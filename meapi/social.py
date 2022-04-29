@@ -271,7 +271,7 @@ class Social:
 
     def get_groups_names(self) -> dict:
         """
-        Get groups of names 'how people named you'.
+        Get groups of names and see how people named you.
 
         :return: Dict with groups.
         :rtype: dict
@@ -374,19 +374,26 @@ class Social:
         body = {"contact_ids": [int(_id) for _id in contacts_ids]}
         return self.make_request('post', '/main/settings/hidden-names/', body)['success']
 
-    def ask_group_rename(self, contacts_ids: Union[int, str, List[Union[int, str]]], new_name: str) -> bool:
+    def ask_group_rename(self, contacts_ids: Union[int, str, List[Union[int, str]]], new_name: Union[str, None] = None) -> bool:
         """
         Suggest new name to group of people and ask them to rename you in their contacts book.
 
         :param contacts_ids: Single or list of contact ids from the same group. See :py:func:`get_groups_names`.
         :type contacts_ids: Union[int, str, List[Union[int, str]]]
-        :param new_name: Suggested name
-        :type new_name: str
+        :param new_name: Suggested name, Default: Your profile name from :py:func:`get_profile_info`.
+        :type new_name: Union[str, None]
         :return: Is asking success.
         :rtype: bool
         """
         if not isinstance(contacts_ids, list):
             contacts_ids = [contacts_ids]
+
+        if not new_name:  # suggest your name in your profile
+            my_profile = self.get_profile_info()
+            new_name = + str(my_profile['profile']['first_name'])
+            if my_profile['profile']['last_name']:
+                new_name += (" " + my_profile['profile']['last_name'])
+
         body = {"contact_ids": [int(_id) for _id in contacts_ids], "name": new_name}
         return self.make_request('post', '/main/names/suggestion/', body)['success']
 
@@ -518,17 +525,17 @@ class Social:
 
         - **if you have at least 2 socials, you get** ``is_verified`` = ``True`` **in your profile (Blue check).**
 
-        :param twitter_token: `Twitter Token <https://gist.github.com/david-lev/b158f1cc0cc783dbb13ff4b54416ceec#file-twitter_token-md>`_. Default = None.
+        :param twitter_token: `Twitter Token <https://gist.github.com/david-lev/b158f1cc0cc783dbb13ff4b54416ceec#file-twitter_token-md>`_. Default = ``None``.
         :type twitter_token: str
-        :param spotify_token: Log in to `spotify <https://accounts.spotify.com/authorize?client_id=0b1ea72f7dce420583038b49fd04be50&response_type=code&redirect_uri=https://app.mobile.me.app/&scope=user-read-email%20playlist-read-private>`_ and copy the token after the ``https://app.mobile.me.app/?code=``. Default = None.
+        :param spotify_token: Log in to `spotify <https://accounts.spotify.com/authorize?client_id=0b1ea72f7dce420583038b49fd04be50&response_type=code&redirect_uri=https://app.mobile.me.app/&scope=user-read-email%20playlist-read-private>`_ and copy the token after the ``https://app.mobile.me.app/?code=``. Default = ``None``.
         :type spotify_token: str
-        :param instagram_token: Log in to `instagram <https://api.instagram.com/oauth/authorize/?app_id=195953705182737&redirect_uri=https://app.mobile.me.app/&response_type=code&scope=user_profile,user_media>`_ and copy the token after the ``https://app.mobile.me.app/?code=``. Default = None.
+        :param instagram_token: Log in to `instagram <https://api.instagram.com/oauth/authorize/?app_id=195953705182737&redirect_uri=https://app.mobile.me.app/&response_type=code&scope=user_profile,user_media>`_ and copy the token after the ``https://app.mobile.me.app/?code=``. Default = ``None``.
         :type instagram_token: str
-        :param facebook_token: `Facebook token <https://facebook.com/v12.0/dialog/oauth?cct_prefetching=0&client_id=799397013456724>`_. Default = None.
+        :param facebook_token: `Facebook token <https://facebook.com/v12.0/dialog/oauth?cct_prefetching=0&client_id=799397013456724>`_. Default = ``None``.
         :type facebook_token: str
-        :param pinterest_url: Profile url - ``https://www.pinterest.com/username/``. Default = None.
+        :param pinterest_url: Profile url - ``https://www.pinterest.com/username/``. Default = ``None``.
         :type pinterest_url: str
-        :param linkedin_url: Profile url - ``https://www.linkedin.com/in/username``. Default = None.
+        :param linkedin_url: Profile url - ``https://www.linkedin.com/in/username``. Default = ``None``.
         :type linkedin_url: str
         :return: Tuple of: is_success, list of failed.
         :rtype: Tuple[bool, List[str]]
@@ -569,17 +576,17 @@ class Social:
         """
         Remove social networks from your profile. You can also hide social instead of deleting it: :py:func:`switch_social_status`.
 
-        :param twitter: To remove Twitter. Default: False
+        :param twitter: To remove Twitter. Default: ``False``.
         :type twitter: bool
-        :param spotify: To remove Spotify. Default: False
+        :param spotify: To remove Spotify. Default: ``False``.
         :type spotify: bool
-        :param instagram: To remove Instagram. Default: False
+        :param instagram: To remove Instagram. Default: ``False``.
         :type instagram: bool
-        :param facebook: To remove Facebook. Default: False
+        :param facebook: To remove Facebook. Default: ``False``.
         :type facebook: bool
-        :param pinterest: To remove Pinterest. Default: False
+        :param pinterest: To remove Pinterest. Default: ``False``.
         :type pinterest: bool
-        :param linkedin: To remove Linkedin. Default: False
+        :param linkedin: To remove Linkedin. Default: ``False``.
         :type linkedin: bool
         :return: Is removal success.
         :rtype: bool
@@ -694,11 +701,7 @@ class Social:
         :return: User age if date of birth exists. else - 0.0
         :rtype: float
         """
-        if not uuid:
-            date_of_birth = self.get_profile_info()['profile']['date_of_birth']
-        else:
-            print(self.get_profile_info(uuid))
-            date_of_birth = self.get_profile_info(uuid)['profile']['date_of_birth']
+        date_of_birth = self.get_profile_info(uuid)['profile']['date_of_birth']
         if match(r"^\d{4}(\-)([0-2][0-9]|(3)[0-1])(\-)(((0)[0-9])|((1)[0-2]))$", str(date_of_birth)):
             days_in_year = 365.2425
             return round((date.today() - datetime.strptime(date_of_birth, "%Y-%m-%d").date()).days / days_in_year, 1)
@@ -717,3 +720,124 @@ class Social:
         if results:
             return results['contact']['suggested_as_spam']
         return 0
+
+    def update_location(self, lat: float, lon: float) -> bool:
+        """
+        Update your location. See :py:func:`upload_random_data`.
+
+        :param lat: location latitude coordinates.
+        :type lat: float
+        :param lon: location longitude coordinates.
+        :type lon: float
+        :return: Is location update success.
+        :rtype: bool
+        """
+        if not isinstance(lat, float) or not isinstance(lon, float):
+            raise Exception("Not a valid coordination!")
+        body = {"location_latitude": float(lat), "location_longitude": float(lon)}
+        return self.make_request('post', '/main/location/update/', body)['success']
+
+    def share_location(self, uuid: str) -> bool:
+        """
+        Share your :py:func:`update_location` with another user.
+
+        :param uuid: User uuid. See :py:func:`get_uuid`.
+        :type uuid: str
+        :return: is sharing success.
+        :rtype: bool
+        """
+        return self.make_request('post', '/main/users/profile/share-location/' + str(uuid) + "/")['success']
+
+    def get_distance(self, uuid: str) -> Union[float, None]:
+        """
+        Get your distance between you and another user.
+         - Only if the user shared his location with you. you can ask his location with :py:func:`suggest_turn_on_location`.
+
+        :param uuid: User uuid. See :py:func:`get_uuid`.
+        :type uuid: str
+        :return: The distance between you in kilometers. None if the user not shared his location with you.
+        :rtype: Union[float, None]
+        """
+        results = self.get_profile_info(uuid)
+        if results['profile'].get('distance'):
+            return results['profile']['distance']
+        return None
+
+    def stop_sharing_location(self, uuids: Union[str, List[str]]) -> bool:
+        """
+        Stop sharing your :py:func:`update_location` with users.
+
+        :param uuids: Single or list of uuids that you want to stop them from watching you location. See :py:func:`locations_shared_by_me`.
+        :type uuids: Union[str, List[str]]
+        :return: is stopping success.
+        :rtype: bool
+        """
+        if not isinstance(uuids, list):
+            uuids = [uuids]
+        body = {"uuids": uuids}
+        return self.make_request('post', '/main/users/profile/share-location/stop-for-me/', body)['success']
+
+    def stop_shared_location(self, uuids: Union[str, List[str]]) -> bool:
+        """
+        Stop locations that shared with you.
+
+        :param uuids: Single or list of uuids that you want to stop their location. See :py:func:`locations_shared_with_me`.
+        :type uuids: Union[str, List[str]]
+        :return: is stopping success.
+        :rtype: bool
+        """
+        if not isinstance(uuids, list):
+            uuids = [uuids]
+        body = {"uuids": uuids}
+        return self.make_request('post', '/main/users/profile/share-location/stop/', body)['success']
+
+    def locations_shared_by_me(self) -> List[dict]:
+        """
+        Get list of users that you shared your location with them. See also :py:func:`locations_shared_with_me`.
+
+        :return: list of dicts with contacts details.
+        :rtype: List[dict]
+
+        Example::
+
+            [
+                {
+                    "first_name": "Rachel Green",
+                    "last_name": "",
+                    "phone_number": 1234567890,
+                    "profile_picture": "https://d18zaexen4dp1s.cloudfront.net/59XXXXXXXXXfa67.jpg",
+                    "uuid": "XXXXX-XXXXX-XXXX-XXXX-XXXXXX"
+                }
+            ]
+        """
+        return self.make_request('get', '/main/users/profile/share-location/')
+
+    def locations_shared_with_me(self) -> dict:
+        """
+        Get users who have shared a location with you. See also :py:func:`locations_shared_by_me`.
+
+        :return: dict with list of uuids and list with users.
+        :rtype: dict
+
+        Example::
+
+            {
+                "shared_location_user_uuids": [
+                    "3850XXX-XXX-XXX-XXX-XXXXX"
+                ],
+                "shared_location_users": [
+                    {
+                        "author": {
+                            "first_name": "Gunther",
+                            "last_name": "",
+                            "phone_number": 3647632874324,
+                            "profile_picture": "https://d18zaexen4dp1s.cloudfront.net/dXXXXXXXXXXXXXXXXXXb.jpg",
+                            "uuid": "3850XXX-XXX-XXX-XXX-XXXXX"
+                        },
+                        "distance": 1.4099551982832228,
+                        "i_shared": False
+                    }
+                ]
+            }
+        """
+        return self.make_request('get', '/main/users/profile/share-location/for-me/')
