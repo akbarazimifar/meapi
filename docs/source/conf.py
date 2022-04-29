@@ -76,8 +76,10 @@ intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 
 ogp_site_url = "https://meapi.readthedocs.io/"
 ogp_site_name = "meapi documentation"
-ogp_image = "../_static/ogp_image.webp"
-ogp_description = "meapi is a Python3 library to identify, discover and get information about phone numbers, " \
-                  "indicate and report spam, get and manage socials, profile management and much more."
+ogp_image = "https://meapi.readthedocs.io/en/latest/_static/ogp_image.webp"
 ogp_description_length = 300
 ogp_type = "website"
+ogp_custom_meta_tags = [
+    '<meta property="og:description" content="meapi is a Python3 library to identify, discover and get information '
+    'about phone numbers, indicate and report spam, get and manage socials, profile management and much more." /> '
+]
