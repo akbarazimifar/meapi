@@ -12,7 +12,9 @@ class MeApiException(Exception):
     **Expected msg's:**
 
     - ``api_incorrect_pwd_token`` in :py:func:`~meapi.Me.generate_access_token`.
+    - ``api_phone_number_doesnt_exists`` in :py:func:`~meapi.Me.activate_account`.
     - ``api_incorrect_activation_code`` in :py:func:`~meapi.Me.activate_account`.
+    - ``api_activation_code_expired`` in :py:func:`~meapi.Me.activate_account`.
     - ``api_search_passed_limit`` in :py:func:`~meapi.Me.phone_search`.
     - ``api_profile_view_passed_limit`` in :py:func:`~meapi.Me.get_profile_info`.
     """

@@ -16,7 +16,10 @@ class Auth:
         :param activation_code: You can pass the activation code if you want to skipp the prompt. Default: ``None``.
         :type activation_code: Union[int, str, None]
         :raises MeException: If pre-activation-code is not valid.
-        :raises MeApiException: msg: ``api_incorrect_activation_code`` If activation-code is incorrect.
+        :raises MeApiException:
+            - **msg's:**
+            - ``api_phone_number_doesnt_exists`` if not a valid ``phone_number``.
+            - ``api_activation_code_expired``, ``api_incorrect_activation_code`` If activation-code is incorrect.
         :return: Is success.
         :rtype: bool
         """

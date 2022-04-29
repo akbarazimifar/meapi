@@ -32,27 +32,28 @@ class Notifications:
                           who_watch_filter: bool = False,
                           who_deleted_filter: bool = False,
                           birthday_filter: bool = False,
-                          location_filter: bool = False) -> dict:
+                          location_filter: bool = False
+                          ) -> dict:
         """
         Get app notifications: new names, birthdays, comments, watches, deletes, location shares and system notifications.
 
-        :param page_number: :py:func:`get_notifications_uuid` [``'count'``] / ``page_size`` = ``pages``. Default: 1
+        :param page_number: :py:func:`get_notifications_uuid` [``'count'``] / ``page_size`` = ``pages``. Default: ``1``.
         :type page_number: int
-        :param results_limit: Limit of notifications in each page. Default: 20
+        :param results_limit: Limit of notifications in each page. Default: ``20``.
         :type results_limit: int
-        :param names_filter: New names, deletes, joined, renames, rename requests. Default: False
+        :param names_filter: New names, deletes, joined, renames, rename requests. Default: ``False``.
         :type names_filter: bool
-        :param system_filter: System notifications: spam reports, your name requests, suggestions to turn on mutual contacts. Default: False
+        :param system_filter: System notifications: spam reports, your name requests, suggestions to turn on mutual contacts. Default: ``False``.
         :type system_filter: bool
-        :param comments_filter: Comments notifications: new comments, published comments and suggestions to turn on comments (See :py:func:`get_comments`). Default: False
+        :param comments_filter: Comments notifications: new comments, published comments and suggestions to turn on comments (See :py:func:`get_comments`). Default: ``False``.
         :type comments_filter: bool
-        :param who_watch_filter: Who watched your profile (See :py:func:`who_watched`). Default: False
+        :param who_watch_filter: Who watched your profile (See :py:func:`who_watched`). Default: ``False``.
         :type who_watch_filter: bool
-        :param who_deleted_filter: Who deleted you from his contacts (See :py:func:`who_deleted`). Default: False
+        :param who_deleted_filter: Who deleted you from his contacts (See :py:func:`who_deleted`). Default: ``False``.
         :type who_deleted_filter: bool
-        :param birthday_filter: Contacts birthdays (See :py:func:`get_age`). Default: False
+        :param birthday_filter: Contacts birthdays (See :py:func:`get_age`). Default: ``False``.
         :type birthday_filter: bool
-        :param location_filter: Shared locations: suggestions to turn on location, locations that shared with you. Default: False
+        :param location_filter: Shared locations: suggestions to turn on location, locations that shared with you. Default: ``False``.
         :type location_filter: bool
         :return: Dict with notifications
         :rtype: dict
@@ -139,7 +140,7 @@ class Notifications:
         del args['self']
         filters = []
         for fil, val in args.items():
-            if val:
+            if val and fil.endswith('filter'):
                 filters = [*filters, *notification_categories[fil.replace("_filter", "")]]
         params = f"?page={page_number}&page_size={results_limit}&status=distributed"
         if filters:
@@ -170,21 +171,21 @@ class Notifications:
         """
         Set new settings for notifications.
 
-        :param who_deleted_notification_enabled: Default: None
+        :param who_deleted_notification_enabled: Default: ``None``.
         :type who_deleted_notification_enabled: bool
-        :param who_watched_notification_enabled: Default: None
+        :param who_watched_notification_enabled: Default: ``None``.
         :type who_watched_notification_enabled: bool
-        :param distance_notification_enabled: Default: None
+        :param distance_notification_enabled: Default: ``None``.
         :type distance_notification_enabled: bool
-        :param system_notification_enabled: Default: None
+        :param system_notification_enabled: Default: ``None``.
         :type system_notification_enabled: bool
-        :param birthday_notification_enabled: Default: None
+        :param birthday_notification_enabled: Default: ``None``.
         :type birthday_notification_enabled: bool
-        :param comments_notification_enabled: Default: None
+        :param comments_notification_enabled: Default: ``None``.
         :type comments_notification_enabled: bool
-        :param names_notification_enabled: Default: None
+        :param names_notification_enabled: Default: ``None``.
         :type names_notification_enabled: bool
-        :param notifications_enabled: Default: None
+        :param notifications_enabled: Default: ``None``.
         :type notifications_enabled: bool
         :return: Tuple of: is success, list of failed
         :rtype: Tuple[bool, list]

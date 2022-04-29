@@ -45,22 +45,22 @@ class Settings:
         """
         Change social settings.
 
-        :param mutual_contacts_available: Show common contacts between users. Default: None
+        :param mutual_contacts_available: Show common contacts between users. Default: ``None``.
         :type mutual_contacts_available: bool
-        :param who_watched_enabled: Users will be notified that you have viewed their profile. Default: None
+        :param who_watched_enabled: Users will be notified that you have viewed their profile. Default: ``None``.
             - They will only be able to get information about you if they are premium users (``is_premium`` = True in :py:func:`get_profile_info`) or, by using this libary....
             - This setting must be True if you want to use :py:func:`who_watched` method.
         :type who_watched_enabled: bool
-        :param who_deleted_enabled: Users will be notified that you have deleted them from your contact book. Default: None
+        :param who_deleted_enabled: Users will be notified that you have deleted them from your contact book. Default: ``None``.
             - They will only be able to get information about you if they are premium users (``is_premium`` = True in :py:func:`get_profile_info`) or, by using this libary....
             - This setting must be True if you want to use :py:func:`who_deleted` method.
         :type who_deleted_enabled: bool
-        :param comments_enabled: Allow users to publish comment (:py:func:`publish_comment`) in your profile. Default: None
+        :param comments_enabled: Allow users to publish comment (:py:func:`publish_comment`) in your profile. Default: ``None``.
             - Comments will not be posted until you approve them with :py:func:`approve_comment`.
         :type comments_enabled: bool
-        :param location_enabled: Allow shared locations. Default: None
+        :param location_enabled: Allow shared locations. Default: ``None``.
         :type location_enabled: bool
-        :param language: lang code, iw, en, etc. (For notifications). Default: None
+        :param language: lang code, iw, en, etc. (For notifications). Default: ``None``.
         :type language: bool
         :return: Tuple: is success, list of failed
         :rtype: Tuple[bool, list]
