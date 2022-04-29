@@ -76,7 +76,7 @@ intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 
 ogp_site_url = "https://meapi.readthedocs.io/"
 ogp_site_name = "meapi documentation"
-ogp_image = "https://meapi.readthedocs.io/en/latest/_static/ogp_image.webp"
+ogp_image = "https://meapi.readthedocs.io/en/latest/_static/ogp_image.png"
 ogp_description_length = 300
 ogp_type = "website"
 ogp_custom_meta_tags = [
