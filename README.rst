@@ -1,6 +1,7 @@
 .. image:: https://user-images.githubusercontent.com/42866208/164977163-2837836d-15bd-4a75-88fd-4e3fe2fd5dae.png
   :width: 95
   :alt: Alternative text
+.. end-logo
 
 `meapi <https://github.com/david-lev/meapi>`_: Unofficial api for 'Me - Caller ID & Spam Blocker'
 ##################################################################################################
@@ -120,12 +121,4 @@ See the `Documentation <https://meapi.readthedocs.io/>`_ for detailed instructio
 **This application is intended for educational purposes only. Any use in professional manner or to harm anyone or any organization doesn't relate to me and can be considered as illegal.
 Me name, its variations and the logo are registered trademarks of NFO LTD. I have nothing to do with the registered trademark.**
 
-🏆 **Credits**
----------------
-
-- `Magisk <https://github.com/topjohnwu/Magisk/>`_ for device rooting.
-- `LSPosed <https://github.com/LSPosed/LSPosed>`_ for xposed framework.
-- `TrustMeAlready <https://github.com/ViRb3/TrustMeAlready>`_ to disable SSL verification.
-- `mitmproxy <https://github.com/mitmproxy/mitmproxy>`_ to monitor the app network requests.
-- `ytmusicapi <https://github.com/sigma67/ytmusicapi/>`_ for the structure of this project.
-- `readthedocs <https://github.com/readthedocs/readthedocs.org>`_ for hosting the docs.
+.. end-readme

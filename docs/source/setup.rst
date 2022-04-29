@@ -1,18 +1,18 @@
-Setup
-=====
+⚙️ Setup
+=========
 
-Installation
-------------
+⬇️ Installation
+---------------
 .. include:: ../../README.rst
   :start-after: installation
   :end-before: end-installation
 
 
-Authentication
---------------
+🔐 Authentication
+-----------------
 
-Unofficial method
-^^^^^^^^^^^^^^^^^
+✅ Unofficial method
+^^^^^^^^^^^^^^^^^^^^^
 **important notes:**
 
     - **This method is for educational purposes only and its use is at your own risk.** See `disclaimer <https://meapi.readthedocs.io/en/latest/index.html#disclaimer>`_.

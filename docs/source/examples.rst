@@ -1,5 +1,5 @@
-Examples
---------
+📄 Examples
+============
 
 - Initialize me client:
 
@@ -130,5 +130,4 @@ Examples
             contacts_file.write(header)
             contacts_file.write("\n".join([",".join(phone) for phone in phones_info]))
 
-More examples soon...
-^^^^^^^^^^^^^^^^^^^^^
+**More examples soon...**

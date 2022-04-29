@@ -1,5 +1,5 @@
-Reference
-==================
+🔗 Reference
+=============
 
 
 Reference for the Me class.
@@ -8,14 +8,14 @@ Reference for the Me class.
 .. autoclass:: Me
 
 
-Search
-------
+🔎 Search
+---------
 .. automethod:: Me.phone_search
 .. automethod:: Me.get_profile_info
 .. automethod:: Me.get_uuid
 
-Account
--------
+👤 Account
+-----------
 
 .. automethod:: Me.update_profile_info
 .. automethod:: Me.add_contacts
@@ -33,8 +33,8 @@ Account
 .. automethod:: Me.suspend_account
 .. automethod:: Me.delete_account
 
-Social
---------
+🌐 Social
+----------
 .. automethod:: Me.friendship
 .. automethod:: Me.suggest_turn_on_mutual
 .. automethod:: Me.report_spam
@@ -44,23 +44,23 @@ Social
 .. automethod:: Me.get_age
 .. automethod:: Me.numbers_count
 
-Social network
---------------
+📱 Social network
+------------------
 .. automethod:: Me.get_socials
 .. automethod:: Me.add_social
 .. automethod:: Me.remove_social
 .. automethod:: Me.switch_social_status
 
-Group names
------------
+👥 Group names
+---------------
 .. automethod:: Me.get_groups_names
 .. automethod:: Me.delete_name
 .. automethod:: Me.get_deleted_names
 .. automethod:: Me.restore_name
 .. automethod:: Me.ask_group_rename
 
-Comments
---------
+💬 Comments
+------------
 .. automethod:: Me.get_comments
 .. automethod:: Me.suggest_turn_on_comments
 .. automethod:: Me.get_comment
@@ -69,8 +69,8 @@ Comments
 .. automethod:: Me.delete_comment
 .. automethod:: Me.like_comment
 
-Location:
----------
+📍 Location
+------------
 .. automethod:: Me.update_location
 .. automethod:: Me.suggest_turn_on_location
 .. automethod:: Me.share_location
@@ -80,37 +80,35 @@ Location:
 .. automethod:: Me.locations_shared_by_me
 .. automethod:: Me.locations_shared_with_me
 
-Notifications
---------------
+🔔 Notifications
+----------------
 .. automethod:: Me.unread_notifications_count
 .. automethod:: Me.get_notifications
 .. automethod:: Me.read_notification
 
-Settings
----------
+⚙️Settings
+----------
 .. automethod:: Me.get_settings
 .. automethod:: Me.change_social_settings
 .. automethod:: Me.change_notification_settings
 
-Exceptions
-----------
+❗ Exceptions
+-------------
 .. currentmodule:: meapi.exceptions
 .. autoclass:: MeApiException
 .. autoclass:: MeException
 
-Utils
------
-These methods are for internal use but can still be used if you wish.
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+🛠 Utils
+--------
+**These methods are for internal use but can still be used if you wish.**
 
 .. currentmodule:: meapi
 .. automethod:: Me.make_request
 .. automethod:: Me.valid_phone_number
 
-Auth
-----
-These methods are for internal use but can still be used if you wish.
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+🔐 Auth
+--------
+**These methods are for internal use but can still be used if you wish.**
 
 .. automethod:: Me.activate_account
 .. automethod:: Me.generate_access_token

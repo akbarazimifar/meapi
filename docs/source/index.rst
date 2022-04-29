@@ -4,6 +4,7 @@
    contain the root `toctree` directive.
 
 .. include:: ../../README.rst
+   :start-after: end-logo
 
 🔗 **Contents**
 ---------------
@@ -11,7 +12,7 @@
 .. toctree::
    :hidden:
 
-   Home <self>
+   📖 Home <self>
 
 .. toctree::
 
