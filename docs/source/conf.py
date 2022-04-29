@@ -38,6 +38,7 @@ extensions = [
     "sphinx_copybutton",
     "sphinx.ext.doctest",
     "sphinx.ext.intersphinx",
+    "sphinxext.opengraph"
 ]
 
 # The suffix of source filenames.
@@ -64,12 +65,17 @@ html_favicon = "../images/favicon.ico"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['../_static']
-# html_logo = "https://user-images.githubusercontent.com/42866208/164977163-2837836d-15bd-4a75-88fd-4e3fe2fd5dae.png"
 
 html_theme_options = {
-    # "sidebar_hide_name": True,
+    "sidebar_hide_name": True,
     "light_logo": "light_logo.png",
     "dark_logo": "dark_logo.png",
 }
 
 intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
+
+ogp_site_url = "https://meapi.readthedocs.io/"
+ogp_site_name = "meapi documentation"
+ogp_image = "https://meapi.readthedocs.io/en/latest/_static/light_logo.png"
+ogp_description_length = 300
+ogp_type = "website"
