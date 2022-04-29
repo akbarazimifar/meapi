@@ -19,8 +19,6 @@ sys.path.insert(0, '../..')
 
 from meapi import __version__
 
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-
 # -- Project information -----------------------------------------------------
 
 project = 'meapi'
@@ -60,24 +58,6 @@ pygments_style = "friendly"
 
 html_theme = "furo"
 html_favicon = "images/favicon.ico"
-
-# -- Options for HTML output -------------------------------------------------
-
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-
-if not on_rtd:
-    # Try to use the ReadTheDocs theme if installed.
-    # Default to the default alabaster theme if not.
-    try:
-        import sphinx_rtd_theme
-        html_theme = 'sphinx_rtd_theme'
-        html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-    except ImportError:
-        html_theme = 'alabaster'
-else:
-    # Set theme to 'default' for ReadTheDocs.
-    html_theme = 'default'
 
 
 # Add any paths that contain custom static files (such as style sheets) here,
