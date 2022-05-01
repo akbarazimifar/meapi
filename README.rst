@@ -91,11 +91,11 @@ ________________________
 
     from meapi import Me
 
-    me = Me(phone_nuber=972123456789)
+    me = Me(phone_number=972123456789)
     # If you have official access token:
     # me = Me(access_token='XXXXXXXX')
 
-    search_res = me.search_phone('+865-456-234-12'))
+    search_res = me.phone_search('+865-456-234-12'))
     if search_res:
         print(search_res['contact']['name'])
 
