@@ -2,28 +2,18 @@ import inspect
 import json
 from abc import ABCMeta
 from datetime import datetime
-from typing import Union, Any, List
+from typing import Union, List
 
 
-def parse_datetime(datetime_str: str) -> Union[datetime, None]:
-    return datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S%z') if datetime_str else datetime_str
-
-
-def get_object(cls, data: Union[dict, Any]):
-    if not data:
-        return None
-    if isinstance(data, dict):
-        cls_attrs = cls._init_parameters.keys()
-        for key in data.copy():
-            if key not in cls_attrs:
-                del data[key]
-        return cls(**data)
-    return cls(data)
+def parse_date(date_str: str, date_only=False) -> Union[datetime, datetime.date, None]:
+    if not date_str:
+        return date_str
+    date = datetime.strptime(str(date_str), '%Y-%m-%d' + ('' if date_only else 'T%H:%M:%S%z'))
+    return date.date() if date_only else date
 
 
 class _ParameterReader(ABCMeta):
     """Internal class to get class init parameters"""
-
     def __init__(cls, *args, **kwargs):
         parameters = inspect.signature(cls.__init__).parameters
         parameters = {key: value for key, value in parameters.items() if key not in ['self', 'args', 'kwargs']}
@@ -37,14 +27,7 @@ class _ParameterReader(ABCMeta):
 
 
 class MeModel(metaclass=_ParameterReader):
-    """ Base class from which all Me models will inherit. """
-
-    # def __init__(self, _index=0):
-    #     self._index = _index
-
     def __str__(self):
-        """ Returns a string representation of MeModel. By default
-        this is the same as as_json_string(). """
         return self.as_json_string()
 
     def __eq__(self, other):
@@ -81,46 +64,80 @@ class MeModel(metaclass=_ParameterReader):
 
             elif getattr(self, key, None):
                 data[key] = getattr(self, key, None)
-
         return data
 
     @classmethod
     def new_from_json_dict(cls, data: dict, **kwargs):
+        if not data or data is None:
+            return None
+        cls_attrs = cls._init_parameters.keys()
         json_data = data.copy()
         if kwargs:
             for key, val in kwargs.items():
                 json_data[key] = val
-
+        for key in json_data.copy():
+            if key not in cls_attrs:
+                del json_data[key]
         c = cls(**json_data)
         c._json = data
         return c
 
 
 class Profile(MeModel):
-    def __init__(self, comments_blocked: bool, is_he_blocked_me: bool, is_permanent: bool, is_shared_location: bool,
-                 last_comment: None, mutual_contacts_available: bool, mutual_contacts: List[dict], share_location: bool,
-                 social: dict, carrier: str, comments_enabled: bool, country_code: str, date_of_birth: datetime,
-                 device_type: str, distance: None, email: str, facebook_url: str, first_name: str, gdpr_consent: bool,
-                 gender: str, google_url: None, is_premium: bool, is_verified: bool, last_name: str,
-                 location_enabled: bool, location_name: str, login_type: str, me_in_contacts: bool, phone_number: int,
-                 phone_prefix: int, profile_picture: str, slogan: str, user_type: str, uuid: str,
-                 verify_subscription: bool, who_deleted_enabled: bool, who_watched_enabled: bool,
-                 ) -> None:
-        super().__init__()
+    def __init__(self,
+                 comments_blocked: Union[bool, None] = None,
+                 is_he_blocked_me: Union[bool, None] = None,
+                 is_permanent: Union[bool, None] = None,
+                 is_shared_location: Union[bool, None] = None,
+                 last_comment: Union[None, None] = None,
+                 mutual_contacts_available: Union[bool, None] = None,
+                 mutual_contacts: Union[List[dict], None] = None,
+                 share_location: Union[bool, None] = None,
+                 social: Union[dict, None] = None,
+                 carrier: Union[str, None] = None,
+                 comments_enabled: Union[bool, None] = None,
+                 country_code: Union[str, None] = None,
+                 date_of_birth: Union[str, None] = None,
+                 device_type: Union[str, None] = None,
+                 distance: Union[None, None] = None,
+                 email: Union[str, None] = None,
+                 facebook_url: Union[str, None] = None,
+                 first_name: Union[str, None] = None,
+                 gdpr_consent: Union[bool, None] = None,
+                 gender: Union[str, None] = None,
+                 google_url: Union[None, None] = None,
+                 is_premium: Union[bool, None] = None,
+                 is_verified: Union[bool, None] = None,
+                 last_name: Union[str, None] = None,
+                 location_enabled: Union[bool, None] = None,
+                 location_name: Union[str, None] = None,
+                 login_type: Union[str, None] = None,
+                 me_in_contacts: Union[bool, None] = None,
+                 phone_number: Union[int, None] = None,
+                 phone_prefix: Union[int, None] = None,
+                 profile_picture: Union[str, None] = None,
+                 slogan: Union[str, None] = None,
+                 user_type: Union[str, None] = None,
+                 uuid: Union[str, None] = None,
+                 verify_subscription: Union[bool, None] = None,
+                 who_deleted_enabled: Union[bool, None] = None,
+                 who_watched_enabled: Union[bool, None] = None,
+                 in_contact_list: Union[bool, None] = None,
+                 ):
         self.comments_blocked = comments_blocked
         self.is_he_blocked_me = is_he_blocked_me
         self.is_permanent = is_permanent
         self.is_shared_location = is_shared_location
         self.last_comment = last_comment
         self.mutual_contacts_available = mutual_contacts_available
-        self.mutual_contacts: List[MutualContact] = [get_object(MutualContact, mutual_contact) for mutual_contact in
-                                                     mutual_contacts]
+        self.mutual_contacts: List[MutualContact] = [MutualContact.new_from_json_dict(mutual_contact) for mutual_contact in
+                                                     mutual_contacts] if mutual_contacts_available else mutual_contacts
         self.share_location = share_location
-        self.social: Socials = get_object(Socials, social)
+        self.social: Socials = Socials.new_from_json_dict(social)
         self.carrier = carrier
         self.comments_enabled = comments_enabled
         self.country_code = country_code
-        self.date_of_birth = date_of_birth
+        self.date_of_birth: Union[datetime.date, None] = parse_date(date_of_birth, date_only=True)
         self.device_type = device_type
         self.distance = distance
         self.email = email
@@ -136,6 +153,7 @@ class Profile(MeModel):
         self.location_name = location_name
         self.login_type = login_type
         self.me_in_contacts = me_in_contacts
+        self.in_contact_list = in_contact_list
         self.phone_number = phone_number
         self.phone_prefix = phone_prefix
         self.profile_picture = profile_picture
@@ -148,30 +166,50 @@ class Profile(MeModel):
 
 
 class Socials(MeModel):
-    def __init__(self, facebook: dict, fakebook: dict, instagram: dict, linkedin: dict, pinterest: dict, spotify: dict,
-                 tiktok: dict, twitter: dict) -> None:
-        self.facebook: Social = get_object(Social, facebook)
-        self.fakebook: Social = get_object(Social, fakebook)
-        self.instagram: Social = get_object(Social, instagram)
-        self.linkedin: Social = get_object(Social, linkedin)
-        self.pinterest: Social = get_object(Social, pinterest)
-        self.spotify: Social = get_object(Social, spotify)
-        self.tiktok: Social = get_object(Social, tiktok)
-        self.twitter: Social = get_object(Social, twitter)
+    def __init__(self=None,
+                 facebook: Union[dict, None] = None,
+                 fakebook: Union[dict, None] = None,
+                 instagram: Union[dict, None] = None,
+                 linkedin: Union[dict, None] = None,
+                 pinterest: Union[dict, None] = None,
+                 spotify: Union[dict, None] = None,
+                 tiktok: Union[dict, None] = None,
+                 twitter: Union[dict, None] = None
+                 ):
+        self.facebook: Social = Social.new_from_json_dict(facebook)
+        self.fakebook: Social = Social.new_from_json_dict(fakebook)
+        self.instagram: Social = Social.new_from_json_dict(instagram)
+        self.linkedin: Social = Social.new_from_json_dict(linkedin)
+        self.pinterest: Social = Social.new_from_json_dict(pinterest)
+        self.spotify: Social = Social.new_from_json_dict(spotify)
+        self.tiktok: Social = Social.new_from_json_dict(tiktok)
+        self.twitter: Social = Social.new_from_json_dict(twitter)
 
 
 class Social(MeModel):
-    def __init__(self, posts: List[dict], profile_id: str, is_active: bool, is_hidden: bool) -> None:
-        self.posts: List[Post] = [get_object(Post, post) for post in posts]
+    def __init__(self,
+                 posts: Union[List[dict], None] = None,
+                 profile_id: Union[str, None] = None,
+                 is_active: Union[bool, None] = None,
+                 is_hidden: Union[bool, None] = None
+                 ):
+        self.posts: Union[List[Post], None] = [Post.new_from_json_dict(post) for post in posts] if posts else posts
         self.profile_id = profile_id
         self.is_active = is_active
         self.is_hidden = is_hidden
 
 
 class Post(MeModel):
-    def __init__(self, posted_at, photo: str, text_first: str, text_second: str, author: str, redirect_id: str,
-                 owner: str) -> None:
-        self.posted_at: Union[datetime, None] = parse_datetime(posted_at) if posted_at else posted_at
+    def __init__(self,
+                 posted_at: Union[str, None] = None,
+                 photo: Union[str, None] = None,
+                 text_first: Union[str, None] = None,
+                 text_second: Union[str, None] = None,
+                 author: Union[str, None] = None,
+                 redirect_id: Union[str, None] = None,
+                 owner: Union[str, None] = None
+                 ):
+        self.posted_at: Union[datetime, None] = parse_date(posted_at) if posted_at else posted_at
         self.photo = photo
         self.text_first = text_first
         self.text_second = text_second
@@ -181,17 +219,36 @@ class Post(MeModel):
 
 
 class MutualContact(MeModel):
-    def __init__(self, phone_number: int, name: str, referenced_user: dict, date_of_birth: datetime) -> None:
+    def __init__(self,
+                 phone_number: Union[int, None] = None,
+                 name: Union[str, None] = None,
+                 referenced_user: Union[dict, None] = None,
+                 date_of_birth: Union[str, None] = None
+                 ):
         self.phone_number = phone_number
         self.name = name
-        self.referenced_user: User = get_object(User, referenced_user)
+        self.referenced_user: User = User.new_from_json_dict(referenced_user)
         self.date_of_birth = date_of_birth
 
 
 class User(MeModel):
-    def __init__(self, email: str, profile_picture: str, first_name: str, last_name: str, gender: str, uuid: str,
-                 is_verified: bool, phone_number: int, slogan: str, is_premium: bool, verify_subscription: bool,
-                 id: int, comment_count: int, location_enabled: bool, distance: None) -> None:
+    def __init__(self,
+                 email: Union[str, None] = None,
+                 profile_picture: Union[str, None] = None,
+                 first_name: Union[str, None] = None,
+                 last_name: Union[str, None] = None,
+                 gender: Union[str, None] = None,
+                 uuid: Union[str, None] = None,
+                 is_verified: Union[bool, None] = None,
+                 phone_number: Union[int, None] = None,
+                 slogan: Union[str, None] = None,
+                 is_premium: Union[bool, None] = None,
+                 verify_subscription: Union[bool, None] = None,
+                 id: Union[int, None] = None,
+                 comment_count: Union[int, None] = None,
+                 location_enabled: Union[bool, None] = None,
+                 distance: Union[None, None] = None
+                 ):
         self.email = email
         self.profile_picture = profile_picture
         self.first_name = first_name
@@ -210,17 +267,35 @@ class User(MeModel):
 
 
 class Contact(MeModel):
-    def __init__(self, name: str, picture: None, user: dict, suggested_as_spam: int, is_permanent: bool,
-                 is_pending_name_change: bool, user_type: str, phone_number: int, cached: bool, is_my_contact: bool,
-                 is_shared_location: bool) -> None:
+    def __init__(self,
+                 name: Union[str, None] = None,
+                 picture: Union[None, None] = None,
+                 user: Union[dict, None] = None,
+                 suggested_as_spam: Union[int, None] = None,
+                 is_permanent: Union[bool, None] = None,
+                 is_pending_name_change: Union[bool, None] = None,
+                 user_type: Union[str, None] = None,
+                 phone_number: Union[int, None] = None,
+                 cached: Union[bool, None] = None,
+                 is_shared_location: Union[bool, None] = None,
+                 ):
         self.name = name
         self.picture = picture
-        self.user: User = get_object(User, user)
+        self.user: User = User.new_from_json_dict(user)
         self.suggested_as_spam = suggested_as_spam
         self.is_permanent = is_permanent
         self.is_pending_name_change = is_pending_name_change
         self.user_type = user_type
         self.phone_number = phone_number
         self.cached = cached
-        self.is_my_contact = is_my_contact
         self.is_shared_location = is_shared_location
+
+
+class BlockedNumber(MeModel):
+    def __int__(self,
+                block_contact: Union[bool, None] = None,
+                me_full_block: Union[bool, None] = None,
+                phone_number: Union[int, None] = None):
+        self.block_contact = block_contact
+        self.me_full_block = me_full_block
+        self.phone_number = phone_number

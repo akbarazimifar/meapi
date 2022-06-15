@@ -3,6 +3,7 @@ from typing import Union, List, Tuple
 from meapi.exceptions import MeException, MeApiException
 from meapi.random_data import get_random_data
 from random import randint
+from meapi.models import Contact, Profile, User, BlockedNumber
 
 
 def validate_contacts(contacts: List[dict]) -> List[dict]:
@@ -49,7 +50,7 @@ def validate_calls(calls: List[dict]) -> List[dict]:
 
 class Account:
 
-    def phone_search(self, phone_number: Union[str, int]) -> dict:
+    def phone_search(self, phone_number: Union[str, int]) -> Union[Contact, None]:
         """
         Get information on any phone number.
 
@@ -112,16 +113,15 @@ class Account:
             }
         """
         try:
-            response = self.make_request(req_type='get', endpoint='/main/contacts/search/?phone_number=' + str(
-                self.valid_phone_number(phone_number)))
+            response = self.make_request(req_type='get', endpoint='/main/contacts/search/?phone_number=' + str(self.valid_phone_number(phone_number)))
         except MeApiException as err:
             if err.http_status == 404 and err.msg == 'Not found.':
-                return {}
+                return None
             else:
                 raise err
-        return response
+        return Contact.new_from_json_dict(response)
 
-    def get_profile_info(self, uuid: Union[str, None] = None) -> dict:
+    def get_profile_info(self, uuid: Union[str, None] = None) -> Profile:
         """
         For Me users (those who have registered in the app) there is an account UUID obtained when receiving
         information about the phone number :py:func:`phone_search`. With it, you can get social information
@@ -294,8 +294,14 @@ class Account:
             }
         """
         if uuid:
-            return self.make_request('get', '/main/users/profile/' + str(uuid))
-        return self.make_request('get', '/main/users/profile/me/')
+            res = self.make_request('get', '/main/users/profile/' + str(uuid))
+        else:
+            res = self.make_request('get', '/main/users/profile/me/')
+        try:
+            profile = res.pop('profile')
+        except KeyError:
+            profile = {}
+        return Profile.new_from_json_dict(res, **profile)
 
     def get_uuid(self, phone_number: Union[int, str] = None) -> Union[str, None]:
         """
@@ -307,12 +313,13 @@ class Account:
         :rtype: Union[str, None]
         """
         if phone_number:
-            res = self.phone_search(phone_number).get('contact').get('user')
+            res = self.phone_search(phone_number)
             if res:
-                return res.get('uuid')
+                if res.user:
+                    return res.user.uuid
             return None
         try:
-            return self.get_profile_info()['uuid']
+            return self.get_profile_info().uuid
         except MeApiException as err:
             if err.http_status == 401:  # on login, if no active account on this number you need to register
                 print("** This is a new account and you need to register first.")
@@ -523,9 +530,10 @@ class Account:
             ]
         """
         body = {"add": validate_contacts(contacts), "is_first": False, "remove": []}
-        return self.make_request('post', '/main/contacts/sync/', body)
+        res = self.make_request('post', '/main/contacts/sync/', body)
+        return [Contact.new_from_json_dict(contact) for contact in res]
 
-    def get_saved_contacts(self) -> List[dict]:
+    def get_saved_contacts(self) -> List[User]:
         """
         Get all the contacts stored in your contacts (Which has an Me account).
 
@@ -566,9 +574,13 @@ class Account:
             ]
 
         """
-        return [contact for group in self.get_groups_names()['groups'] for contact in group['contacts'] if contact['in_contact_list']]
+        contacts = []
+        for contact in [contact for group in self.get_groups_names()['groups'] for contact in group['contacts'] if contact['in_contact_list']]:
+            user = contact.pop('user')
+            contacts.append({**contact, **user})
+        return [User.new_from_json_dict(user) for user in contacts]
 
-    def get_unsaved_contacts(self) -> List[dict]:
+    def get_unsaved_contacts(self) -> List[User]:
         """
         Get all the contacts that not stored in your contacts (Which has an Me account).
 
@@ -608,7 +620,11 @@ class Account:
                 }
             ]
         """
-        return [contact for group in self.get_groups_names()['groups'] for contact in group['contacts'] if not contact['in_contact_list']]
+        contacts = []
+        for contact in [contact for group in self.get_groups_names()['groups'] for contact in group['contacts'] if not contact['in_contact_list']]:
+            user = contact.pop('user')
+            contacts.append({**contact, **user})
+        return [User.new_from_json_dict(user) for user in contacts]
 
     def remove_contacts(self, contacts: List[dict]) -> dict:
         """
@@ -817,7 +833,7 @@ class Account:
         body = {"phone_numbers": numbers}
         return self.make_request('post', '/main/users/profile/bulk-unblock/', body)['success']
 
-    def get_blocked_numbers(self) -> List[dict]:
+    def get_blocked_numbers(self) -> List[BlockedNumber]:
         """
         Get list of your blocked numbers. See :py:func:`unblock_numbers`.
 
@@ -834,7 +850,7 @@ class Account:
                 }
             ]
         """
-        return self.make_request('get', '/main/settings/blocked-phone-numbers/')
+        return [BlockedNumber.new_from_json_dict(blocked_number) for blocked_number in self.make_request('get', '/main/settings/blocked-phone-numbers/')]
 
     def upload_random_data(self, contacts=True, calls=True, location=True):
         """
