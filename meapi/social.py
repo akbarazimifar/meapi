@@ -2,6 +2,7 @@ from re import match, sub
 from typing import List, Union, Tuple
 from meapi.exceptions import MeException
 from datetime import datetime, date
+from meapi.models import Friendship, Deleter, Group, Socials, User
 
 
 class Social:
@@ -32,7 +33,7 @@ class Social:
                 "my_comment": None,
             }
         """
-        return self.make_request('get', '/main/contacts/friendship/?phone_number=' + str(self.valid_phone_number(phone_number)))
+        return Friendship.new_from_json_dict(self.make_request('get', '/main/contacts/friendship/?phone_number=' + str(self.valid_phone_number(phone_number))))
 
     def report_spam(self, country_code: str, spam_name: str, phone_number: Union[str, int]) -> bool:
         """
@@ -81,7 +82,7 @@ class Social:
                 }
             ]
         """
-        return self.make_request('get', '/main/users/profile/who-deleted/')
+        return [Deleter.new_from_json_dict(deleter) for deleter in self.make_request('get', '/main/users/profile/who-deleted/')]
 
     def who_watched(self) -> List[dict]:
         """
@@ -269,7 +270,7 @@ class Social:
         results = self.make_request('get', '/main/comments/add/' + str(uuid), body)
         return int(results.get('id')) if results.get('status') == 'waiting' else False
 
-    def get_groups_names(self) -> dict:
+    def get_groups_names(self) -> List[Group]:
         """
         Get groups of names and see how people named you.
 
@@ -306,7 +307,7 @@ class Social:
                 ],
             }
         """
-        return self.make_request('get', '/main/names/groups/')
+        return [Group.new_from_json_dict(group) for group in self.make_request('get', '/main/names/groups/')]
 
     def get_deleted_names(self) -> dict:
         """
@@ -510,8 +511,8 @@ class Social:
             }
         """
         if not uuid:
-            return self.make_request('post', '/main/social/update/')
-        return self.extra_info(str(uuid))['social']
+            return Socials.new_from_json_dict(self.make_request('post', '/main/social/update/'))
+        return Socials.new_from_json_dict(self.extra_info(str(uuid))['social'])
 
     def add_social(self,
                    twitter_token: str = None,
@@ -791,7 +792,7 @@ class Social:
         body = {"uuids": uuids}
         return self.make_request('post', '/main/users/profile/share-location/stop/', body)['success']
 
-    def locations_shared_by_me(self) -> List[dict]:
+    def locations_shared_by_me(self) -> List[User]:
         """
         Get list of users that you shared your location with them. See also :py:func:`locations_shared_with_me`.
 
@@ -810,7 +811,7 @@ class Social:
                 }
             ]
         """
-        return self.make_request('get', '/main/users/profile/share-location/')
+        return [User.new_from_json_dict(user) for user in self.make_request('get', '/main/users/profile/share-location/')]
 
     def locations_shared_with_me(self) -> dict:
         """

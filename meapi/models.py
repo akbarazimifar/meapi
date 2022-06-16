@@ -122,7 +122,6 @@ class Profile(MeModel):
                  verify_subscription: Union[bool, None] = None,
                  who_deleted_enabled: Union[bool, None] = None,
                  who_watched_enabled: Union[bool, None] = None,
-                 in_contact_list: Union[bool, None] = None,
                  ):
         self.comments_blocked = comments_blocked
         self.is_he_blocked_me = is_he_blocked_me
@@ -153,7 +152,6 @@ class Profile(MeModel):
         self.location_name = location_name
         self.login_type = login_type
         self.me_in_contacts = me_in_contacts
-        self.in_contact_list = in_contact_list
         self.phone_number = phone_number
         self.phone_prefix = phone_prefix
         self.profile_picture = profile_picture
@@ -269,6 +267,7 @@ class User(MeModel):
 class Contact(MeModel):
     def __init__(self,
                  name: Union[str, None] = None,
+                 id: Union[int, None] = None,
                  picture: Union[None, None] = None,
                  user: Union[dict, None] = None,
                  suggested_as_spam: Union[int, None] = None,
@@ -278,8 +277,12 @@ class Contact(MeModel):
                  phone_number: Union[int, None] = None,
                  cached: Union[bool, None] = None,
                  is_shared_location: Union[bool, None] = None,
+                 created_at: Union[str, None] = None,
+                 modified_at: Union[str, None] = None,
+                 in_contact_list: bool = None
                  ):
         self.name = name
+        self.id = id
         self.picture = picture
         self.user: User = User.new_from_json_dict(user)
         self.suggested_as_spam = suggested_as_spam
@@ -289,6 +292,9 @@ class Contact(MeModel):
         self.phone_number = phone_number
         self.cached = cached
         self.is_shared_location = is_shared_location
+        self.created_at: Union[datetime, None] = parse_date(created_at)
+        self.modified_at: Union[datetime, None] = parse_date(modified_at)
+        self.in_contact_list = in_contact_list
 
 
 class BlockedNumber(MeModel):
@@ -299,3 +305,129 @@ class BlockedNumber(MeModel):
         self.block_contact = block_contact
         self.me_full_block = me_full_block
         self.phone_number = phone_number
+
+
+class Friendship(MeModel):
+    def __init__(self,
+                 calls_duration: Union[None, None] = None,
+                 he_called: Union[int, None] = None,
+                 he_named: Union[str, None] = None,
+                 he_watched: Union[int, None] = None,
+                 his_comment: Union[None, None] = None,
+                 i_called: Union[int, None] = None,
+                 i_named: Union[str, None] = None,
+                 i_watched: Union[int, None] = None,
+                 is_premium: Union[bool, None] = None,
+                 mutual_friends_count: Union[int, None] = None,
+                 my_comment: Union[str, None] = None
+                 ):
+        self.calls_duration = calls_duration
+        self.he_called = he_called
+        self.he_named = he_named
+        self.he_watched = he_watched
+        self.his_comment = his_comment
+        self.i_called = i_called
+        self.i_named = i_named
+        self.i_watched = i_watched
+        self.is_premium = is_premium
+        self.mutual_friends_count = mutual_friends_count
+        self.my_comment = my_comment
+
+
+class Deleter(MeModel):
+    def __init__(self,
+                 created_at: Union[str, None] = None,
+                 user: Union[dict, None] = None
+                 ):
+        self.created_at = parse_date(created_at)
+        self.user = User.new_from_json_dict(user)
+
+
+class Watcher(MeModel):
+    def __init__(self, last_view: Union[str, None] = None,
+                 user: Union[dict, None] = None,
+                 count: Union[int, None] = None,
+                 is_search: Union[bool, None] = None) -> None:
+        self.last_view: datetime = parse_date(last_view)
+        self.user: User = User.new_from_json_dict(user)
+        self.count = count
+        self.is_search = is_search
+
+
+class Comment(MeModel):
+    def __init__(self,
+                 like_count: Union[int, None] = None,
+                 status: Union[str, None] = None,
+                 message: Union[str, None] = None,
+                 author: Union[dict, None] = None,
+                 is_liked: Union[bool, None] = None,
+                 id: Union[int, None] = None,
+                 comments_blocked: Union[bool, None] = None,
+                 created_at: Union[str, None] = None,
+                 comment_likes: Union[dict, None] = None
+                 ):
+        self.like_count = like_count
+        self.status = status
+        self.message = message
+        self.author = User.new_from_json_dict(author)
+        self.is_liked = is_liked
+        self.id = id
+        self.comments_blocked = comments_blocked
+        self.created_at = parse_date(created_at)
+        self.comment_likes = [User.new_from_json_dict(user) for user in comment_likes]
+
+
+class Group(MeModel):
+    def __init__(self,
+                 name: Union[str, None] = None,
+                 count: Union[int, None] = None,
+                 last_contact_at: Union[str, None] = None,
+                 contacts: Union[List[dict], None] = None,
+                 contact_ids: Union[List[int], None] = None
+                 ):
+        self.name = name
+        self.count = count
+        self.last_contact_at: Union[datetime, None] = parse_date(last_contact_at)
+        self.contacts = [Contact.new_from_json_dict(contact) for contact in contacts]
+        self.contact_ids = contact_ids
+
+
+class Settings:
+    def __init__(self,
+                 birthday_notification_enabled: Union[bool, None] = None,
+                 comments_enabled: Union[bool, None] = None,
+                 comments_notification_enabled: Union[bool, None] = None,
+                 contact_suspended: Union[bool, None] = None,
+                 distance_notification_enabled: Union[bool, None] = None,
+                 language: Union[str, None] = None,
+                 last_backup_at: Union[None, None] = None,
+                 last_restore_at: Union[None, None] = None,
+                 location_enabled: Union[bool, None] = None,
+                 mutual_contacts_available: Union[bool, None] = None,
+                 names_notification_enabled: Union[bool, None] = None,
+                 notifications_enabled: Union[bool, None] = None,
+                 spammers_count: Union[int, None] = None,
+                 system_notification_enabled: Union[bool, None] = None,
+                 who_deleted_enabled: Union[bool, None] = None,
+                 who_deleted_notification_enabled: Union[bool, None] = None,
+                 who_watched_enabled: Union[bool, None] = None,
+                 who_watched_notification_enabled: Union[bool, None] = None
+                 ):
+        self.birthday_notification_enabled = birthday_notification_enabled
+        self.comments_enabled = comments_enabled
+        self.comments_notification_enabled = comments_notification_enabled
+        self.contact_suspended = contact_suspended
+        self.distance_notification_enabled = distance_notification_enabled
+        self.language = language
+        self.last_backup_at = last_backup_at
+        self.last_restore_at = last_restore_at
+        self.location_enabled = location_enabled
+        self.mutual_contacts_available = mutual_contacts_available
+        self.names_notification_enabled = names_notification_enabled
+        self.notifications_enabled = notifications_enabled
+        self.spammers_count = spammers_count
+        self.system_notification_enabled = system_notification_enabled
+        self.who_deleted_enabled = who_deleted_enabled
+        self.who_deleted_notification_enabled = who_deleted_notification_enabled
+        self.who_watched_enabled = who_watched_enabled
+        self.who_watched_notification_enabled = who_watched_notification_enabled

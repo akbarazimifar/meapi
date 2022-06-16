@@ -533,7 +533,7 @@ class Account:
         res = self.make_request('post', '/main/contacts/sync/', body)
         return [Contact.new_from_json_dict(contact) for contact in res]
 
-    def get_saved_contacts(self) -> List[User]:
+    def get_saved_contacts(self) -> List[Contact]:
         """
         Get all the contacts stored in your contacts (Which has an Me account).
 
@@ -574,13 +574,9 @@ class Account:
             ]
 
         """
-        contacts = []
-        for contact in [contact for group in self.get_groups_names()['groups'] for contact in group['contacts'] if contact['in_contact_list']]:
-            user = contact.pop('user')
-            contacts.append({**contact, **user})
-        return [User.new_from_json_dict(user) for user in contacts]
+        return [contact for group in self.get_groups_names() for contact in group.contacts if contact.in_contact_list]
 
-    def get_unsaved_contacts(self) -> List[User]:
+    def get_unsaved_contacts(self) -> List[Contact]:
         """
         Get all the contacts that not stored in your contacts (Which has an Me account).
 
@@ -620,11 +616,7 @@ class Account:
                 }
             ]
         """
-        contacts = []
-        for contact in [contact for group in self.get_groups_names()['groups'] for contact in group['contacts'] if not contact['in_contact_list']]:
-            user = contact.pop('user')
-            contacts.append({**contact, **user})
-        return [User.new_from_json_dict(user) for user in contacts]
+        return [contact for group in self.get_groups_names() for contact in group.contacts if not contact.in_contact_list]
 
     def remove_contacts(self, contacts: List[dict]) -> dict:
         """
