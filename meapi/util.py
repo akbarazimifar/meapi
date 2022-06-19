@@ -1,7 +1,7 @@
 from json import loads, JSONDecodeError
 from re import match, sub
 from typing import Union
-from requests import patch, delete, put, get, post
+import requests
 from meapi.exceptions import MeException, MeApiException
 
 ME_BASE_API = 'https://app.mobile.me.app'
@@ -49,6 +49,8 @@ class Util:
         :return: API response as dict or list.
         :rtype: Union[dict, list]
         """
+        import requests
+        getattr(requests, 'post')
         url = ME_BASE_API + endpoint
         request_types = ['post', 'get', 'put', 'patch', 'delete']
         if req_type not in request_types:
@@ -61,16 +63,7 @@ class Util:
             max_rounds -= 1
             if headers and auth:
                 headers['authorization'] = self.access_token
-            if req_type == 'post':
-                response = post(url=url, json=body, headers=headers, proxies=self.proxies)
-            elif req_type == 'get':
-                response = get(url=url, json=body, headers=headers, proxies=self.proxies)
-            elif req_type == 'put':
-                response = put(url=url, json=body, headers=headers, proxies=self.proxies)
-            elif req_type == 'delete':
-                response = delete(url=url, json=body, headers=headers, proxies=self.proxies)
-            elif req_type == 'patch':
-                response = patch(url=url, json=body, headers=headers, proxies=self.proxies)
+            response = getattr(requests, req_type)(url=url, json=body, headers=headers, proxies=self.proxies)
             try:
                 response_text = loads(response.text)
             except JSONDecodeError:
