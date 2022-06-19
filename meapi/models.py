@@ -162,6 +162,12 @@ class Profile(MeModel):
         self.who_deleted_enabled = who_deleted_enabled
         self.who_watched_enabled = who_watched_enabled
 
+    def __repr__(self):
+        return f"<Profile name={self.first_name} {self.last_name or ''} uuid={self.uuid}>"
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name or ''}"
+
 
 class Socials(MeModel):
     def __init__(self=None,
@@ -196,6 +202,12 @@ class Social(MeModel):
         self.is_active = is_active
         self.is_hidden = is_hidden
 
+    def __repr__(self):
+        return f"<Social profile_id={self.profile_id} is_active={self.is_active}>"
+
+    def __str__(self):
+        return str(self.profile_id)
+
 
 class Post(MeModel):
     def __init__(self,
@@ -215,6 +227,12 @@ class Post(MeModel):
         self.redirect_id = redirect_id
         self.owner = owner
 
+    def __repr__(self):
+        return f"<Post text={self.text_first} id={self.redirect_id}>"
+
+    def __str__(self):
+        return str(self.text_first)
+
 
 class MutualContact(MeModel):
     def __init__(self,
@@ -227,6 +245,12 @@ class MutualContact(MeModel):
         self.name = name
         self.referenced_user: User = User.new_from_json_dict(referenced_user)
         self.date_of_birth = date_of_birth
+
+    def __repr__(self):
+        return f"<MutualContact name={self.name} phone={self.phone_number}>"
+
+    def __str__(self):
+        return self.name
 
 
 class User(MeModel):
@@ -263,6 +287,12 @@ class User(MeModel):
         self.location_enabled = location_enabled
         self.distance = distance
 
+    def __repr__(self):
+        return f"User name={self.first_name} {self.last_name or ''}>"
+
+    def __str__(self):
+        return self.uuid
+
 
 class Contact(MeModel):
     def __init__(self,
@@ -296,6 +326,12 @@ class Contact(MeModel):
         self.modified_at: Union[datetime, None] = parse_date(modified_at)
         self.in_contact_list = in_contact_list
 
+    def __repr__(self):
+        return f"<Contact name={self.name} phone={self.phone_number} id={self.id}>"
+
+    def __str__(self):
+        return self.name or "Not found"
+
 
 class BlockedNumber(MeModel):
     def __int__(self,
@@ -305,6 +341,12 @@ class BlockedNumber(MeModel):
         self.block_contact = block_contact
         self.me_full_block = me_full_block
         self.phone_number = phone_number
+
+    def __repr__(self):
+        return f"<BlockedNumber phone={self.phone_number}>"
+
+    def __str__(self):
+        return str(self.phone_number)
 
 
 class Friendship(MeModel):
@@ -333,6 +375,12 @@ class Friendship(MeModel):
         self.mutual_friends_count = mutual_friends_count
         self.my_comment = my_comment
 
+    def __repr__(self):
+        return f"<Friendship of={self.i_named} and={self.he_named}>"
+
+    def __str__(self):
+        return self.i_named
+
 
 class Deleter(MeModel):
     def __init__(self,
@@ -341,6 +389,12 @@ class Deleter(MeModel):
                  ):
         self.created_at = parse_date(created_at)
         self.user = User.new_from_json_dict(user)
+
+    def __repr__(self):
+        return f"<Deleter name={self.user.first_name} {self.user.last_name or ''}>"
+
+    def __str__(self):
+        return f"{self.user.first_name} {self.user.last_name or ''}"
 
 
 class Watcher(MeModel):
@@ -352,6 +406,12 @@ class Watcher(MeModel):
         self.user: User = User.new_from_json_dict(user)
         self.count = count
         self.is_search = is_search
+
+    def __repr__(self):
+        return f"<Watcher name={self.user.first_name} {self.user.last_name or ''} count={self.count}>"
+
+    def __str__(self):
+        return f"{self.user.first_name} {self.user.last_name or ''}"
 
 
 class Comment(MeModel):
@@ -374,7 +434,13 @@ class Comment(MeModel):
         self.id = id
         self.comments_blocked = comments_blocked
         self.created_at = parse_date(created_at)
-        self.comment_likes = [User.new_from_json_dict(user) for user in comment_likes]
+        self.comment_likes = [User.new_from_json_dict(user['author']) for user in comment_likes] if comment_likes else None
+
+    def __repr__(self):
+        return f"<Comment id={self.id} status={self.status} msg={self.message}>"
+
+    def __str__(self):
+        return self.message
 
 
 class Group(MeModel):
@@ -390,6 +456,12 @@ class Group(MeModel):
         self.last_contact_at: Union[datetime, None] = parse_date(last_contact_at)
         self.contacts = [Contact.new_from_json_dict(contact) for contact in contacts]
         self.contact_ids = contact_ids
+
+    def __repr__(self):
+        return f"<Group name={self.name} count={self.count}>"
+
+    def __str__(self):
+        return self.name
 
 
 class Settings:
