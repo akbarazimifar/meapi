@@ -2,7 +2,7 @@ from re import match, sub
 from typing import List, Union, Tuple
 from meapi.exceptions import MeException
 from datetime import datetime, date
-from meapi.models import Friendship, Deleter, Group, Socials, User
+from meapi.models import Friendship, Deleter, Watcher, Group, Socials, User, Comment
 
 
 class Social:
@@ -52,7 +52,7 @@ class Social:
                 "name": str(spam_name), "phone_number": str(self.valid_phone_number(phone_number))}
         return self.make_request('post', '/main/names/suggestion/report/', body)['success']
 
-    def who_deleted(self) -> List[dict]:
+    def who_deleted(self) -> List[Deleter]:
         """
         Get list of contacts dicts who deleted you from their contacts.
 
@@ -84,7 +84,7 @@ class Social:
         """
         return [Deleter.new_from_json_dict(deleter) for deleter in self.make_request('get', '/main/users/profile/who-deleted/')]
 
-    def who_watched(self) -> List[dict]:
+    def who_watched(self) -> List[Watcher]:
         """
          Get list of contacts dicts who watched your profile.
 
@@ -118,7 +118,7 @@ class Social:
         """
         return self.make_request('get', '/main/users/profile/who-watched/')
 
-    def get_comments(self, uuid: str = None) -> dict:
+    def get_comments(self, uuid: str = None) -> List[Comment]:
         """
         Get user comments.
 
@@ -183,7 +183,7 @@ class Social:
                 uuid = self.uuid
             else:
                 raise MeException("In https://meapi.readthedocs.io/en/latest/setup.html#official-method mode you must to provide user uuid.")
-        return self.make_request('get', '/main/comments/list/' + uuid)
+        return [Comment.new_from_json_dict(comment) for comment in self.make_request('get', '/main/comments/list/' + uuid)['comments']]
 
     def get_comment(self, comment_id: Union[int, str]) -> dict:
         """
@@ -220,9 +220,9 @@ class Social:
                 "message": "Test comment",
             }
         """
-        return self.make_request('get', '/main/comments/retrieve/' + str(comment_id))
+        return Comment.new_from_json_dict(self.make_request('get', '/main/comments/retrieve/' + str(comment_id)))
 
-    def approve_comment(self, comment_id: Union[str, int]) -> bool:
+    def approve_comment(self, comment_id: Union[str, int]) -> Tuple[Comment, bool]:
         """
         Approve comment. (You can always delete it with :py:func:`delete_comment`.)
 
@@ -231,9 +231,10 @@ class Social:
         :return: Is approve success.
         :rtype: bool
         """
-        return bool(self.make_request('post', '/main/comments/approve/' + str(comment_id))['status'] == 'approved')
+        res = Comment.new_from_json_dict(self.make_request('post', f'/main/comments/approve/{comment_id}/'))
+        return res, bool(res.status == 'approved')
 
-    def delete_comment(self, comment_id: Union[str, int]) -> bool:
+    def delete_comment(self, comment_id: Union[str, int]) -> Tuple[Comment, bool]:
         """
         Delete (Ignore) comment. (you can always approve it with :py:func:`approve_comment`.)
 
@@ -242,7 +243,8 @@ class Social:
         :return: Is deleting success.
         :rtype: bool
         """
-        return bool(self.make_request('delete', '/main/comments/approve/' + str(comment_id))['status'] == 'ignored')
+        comment = Comment.new_from_json_dict(self.make_request('delete', f'/main/comments/approve/{comment_id}/'))
+        return comment, bool(comment.status == 'ignored')
 
     def like_comment(self, comment_id: Union[int, str]) -> bool:
         """
@@ -253,9 +255,9 @@ class Social:
         :return: Is like success.
         :rtype: bool
         """
-        return self.make_request('post', '/main/comments/like/' + str(comment_id))['success']
+        return self.make_request('post', f'/main/comments/like/{comment_id}/')['success']
 
-    def publish_comment(self, uuid: str, comment: str) -> Union[int, bool]:
+    def publish_comment(self, uuid: str, comment: str) -> Tuple[Comment, bool]:
         """
         Publish comment for another user.
 
@@ -267,8 +269,8 @@ class Social:
         :rtype: Union[int, bool]
         """
         body = {"message": str(comment)}
-        results = self.make_request('get', '/main/comments/add/' + str(uuid), body)
-        return int(results.get('id')) if results.get('status') == 'waiting' else False
+        comment = Comment.new_from_json_dict(self.make_request('post', f'/main/comments/add/{uuid}/', body))
+        return comment, bool(comment.status == 'waiting')
 
     def get_groups_names(self) -> List[Group]:
         """
@@ -307,7 +309,9 @@ class Social:
                 ],
             }
         """
-        return [Group.new_from_json_dict(group) for group in self.make_request('get', '/main/names/groups/')]
+        return sorted([Group.new_from_json_dict(group) for group in
+                       self.make_request('get', '/main/names/groups/')['groups']],
+                      key=lambda x: x.count, reverse=True)
 
     def get_deleted_names(self) -> dict:
         """
@@ -391,9 +395,9 @@ class Social:
 
         if not new_name:  # suggest your name in your profile
             my_profile = self.get_profile_info()
-            new_name = + str(my_profile['profile']['first_name'])
-            if my_profile['profile']['last_name']:
-                new_name += (" " + my_profile['profile']['last_name'])
+            new_name += str(my_profile.first_name)
+            if my_profile.last_name:
+                new_name += (" " + my_profile.last_name)
 
         body = {"contact_ids": [int(_id) for _id in contacts_ids], "name": new_name}
         return self.make_request('post', '/main/names/suggestion/', body)['success']
@@ -601,7 +605,9 @@ class Social:
         for social, value in args.items():
             if value and isinstance(value, bool):
                 body = {"social_name": str(social)}
-                if self.make_request('post', '/main/social/delete/', body).get('success'):
+                res = self.make_request('post', '/main/social/delete/', body)
+                print(res)
+                if res.get('success'):
                     successes += 1
         return bool(true_values == successes)
 

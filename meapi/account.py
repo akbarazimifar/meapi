@@ -119,7 +119,7 @@ class Account:
                 return None
             else:
                 raise err
-        return Contact.new_from_json_dict(response)
+        return Contact.new_from_json_dict(response['contact'])
 
     def get_profile_info(self, uuid: Union[str, None] = None) -> Profile:
         """
