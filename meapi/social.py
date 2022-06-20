@@ -180,10 +180,14 @@ class Social:
         """
         if not uuid:
             if self.phone_number:
-                uuid = self.uuid
+                comments = self.make_request('get', '/main/comments/list/' + self.uuid)['comments']
+                for comment in comments:
+                    comment.update({'_your_comment': True})
             else:
                 raise MeException("In https://meapi.readthedocs.io/en/latest/setup.html#official-method mode you must to provide user uuid.")
-        return [Comment.new_from_json_dict(comment) for comment in self.make_request('get', '/main/comments/list/' + uuid)['comments']]
+        else:
+            comments = self.make_request('get', '/main/comments/list/' + uuid)['comments']
+        return [Comment.new_from_json_dict(comment) for comment in comments]
 
     def get_comment(self, comment_id: Union[int, str]) -> dict:
         """
@@ -402,7 +406,7 @@ class Social:
         body = {"contact_ids": [int(_id) for _id in contacts_ids], "name": new_name}
         return self.make_request('post', '/main/names/suggestion/', body)['success']
 
-    def get_socials(self, uuid: str = None) -> dict:
+    def get_socials(self, uuid: str = None) -> Socials:
         """
         Get connected social networks to Me account.
 

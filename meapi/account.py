@@ -297,6 +297,7 @@ class Account:
             res = self.make_request('get', '/main/users/profile/' + str(uuid))
         else:
             res = self.make_request('get', '/main/users/profile/me/')
+            res.update({'_your_profile': True})
         try:
             profile = res.pop('profile')
         except KeyError:

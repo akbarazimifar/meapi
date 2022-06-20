@@ -3,6 +3,8 @@ import json
 from abc import ABCMeta
 from datetime import datetime
 from typing import Union, List
+from meapi.exceptions import MeException
+from meapi.helpers import validate_profile_details
 
 
 def parse_date(date_str: str, date_only=False) -> Union[datetime, datetime.date, None]:
@@ -79,7 +81,6 @@ class MeModel(metaclass=_ParameterReader):
             if key not in cls_attrs:
                 del json_data[key]
         c = cls(**json_data)
-        c._json = data
         return c
 
 
@@ -122,6 +123,7 @@ class Profile(MeModel):
                  verify_subscription: Union[bool, None] = None,
                  who_deleted_enabled: Union[bool, None] = None,
                  who_watched_enabled: Union[bool, None] = None,
+                 _your_profile: bool = False
                  ):
         self.comments_blocked = comments_blocked
         self.is_he_blocked_me = is_he_blocked_me
@@ -132,7 +134,7 @@ class Profile(MeModel):
         self.mutual_contacts: List[MutualContact] = [MutualContact.new_from_json_dict(mutual_contact) for mutual_contact in
                                                      mutual_contacts] if mutual_contacts_available else mutual_contacts
         self.share_location = share_location
-        self.social: Socials = Socials.new_from_json_dict(social)
+        self.social: Socials = Socials.new_from_json_dict(social) if social else social
         self.carrier = carrier
         self.comments_enabled = comments_enabled
         self.country_code = country_code
@@ -161,12 +163,38 @@ class Profile(MeModel):
         self.verify_subscription = verify_subscription
         self.who_deleted_enabled = who_deleted_enabled
         self.who_watched_enabled = who_watched_enabled
+        self._your_profile = _your_profile
+
+    def __setattr__(self, name, value):
+        if getattr(self, '_your_profile', None) is not None:
+            if self._your_profile:
+                value = validate_profile_details(name, value)
+                # send request and make the changes in the attr
+                body = {name: value}
+                # if self._make_request('post', endpoint, body)[name] == value:
+                return super().__setattr__(name, value)
+            else:
+                raise MeException("You cannot update profile if it's not yours!")
+        else:
+            super().__setattr__(name, value)
 
     def __repr__(self):
         return f"<Profile name={self.first_name} {self.last_name or ''} uuid={self.uuid}>"
 
     def __str__(self):
         return f"{self.first_name} {self.last_name or ''}"
+
+    def block(self):
+        if self._your_profile:
+            raise MeException("you can't block yourself!")
+        # block this profile
+        pass
+
+    def unblock(self):
+        if self._your_profile:
+            raise MeException("you can't unblock yourself!")
+        # unblock this profile
+        pass
 
 
 class Socials(MeModel):
@@ -424,7 +452,8 @@ class Comment(MeModel):
                  id: Union[int, None] = None,
                  comments_blocked: Union[bool, None] = None,
                  created_at: Union[str, None] = None,
-                 comment_likes: Union[dict, None] = None
+                 comment_likes: Union[dict, None] = None,
+                 _your_comment: bool = False
                  ):
         self.like_count = like_count
         self.status = status
@@ -435,12 +464,29 @@ class Comment(MeModel):
         self.comments_blocked = comments_blocked
         self.created_at = parse_date(created_at)
         self.comment_likes = [User.new_from_json_dict(user['author']) for user in comment_likes] if comment_likes else None
+        self._your_comment = _your_comment
 
     def __repr__(self):
         return f"<Comment id={self.id} status={self.status} msg={self.message}>"
 
     def __str__(self):
         return self.message
+
+    def approve_comment(self):
+        if self._your_comment:
+            raise MeException("You can only approve others comments!")
+        if self.id:
+            pass
+
+    def like_comment(self):
+        if self.id:
+            pass
+
+    def delete_comment(self):
+        if self._your_comment:
+            raise MeException("You can delete others comments!")
+        if self.id:
+            pass
 
 
 class Group(MeModel):
@@ -454,7 +500,7 @@ class Group(MeModel):
         self.name = name
         self.count = count
         self.last_contact_at: Union[datetime, None] = parse_date(last_contact_at)
-        self.contacts = [Contact.new_from_json_dict(contact) for contact in contacts]
+        self.contacts = [Contact.new_from_json_dict(contact) for contact in contacts] if contacts else contacts
         self.contact_ids = contact_ids
 
     def __repr__(self):
@@ -463,8 +509,17 @@ class Group(MeModel):
     def __str__(self):
         return self.name
 
+    def delete(self):
+        pass
 
-class Settings:
+    def restore(self):
+        pass
+
+    def ask_to_rename(self, new_name):
+        pass
+
+
+class Settings(MeModel):
     def __init__(self,
                  birthday_notification_enabled: Union[bool, None] = None,
                  comments_enabled: Union[bool, None] = None,
@@ -503,3 +558,21 @@ class Settings:
         self.who_deleted_notification_enabled = who_deleted_notification_enabled
         self.who_watched_enabled = who_watched_enabled
         self.who_watched_notification_enabled = who_watched_notification_enabled
+        self._done = True
+
+    def __repr__(self):
+        return f"<Settings lang={self.language}>"
+
+    def __setattr__(self, name, value):
+        if getattr(self, '_done', None) is not None:
+            if name not in ['spammers_count', 'last_backup_at', 'last_restore_at']:
+                if name == 'language':
+                    if isinstance(value, str) and len(value) == 2 and value.isalpha():
+                        print("bla")
+                        return super().__setattr__(name, value.lower())
+                if not isinstance(value, bool):
+                    raise MeException(f"{str(name).capitalize()} value must be a bool type!")
+            else:
+                raise MeException("You can't change this setting!")
+            # make request and update attr
+        return super().__setattr__(name, value)

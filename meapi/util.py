@@ -49,7 +49,6 @@ class Util:
         :return: API response as dict or list.
         :rtype: Union[dict, list]
         """
-        import requests
         getattr(requests, 'post')
         url = ME_BASE_API + endpoint
         request_types = ['post', 'get', 'put', 'patch', 'delete']
@@ -61,8 +60,7 @@ class Util:
         max_rounds = 3
         while max_rounds != 0:
             max_rounds -= 1
-            if headers and auth:
-                headers['authorization'] = self.access_token
+            headers['authorization'] = self.access_token
             response = getattr(requests, req_type)(url=url, json=body, headers=headers, proxies=self.proxies)
             try:
                 response_text = loads(response.text)
