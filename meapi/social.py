@@ -116,7 +116,8 @@ class Social:
                 }
             ]
         """
-        return self.make_request('get', '/main/users/profile/who-watched/')
+        return sorted([Watcher.new_from_json_dict(watcher) for watcher in
+                       self.make_request('get', '/main/users/profile/who-watched/')], key=lambda x: x.count, reverse=True)
 
     def get_comments(self, uuid: str = None) -> List[Comment]:
         """
@@ -180,9 +181,9 @@ class Social:
         """
         if not uuid:
             if self.phone_number:
-                comments = self.make_request('get', '/main/comments/list/' + self.uuid)['comments']
+                comments: List[dict] = self.make_request('get', '/main/comments/list/' + self.uuid)['comments']
                 for comment in comments:
-                    comment.update({'_your_comment': True})
+                    comment.update({'__my_comment': True})
             else:
                 raise MeException("In https://meapi.readthedocs.io/en/latest/setup.html#official-method mode you must to provide user uuid.")
         else:
@@ -224,7 +225,9 @@ class Social:
                 "message": "Test comment",
             }
         """
-        return Comment.new_from_json_dict(self.make_request('get', '/main/comments/retrieve/' + str(comment_id)))
+        comment = self.make_request('get', '/main/comments/retrieve/' + str(comment_id))
+        comment.update({'id': int(comment_id)})
+        return Comment.new_from_json_dict(comment)
 
     def approve_comment(self, comment_id: Union[str, int]) -> Tuple[Comment, bool]:
         """
