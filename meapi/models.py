@@ -1,10 +1,12 @@
 import inspect
 import json
 from abc import ABCMeta
-from datetime import datetime
+from datetime import datetime, date
 from typing import Union, List
 from meapi.exceptions import MeException
 from meapi.helpers import validate_profile_details
+
+IGNORED_KEYS = []
 
 
 def parse_date(date_str: str, date_only=False) -> Union[datetime, datetime.date, None]:
@@ -58,7 +60,9 @@ class MeModel(metaclass=_ParameterReader):
     def as_dict(self):
         data = {}
         for (key, value) in self.__dict__.items():
-            if isinstance(getattr(self, key, None), (list, tuple, set)):
+            if str(key).startswith("_"):
+                continue
+            elif isinstance(getattr(self, key, None), (list, tuple, set)):
                 data[key] = list()
                 for subobj in getattr(self, key, None):
                     if getattr(subobj, 'as_dict', None):
@@ -69,7 +73,7 @@ class MeModel(metaclass=_ParameterReader):
             elif getattr(getattr(self, key, None), 'as_dict', None):
                 data[key] = getattr(self, key).as_dict()
 
-            elif isinstance(value, datetime):
+            elif isinstance(value, (date, datetime)):
                 data[key] = str(getattr(self, key, None))
 
             elif getattr(self, key, None):
@@ -87,6 +91,10 @@ class MeModel(metaclass=_ParameterReader):
                 json_data[key] = val
         for key in json_data.copy():
             if key not in cls_attrs:
+                if key not in IGNORED_KEYS:
+                    print(f"- The key '{key}' with the value of '{json_data[key]}' just skipped. "
+                          f"Try to update meapi to the latest version (pip3 install -U meapi) "
+                          f"If it's still skipping, open issue in github: <https://github.com/david-lev/meapi/issues>")
                 del json_data[key]
         c = cls(**json_data)
         return c
@@ -98,7 +106,7 @@ class Profile(MeModel):
                  is_he_blocked_me: Union[bool, None] = None,
                  is_permanent: Union[bool, None] = None,
                  is_shared_location: Union[bool, None] = None,
-                 last_comment: Union[None, None] = None,
+                 last_comment: Union[dict, None] = None,
                  mutual_contacts_available: Union[bool, None] = None,
                  mutual_contacts: Union[List[dict], None] = None,
                  share_location: Union[bool, None] = None,
@@ -119,6 +127,8 @@ class Profile(MeModel):
                  is_verified: Union[bool, None] = None,
                  last_name: Union[str, None] = None,
                  location_enabled: Union[bool, None] = None,
+                 location_longitude: Union[float, None] = None,
+                 location_latitude: Union[float, None] = None,
                  location_name: Union[str, None] = None,
                  login_type: Union[str, None] = None,
                  me_in_contacts: Union[bool, None] = None,
@@ -137,7 +147,7 @@ class Profile(MeModel):
         self.is_he_blocked_me = is_he_blocked_me
         self.is_permanent = is_permanent
         self.is_shared_location = is_shared_location
-        self.last_comment = last_comment
+        self.last_comment = Comment.new_from_json_dict(last_comment)
         self.mutual_contacts_available = mutual_contacts_available
         self.mutual_contacts: List[MutualContact] = [MutualContact.new_from_json_dict(mutual_contact) for mutual_contact in
                                                      mutual_contacts] if mutual_contacts_available else mutual_contacts
@@ -159,6 +169,8 @@ class Profile(MeModel):
         self.is_verified = is_verified
         self.last_name = last_name
         self.location_enabled = location_enabled
+        self.location_longitude = location_longitude
+        self.location_latitude = location_latitude
         self.location_name = location_name
         self.login_type = login_type
         self.me_in_contacts = me_in_contacts
@@ -215,14 +227,14 @@ class Socials(MeModel):
                  tiktok: Union[dict, None] = None,
                  twitter: Union[dict, None] = None
                  ):
-        self.facebook: Social = Social.new_from_json_dict(facebook)
-        self.fakebook: Social = Social.new_from_json_dict(fakebook)
-        self.instagram: Social = Social.new_from_json_dict(instagram)
-        self.linkedin: Social = Social.new_from_json_dict(linkedin)
-        self.pinterest: Social = Social.new_from_json_dict(pinterest)
-        self.spotify: Social = Social.new_from_json_dict(spotify)
-        self.tiktok: Social = Social.new_from_json_dict(tiktok)
-        self.twitter: Social = Social.new_from_json_dict(twitter)
+        self.facebook: Social = Social.new_from_json_dict(facebook) if facebook['is_active'] else None
+        self.fakebook: Social = Social.new_from_json_dict(fakebook) if fakebook['is_active'] else None
+        self.instagram: Social = Social.new_from_json_dict(instagram) if instagram['is_active'] else None
+        self.linkedin: Social = Social.new_from_json_dict(linkedin) if linkedin['is_active'] else None
+        self.pinterest: Social = Social.new_from_json_dict(pinterest) if pinterest['is_active'] else None
+        self.spotify: Social = Social.new_from_json_dict(spotify) if spotify['is_active'] else None
+        self.tiktok: Social = Social.new_from_json_dict(tiktok) if tiktok['is_active'] else None
+        self.twitter: Social = Social.new_from_json_dict(twitter) if twitter['is_active'] else None
         super().__init__()
 
 
@@ -349,7 +361,8 @@ class Contact(MeModel):
                  is_shared_location: Union[bool, None] = None,
                  created_at: Union[str, None] = None,
                  modified_at: Union[str, None] = None,
-                 in_contact_list: bool = None
+                 in_contact_list: Union[bool, None] = None,
+                 is_my_contact: Union[bool, None] = None
                  ):
         self.name = name
         self.id = id
@@ -364,7 +377,7 @@ class Contact(MeModel):
         self.is_shared_location = is_shared_location
         self.created_at: Union[datetime, None] = parse_date(created_at)
         self.modified_at: Union[datetime, None] = parse_date(modified_at)
-        self.in_contact_list = in_contact_list
+        self.in_contact_list = in_contact_list or is_my_contact
         super().__init__()
 
     def __repr__(self):
@@ -482,7 +495,13 @@ class Comment(MeModel):
         self.created_at = parse_date(created_at)
         self.comment_likes = [User.new_from_json_dict(user['author']) for user in comment_likes] if comment_likes else None
         self.__my_comment = my_comment
-        super().__init__()
+        self.__init_done = True
+
+    def __setattr__(self, key, value):
+        if getattr(self, '_Comment__init_done', None):
+            if key not in ['message', 'status', 'like_count', 'comment_likes']:
+                raise MeException("You can't change this setting!")
+        return super().__setattr__(key, value)
 
     def __repr__(self):
         return f"<Comment id={self.id} status={self.status} msg={self.message}>"
@@ -513,13 +532,16 @@ class Group(MeModel):
                  count: Union[int, None] = None,
                  last_contact_at: Union[str, None] = None,
                  contacts: Union[List[dict], None] = None,
-                 contact_ids: Union[List[int], None] = None
+                 contact_ids: Union[List[int], None] = None,
+                 status: str = "active"
                  ):
         self.name = name
         self.count = count
         self.last_contact_at: Union[datetime, None] = parse_date(last_contact_at)
         self.contacts = [Contact.new_from_json_dict(contact) for contact in contacts] if contacts else contacts
         self.contact_ids = contact_ids
+        self.status = status
+
         super().__init__()
 
     def __repr__(self):
@@ -582,15 +604,35 @@ class Settings(MeModel):
     def __repr__(self):
         return f"<Settings lang={self.language}>"
 
-    def __setattr__(self, name, value):
+    def __setattr__(self, key, value):
         if getattr(self, '_Settings__init_done', None):
-            if name not in ['spammers_count', 'last_backup_at', 'last_restore_at']:
-                if name == 'language':
+            if key not in ['spammers_count', 'last_backup_at', 'last_restore_at']:
+                if key == 'language':
                     if isinstance(value, str) and len(value) == 2 and value.isalpha():
-                        return super().__setattr__(name, value.lower())
+                        pass
                 if not isinstance(value, bool):
-                    raise MeException(f"{str(name).capitalize()} value must be a bool type!")
+                    raise MeException(f"{str(key)} value must be a bool type!")
             else:
                 raise MeException("You can't change this setting!")
+            body = {key: value}
             # make request and update attr
-        return super().__setattr__(name, value)
+        return super().__setattr__(key, value)
+    
+    def __change_all(self, change_to: bool):
+        to_change = {}
+        for key, value in self.__dict__.items():
+            if isinstance(value, bool) and not key.startswith('_'):
+                to_change[key] = change_to
+        res = self.change_settings(**to_change)  # todo update to real func
+        for key in to_change:
+            if res[key] != change_to:
+                return False
+        self.__dict__.update(to_change)
+        return True
+    
+    def enable_all(self) -> bool:
+        return self.__change_all(change_to=True)
+
+    def disable_all(self) -> bool:
+        return self.__change_all(change_to=False)
+
