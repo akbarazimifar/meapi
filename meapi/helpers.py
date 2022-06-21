@@ -36,7 +36,7 @@ def validate_profile_details(key: str, value: str) -> str:
                 raise MeException("Facebook url must be numbers!")
 
     if key not in ['country_code', 'date_of_birth', 'device_type', 'login_type', 'email', 'first_name',
-                   'last_name', 'slogan', 'gender', 'profile_picture_url', 'facebook_url']:
+                   'last_name', 'slogan', 'gender', 'profile_picture_url', 'facebook_url', '_MeModel__init_done']:
         raise MeException("You cannot change this field!")
 
     return value

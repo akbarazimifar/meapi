@@ -131,7 +131,7 @@ class Profile(MeModel):
                  verify_subscription: Union[bool, None] = None,
                  who_deleted_enabled: Union[bool, None] = None,
                  who_watched_enabled: Union[bool, None] = None,
-                 __my_profile: bool = False
+                 my_profile: bool = False
                  ):
         self.comments_blocked = comments_blocked
         self.is_he_blocked_me = is_he_blocked_me
@@ -171,8 +171,7 @@ class Profile(MeModel):
         self.verify_subscription = verify_subscription
         self.who_deleted_enabled = who_deleted_enabled
         self.who_watched_enabled = who_watched_enabled
-        self.__my_profile = __my_profile
-        super().__init__()
+        self.__my_profile = my_profile
 
     def __setattr__(self, key, value):
         if getattr(self, '_Profile__my_profile', None) is not None:
@@ -471,7 +470,7 @@ class Comment(MeModel):
                  comments_blocked: Union[bool, None] = None,
                  created_at: Union[str, None] = None,
                  comment_likes: Union[dict, None] = None,
-                 __my_comment: bool = False
+                 my_comment: bool = False
                  ):
         self.like_count = like_count
         self.status = status
@@ -482,7 +481,7 @@ class Comment(MeModel):
         self.comments_blocked = comments_blocked
         self.created_at = parse_date(created_at)
         self.comment_likes = [User.new_from_json_dict(user['author']) for user in comment_likes] if comment_likes else None
-        self.__my_comment = __my_comment
+        self.__my_comment = my_comment
         super().__init__()
 
     def __repr__(self):
@@ -578,17 +577,16 @@ class Settings(MeModel):
         self.who_deleted_notification_enabled = who_deleted_notification_enabled
         self.who_watched_enabled = who_watched_enabled
         self.who_watched_notification_enabled = who_watched_notification_enabled
-        super().__init__()
+        self.__init_done = True
 
     def __repr__(self):
         return f"<Settings lang={self.language}>"
 
     def __setattr__(self, name, value):
-        if getattr(self, '_MeModel__init_done', None):
+        if getattr(self, '_Settings__init_done', None):
             if name not in ['spammers_count', 'last_backup_at', 'last_restore_at']:
                 if name == 'language':
                     if isinstance(value, str) and len(value) == 2 and value.isalpha():
-                        print("bla")
                         return super().__setattr__(name, value.lower())
                 if not isinstance(value, bool):
                     raise MeException(f"{str(name).capitalize()} value must be a bool type!")

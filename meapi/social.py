@@ -183,7 +183,7 @@ class Social:
             if self.phone_number:
                 comments: List[dict] = self.make_request('get', '/main/comments/list/' + self.uuid)['comments']
                 for comment in comments:
-                    comment.update({'__my_comment': True})
+                    comment.update({'my_comment': True})
             else:
                 raise MeException("In https://meapi.readthedocs.io/en/latest/setup.html#official-method mode you must to provide user uuid.")
         else:
