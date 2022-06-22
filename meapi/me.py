@@ -83,6 +83,12 @@ class Me(Auth, Account, Social, Settings, Notifications):
             if auth_data:
                 self.access_token = auth_data['access']
 
+    def __repr__(self):
+        return f"<Me phone={self.phone_number} uuid={self.uuid}>"
+
+    def __str__(self):
+        return str(self.phone_number)
+
     def _make_request(self,
                       req_type: str,
                       endpoint: str,
