@@ -228,9 +228,9 @@ class Social:
         """
         comment = self._make_request('get', '/main/comments/retrieve/' + str(comment_id))
         comment.update({'id': int(comment_id)})
-        return Comment.new_from_json_dict(comment)
+        return Comment.new_from_json_dict(comment, _meobj=self)
 
-    def approve_comment(self, comment_id: Union[str, int]) -> Tuple[Comment, bool]:
+    def approve_comment(self, comment_id: Union[str, int]) -> bool:
         """
         Approve comment. (You can always delete it with :py:func:`delete_comment`.)
 
@@ -239,10 +239,9 @@ class Social:
         :return: Is approve success.
         :rtype: bool
         """
-        res = Comment.new_from_json_dict(self._make_request('post', f'/main/comments/approve/{comment_id}/'))
-        return res, bool(res.status == 'approved')
+        return bool(self._make_request('post', f'/main/comments/approve/{comment_id}/') == 'approved')
 
-    def delete_comment(self, comment_id: Union[str, int]) -> Tuple[Comment, bool]:
+    def delete_comment(self, comment_id: Union[str, int]) -> bool:
         """
         Delete (Ignore) comment. (you can always approve it with :py:func:`approve_comment`.)
 
@@ -251,8 +250,7 @@ class Social:
         :return: Is deleting success.
         :rtype: bool
         """
-        comment = Comment.new_from_json_dict(self._make_request('delete', f'/main/comments/approve/{comment_id}/'))
-        return comment, bool(comment.status == 'ignored')
+        return bool(self._make_request('delete', f'/main/comments/approve/{comment_id}/') == 'ignored')
 
     def like_comment(self, comment_id: Union[int, str]) -> bool:
         """
@@ -317,7 +315,7 @@ class Social:
                 ],
             }
         """
-        return sorted([Group.new_from_json_dict(group) for group in
+        return sorted([Group.new_from_json_dict(group, _meobj=self, **{'status': 'active'}) for group in
                        self._make_request('get', '/main/names/groups/')['groups']],
                       key=lambda x: x.count, reverse=True)
 
