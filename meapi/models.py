@@ -17,6 +17,24 @@ def parse_date(date_str: str, date_only=False) -> Union[datetime, date, None]:
     return date_obj.date() if date_only else date_obj
 
 
+class _CommonMethodsForUserContactProfile:
+    """
+    Common methods for user, profile and contact
+    """
+    def block(self, block_contact=True, me_full_block=True) -> bool:
+        if getattr(self, f'_{self.__class__.__name__}__my_profile', None):
+            raise MeException("you can't block yourself!")
+        return getattr(self, f'_{self.__class__.__name__}__meobj').block_profile(phone_number=self.phone_number, block_contact=block_contact, me_full_block=me_full_block)
+
+    def unblock(self, unblock_contact=True, me_full_unblock=True) -> bool:
+        if getattr(self, f'_{self.__class__.__name__}__my_profile', None):
+            raise MeException("you can't unblock yourself!")
+        return getattr(self, f'_{self.__class__.__name__}__meobj').unblock_profile(phone_number=self.phone_number, unblock_contact=unblock_contact, me_full_unblock=me_full_unblock)
+
+    def get_vcard(self, prefix_name: str = "", profile_picture: bool = True, **kwargs) -> str:
+        return get_vcard(self.__dict__, prefix_name, profile_picture, **kwargs)
+
+
 class _ParameterReader(ABCMeta):
     """Internal class to get class init parameters"""
     def __init__(cls, *args, **kwargs):
@@ -117,7 +135,7 @@ class MeModel(metaclass=_ParameterReader):
         return c
 
 
-class Profile(MeModel):
+class Profile(MeModel, _CommonMethodsForUserContactProfile):
     def __init__(self,
                  _meobj,
                  comments_blocked: Union[bool, None] = None,
@@ -220,18 +238,88 @@ class Profile(MeModel):
     def __str__(self):
         return f"{self.first_name} {self.last_name or ''}"
 
-    def block(self, block_contact=True, me_full_block=True) -> bool:
-        if self.__my_profile:
-            raise MeException("you can't block yourself!")
-        return self.__meobj.block_profile(phone_number=self.phone_number, block_contact=block_contact, me_full_block=me_full_block)
 
-    def unblock(self, unblock_contact=True, me_full_unblock=True) -> bool:
-        if self.__my_profile:
-            raise MeException("you can't unblock yourself!")
-        return self.__meobj.unblock_profile(phone_number=self.phone_number, unblock_contact=unblock_contact, me_full_unblock=me_full_unblock)
+class User(MeModel, _CommonMethodsForUserContactProfile):
+    def __init__(self,
+                 email: Union[str, None] = None,
+                 profile_picture: Union[str, None] = None,
+                 first_name: Union[str, None] = None,
+                 last_name: Union[str, None] = None,
+                 gender: Union[str, None] = None,
+                 uuid: Union[str, None] = None,
+                 is_verified: Union[bool, None] = None,
+                 phone_number: Union[int, None] = None,
+                 slogan: Union[str, None] = None,
+                 is_premium: Union[bool, None] = None,
+                 verify_subscription: Union[bool, None] = None,
+                 id: Union[int, None] = None,
+                 comment_count: Union[int, None] = None,
+                 location_enabled: Union[bool, None] = None,
+                 distance: Union[None, None] = None
+                 ):
+        self.email = email
+        self.profile_picture = profile_picture
+        self.first_name = first_name
+        self.last_name = last_name
+        self.gender = gender
+        self.uuid = uuid
+        self.is_verified = is_verified
+        self.phone_number = phone_number
+        self.slogan = slogan
+        self.is_premium = is_premium
+        self.verify_subscription = verify_subscription
+        self.id = id
+        self.comment_count = comment_count
+        self.location_enabled = location_enabled
+        self.distance = distance
+        super().__init__()
 
-    def get_vcard(self, prefix_name: str = "", profile_picture: bool = True, **kwargs) -> str:
-        return get_vcard(self.__dict__, prefix_name, profile_picture, **kwargs)
+    def __repr__(self):
+        return f"User name={self.first_name} {self.last_name or ''}>"
+
+    def __str__(self):
+        return self.uuid
+
+
+class Contact(MeModel, _CommonMethodsForUserContactProfile):
+    def __init__(self,
+                 name: Union[str, None] = None,
+                 id: Union[int, None] = None,
+                 picture: Union[None, None] = None,
+                 user: Union[dict, None] = None,
+                 suggested_as_spam: Union[int, None] = None,
+                 is_permanent: Union[bool, None] = None,
+                 is_pending_name_change: Union[bool, None] = None,
+                 user_type: Union[str, None] = None,
+                 phone_number: Union[int, None] = None,
+                 cached: Union[bool, None] = None,
+                 is_shared_location: Union[bool, None] = None,
+                 created_at: Union[str, None] = None,
+                 modified_at: Union[str, None] = None,
+                 in_contact_list: Union[bool, None] = None,
+                 is_my_contact: Union[bool, None] = None
+                 ):
+        self.name = name
+        self.id = id
+        self.picture = picture
+        self.user: User = User.new_from_json_dict(user)
+        self.suggested_as_spam = suggested_as_spam
+        self.is_permanent = is_permanent
+        self.is_pending_name_change = is_pending_name_change
+        self.user_type = user_type
+        self.phone_number = phone_number
+        self.cached = cached
+        self.is_shared_location = is_shared_location
+        self.created_at: Union[datetime, None] = parse_date(created_at)
+        self.modified_at: Union[datetime, None] = parse_date(modified_at)
+        self.in_contact_list = in_contact_list or is_my_contact
+        super().__init__()
+
+    def __repr__(self):
+        return f"<Contact name={self.name} phone={self.phone_number} id={self.id}>"
+
+    def __str__(self):
+        return self.name or "Not found"
 
 
 class Socials(MeModel):
@@ -324,100 +412,12 @@ class MutualContact(MeModel):
         return self.name
 
 
-class User(MeModel):
-    def __init__(self,
-                 email: Union[str, None] = None,
-                 profile_picture: Union[str, None] = None,
-                 first_name: Union[str, None] = None,
-                 last_name: Union[str, None] = None,
-                 gender: Union[str, None] = None,
-                 uuid: Union[str, None] = None,
-                 is_verified: Union[bool, None] = None,
-                 phone_number: Union[int, None] = None,
-                 slogan: Union[str, None] = None,
-                 is_premium: Union[bool, None] = None,
-                 verify_subscription: Union[bool, None] = None,
-                 id: Union[int, None] = None,
-                 comment_count: Union[int, None] = None,
-                 location_enabled: Union[bool, None] = None,
-                 distance: Union[None, None] = None
-                 ):
-        self.email = email
-        self.profile_picture = profile_picture
-        self.first_name = first_name
-        self.last_name = last_name
-        self.gender = gender
-        self.uuid = uuid
-        self.is_verified = is_verified
-        self.phone_number = phone_number
-        self.slogan = slogan
-        self.is_premium = is_premium
-        self.verify_subscription = verify_subscription
-        self.id = id
-        self.comment_count = comment_count
-        self.location_enabled = location_enabled
-        self.distance = distance
-        super().__init__()
-
-    def __repr__(self):
-        return f"User name={self.first_name} {self.last_name or ''}>"
-
-    def __str__(self):
-        return self.uuid
-
-    def get_vcard(self, prefix_name: str = "", profile_picture: bool = True, **kwargs) -> str:
-        return get_vcard(self.__dict__, prefix_name, profile_picture, **kwargs)
-
-
-class Contact(MeModel):
-    def __init__(self,
-                 name: Union[str, None] = None,
-                 id: Union[int, None] = None,
-                 picture: Union[None, None] = None,
-                 user: Union[dict, None] = None,
-                 suggested_as_spam: Union[int, None] = None,
-                 is_permanent: Union[bool, None] = None,
-                 is_pending_name_change: Union[bool, None] = None,
-                 user_type: Union[str, None] = None,
-                 phone_number: Union[int, None] = None,
-                 cached: Union[bool, None] = None,
-                 is_shared_location: Union[bool, None] = None,
-                 created_at: Union[str, None] = None,
-                 modified_at: Union[str, None] = None,
-                 in_contact_list: Union[bool, None] = None,
-                 is_my_contact: Union[bool, None] = None
-                 ):
-        self.name = name
-        self.id = id
-        self.picture = picture
-        self.user: User = User.new_from_json_dict(user)
-        self.suggested_as_spam = suggested_as_spam
-        self.is_permanent = is_permanent
-        self.is_pending_name_change = is_pending_name_change
-        self.user_type = user_type
-        self.phone_number = phone_number
-        self.cached = cached
-        self.is_shared_location = is_shared_location
-        self.created_at: Union[datetime, None] = parse_date(created_at)
-        self.modified_at: Union[datetime, None] = parse_date(modified_at)
-        self.in_contact_list = in_contact_list or is_my_contact
-        super().__init__()
-
-    def __repr__(self):
-        return f"<Contact name={self.name} phone={self.phone_number} id={self.id}>"
-
-    def __str__(self):
-        return self.name or "Not found"
-
-    def get_vcard(self, prefix_name: str = "", profile_picture: bool = True, **kwargs) -> str:
-        return get_vcard(self.__dict__, prefix_name, profile_picture, **kwargs)
-
-
 class BlockedNumber(MeModel):
-    def __int__(self,
+    def __init__(self,
                 block_contact: Union[bool, None] = None,
                 me_full_block: Union[bool, None] = None,
-                phone_number: Union[int, None] = None):
+                phone_number: Union[int, None] = None
+                ):
         self.block_contact = block_contact
         self.me_full_block = me_full_block
         self.phone_number = phone_number
@@ -529,7 +529,7 @@ class Comment(MeModel):
     def __setattr__(self, key, value):
         if getattr(self, '_Comment__init_done', None):
             if key not in ['message', 'status', 'like_count', 'comment_likes']:
-                raise MeException("You can't change this setting!")
+                raise MeException("You can't change this attr!")
         return super().__setattr__(key, value)
 
     def __repr__(self):
@@ -538,25 +538,35 @@ class Comment(MeModel):
     def __str__(self):
         return self.message
 
-    def approve(self):
+    def approve(self) -> bool:
         if self.__my_comment:
             raise MeException("You can only approve others comments!")
         if self.id:
-            pass
+            if self.__meobj.approve_comment(self.id):
+                self.status = 'approved'
+                return True
+        return False
 
-    def like(self):
+    def like(self) -> bool:
         if self.id:
-            pass
+            if self.__meobj.like_comment(self.id):
+                self.like_count += 1
+                return True
+        return False
 
     def delete(self):
         if self.__my_comment:
             raise MeException("You can delete others comments!")
         if self.id:
-            pass
+            if self.__meobj.delete_comment(self.id):
+                self.status = 'ignored'
+                return True
+        return False
 
 
 class Group(MeModel):
     def __init__(self,
+                 _meobj,
                  name: Union[str, None] = None,
                  count: Union[int, None] = None,
                  last_contact_at: Union[str, None] = None,
@@ -570,8 +580,14 @@ class Group(MeModel):
         self.contacts = [Contact.new_from_json_dict(contact) for contact in contacts] if contacts else contacts
         self.contact_ids = contact_ids
         self.status = status
+        self.__meobj = _meobj
+        self.__init_done = True
 
-        super().__init__()
+    def __setattr__(self, key, value):
+        if getattr(self, '_Group__init_done', None):
+            if key != 'status':
+                raise MeException("You can't change this attr!")
+        return super().__setattr__(key, value)
 
     def __repr__(self):
         return f"<Group name={self.name} count={self.count}>"
@@ -579,14 +595,28 @@ class Group(MeModel):
     def __str__(self):
         return self.name
 
-    def delete(self):
-        pass
+    def delete(self) -> bool:
+        if self.status != 'active':
+            raise MeException(f"The name '{self.name}' is already hidden!")
+        if self.__meobj.delete_name(self.contact_ids):
+            self.status = 'hidden'
+            return True
+        return False
 
-    def restore(self):
-        pass
+    def restore(self) -> bool:
+        if self.status != 'hidden':
+            raise MeException(f"The name '{self.name}' is already activated!")
+        if self.__meobj.restore_name(self.contact_ids):
+            self.status = 'active'
+            return True
+        return False
 
-    def ask_to_rename(self, new_name):
-        pass
+    def ask_to_rename(self, new_name) -> bool:
+        if self.status != 'active':
+            raise MeException("You can't ask to rename if the name is hidden. restore and then ask again!")
+        if self.__meobj.ask_group_rename(self.contact_ids, new_name):
+            return True
+        return False
 
 
 class Settings(MeModel):
