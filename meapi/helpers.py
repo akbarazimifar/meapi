@@ -62,3 +62,48 @@ def validate_profile_details(key: str, value: str) -> str:
         raise MeException("You cannot change this field!")
 
     return value
+
+
+def get_img_binary_content(url: str):
+    try:
+        res = get(url)
+        if res.status_code == 200:
+            return b64encode(res.content).decode("utf-8")
+    except Exception:
+        return None
+
+
+def encode_string(string: str) -> str:
+    return encodestring(string.encode('utf-8')).decode("utf-8")
+
+
+def get_vcard(data: dict, prefix_name: str = "", profile_picture: bool = True, **kwargs) -> str:
+    """
+    Get vcard format based on data provided
+    """
+    vcard_data = {'start': "BEGIN:VCARD", 'version': "VERSION:3.0"}
+
+    if prefix_name:
+        prefix_name += " - "
+    full_name = (prefix_name + (data.get('first_name') or data.get('name')))
+    if data.get('last_name'):
+        full_name += (" " + data['last_name'])
+
+    vcard_data['name'] = f"FN;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:{encode_string(full_name)}"
+    vcard_data['phone'] = f"TEL;CELL:{data['phone_number']}"
+    if profile_picture and data.get('profile_picture'):
+        vcard_data['photo'] = f"PHOTO;ENCODING=BASE64;JPEG:{get_img_binary_content(data['profile_picture'])}"
+    if data.get('email'):
+        vcard_data['email'] = f"EMAIL:{data['email']}"
+    if data.get('date_of_birth'):
+        vcard_data['birthday'] = f"BDAY:{data['date_of_birth']}"
+
+    notes = 'Extracted by meapi https://github.com/david-lev/meapi'
+    for key, value in kwargs.items():
+        if data.get(key):
+            notes += f" | {value}: {data[key]}"
+
+    vcard_data['note'] = f"NOTE;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:{encode_string(notes)}"
+    vcard_data['end'] = "END:VCARD"
+
+    return "\n".join([val for val in vcard_data.values()])
