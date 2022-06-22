@@ -42,7 +42,7 @@ class Auth:
         }
         try:
             print("** Trying to verify...")
-            results = self.make_request(req_type='post', endpoint='/auth/authorization/activate/', body=data, auth=False)
+            results = self._make_request(req_type='post', endpoint='/auth/authorization/activate/', body=data, auth=False)
             if results.get('access'):
                 access_token = results['access']
             else:
@@ -76,7 +76,7 @@ class Auth:
                 "pwd_token": auth_data['pwd_token']}
         print("Generating new access token...")
         try:
-            auth_data = self.make_request(req_type='post', endpoint='/auth/authorization/login/', body=body, auth=False)
+            auth_data = self._make_request(req_type='post', endpoint='/auth/authorization/login/', body=body, auth=False)
         except MeApiException as err:
             if err.http_status == 400 and err.msg == 'api_incorrect_pwd_token':
                 err.reason = f"Your pwd_token in {self.config_file} is broken (You probably activated the account elsewhere)."

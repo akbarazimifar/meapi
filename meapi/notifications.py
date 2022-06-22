@@ -21,7 +21,7 @@ class Notifications:
         :return: count of notifications.
         :rtype: int
         """
-        return self.make_request('get', '/notification/notification/count/')['count']
+        return self._make_request('get', '/notification/notification/count/')['count']
 
     def get_notifications(self,
                           page_number: int = 1,
@@ -145,7 +145,7 @@ class Notifications:
         params = f"?page={page_number}&page_size={results_limit}&status=distributed"
         if filters:
             params += f"&categories=%5B{'%2C%20'.join(filters)}%5D"
-        return self.make_request('get', '/notification/notification/items/' + params)
+        return self._make_request('get', '/notification/notification/items/' + params)
 
     def read_notification(self, notification_id: Union[int, str]) -> bool:
         """
@@ -157,19 +157,7 @@ class Notifications:
         :rtype: bool
         """
         body = {"notification_id": int(notification_id)}
-        return self.make_request('post', '/notification/notification/read/', body)['is_read']
-
-    def change_notification_settings(self,
-                                     who_deleted_notification_enabled: bool = None,
-                                     who_watched_notification_enabled: bool = None,
-                                     distance_notification_enabled: bool = None,
-                                     system_notification_enabled: bool = None,
-                                     birthday_notification_enabled: bool = None,
-                                     comments_notification_enabled: bool = None,
-                                     names_notification_enabled: bool = None,
-                                     notifications_enabled: bool = None) -> Tuple[bool, List[str]]:
-        """
-        Set new settings for notifications.
+        return self._make_request('post', '/notification/notification/read/', body)['is_read']
 
         :param who_deleted_notification_enabled: Default: ``None``.
         :type who_deleted_notification_enabled: bool

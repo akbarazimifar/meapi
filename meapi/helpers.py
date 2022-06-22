@@ -1,5 +1,27 @@
-from re import match
+from base64 import b64encode
+from quopri import encodestring
+from re import match, sub
+from typing import Union
+from requests import get
 from meapi.exceptions import MeException
+
+
+def valid_phone_number(phone_number: Union[str, int]) -> int:
+    """
+    Check if phone number is valid and return it clean without spaces, pluses or other spacial characters.
+     - ``(972) 123-4567890``, ``+9721234567890``, ``123-456-7890`` --> ``9721234567890``.
+
+    :param phone_number: phone number in global format.
+    :type phone_number: Union[int, str]
+    :raises MeException: If length of phone number not between 9-15.
+    :return: fixed phone number
+    :rtype: int
+    """
+    if phone_number:
+        phone_number = sub(r'[\D]', '', str(phone_number))
+        if match(r"^\d{9,15}$", phone_number):
+            return int(phone_number)
+    raise MeException("Not a valid phone number! " + phone_number)
 
 
 def validate_profile_details(key: str, value: str) -> str:

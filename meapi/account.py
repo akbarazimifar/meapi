@@ -1,9 +1,10 @@
 from re import match
 from typing import Union, List, Tuple
 from meapi.exceptions import MeException, MeApiException
+from meapi.helpers import valid_phone_number
 from meapi.random_data import get_random_data
 from random import randint
-from meapi.models import Contact, Profile, User, BlockedNumber
+from meapi.models import Contact, Profile, BlockedNumber
 
 
 def validate_contacts(contacts: List[dict]) -> List[dict]:
@@ -113,7 +114,7 @@ class Account:
             }
         """
         try:
-            response = self.make_request(req_type='get', endpoint='/main/contacts/search/?phone_number=' + str(self.valid_phone_number(phone_number)))
+            response = self._make_request(req_type='get', endpoint='/main/contacts/search/?phone_number=' + str(valid_phone_number(phone_number)))
         except MeApiException as err:
             if err.http_status == 404 and err.msg == 'Not found.':
                 return None
@@ -294,15 +295,15 @@ class Account:
             }
         """
         if uuid:
-            res = self.make_request('get', '/main/users/profile/' + str(uuid))
+            res = self._make_request('get', '/main/users/profile/' + str(uuid))
         else:
-            res = self.make_request('get', '/main/users/profile/me/')
+            res = self._make_request('get', '/main/users/profile/me/')
             res.update({'my_profile': True})
         try:
             profile = res.pop('profile')
         except KeyError:
             profile = {}
-        return Profile.new_from_json_dict(res, **profile)
+        return Profile.new_from_json_dict(res, _meobj=self, **profile)
 
     def get_uuid(self, phone_number: Union[int, str] = None) -> Union[str, None]:
         """
@@ -449,7 +450,9 @@ class Account:
         if not body:
             raise MeException("You must change at least one detail!")
 
-        results = self.make_request('patch', '/main/users/profile/', body)
+        res = self._make_request('patch', '/main/users/profile/', body)
+        print(res)
+        return res
         failed = []
         for key in body.keys():
             if results[key] != body[key] and key != 'profile_picture':
@@ -469,7 +472,7 @@ class Account:
         :return: Is deleted.
         :rtype: bool
         """
-        return True if not self.make_request('delete', '/main/settings/remove-user/') else False
+        return True if not self._make_request('delete', '/main/settings/remove-user/') else False
 
     def suspend_account(self) -> bool:
         """
@@ -478,7 +481,7 @@ class Account:
         :return: is suspended.
         :rtype: bool
         """
-        return self.make_request('put', '/main/settings/suspend-user/')['contact_suspended']
+        return self._make_request('put', '/main/settings/suspend-user/')['contact_suspended']
 
     def add_contacts(self, contacts: List[dict]):
         """
@@ -531,7 +534,7 @@ class Account:
             ]
         """
         body = {"add": validate_contacts(contacts), "is_first": False, "remove": []}
-        res = self.make_request('post', '/main/contacts/sync/', body)
+        res = self._make_request('post', '/main/contacts/sync/', body)
         return [Contact.new_from_json_dict(contact) for contact in res]
 
     def get_saved_contacts(self) -> List[Contact]:
@@ -670,7 +673,7 @@ class Account:
             ]
         """
         body = {"add": [], "is_first": False, "remove": validate_contacts(contacts)}
-        return self.make_request('post', '/main/contacts/sync/', body)
+        return self._make_request('post', '/main/contacts/sync/', body)
 
     def add_calls_to_log(self, calls: List[dict]) -> dict:
         """
@@ -711,7 +714,7 @@ class Account:
             ]
         """
         body = {"add": validate_calls(calls), "remove": []}
-        return self.make_request('post', '/main/call-log/change-sync/', body)
+        return self._make_request('post', '/main/call-log/change-sync/', body)
 
     def remove_calls_from_log(self, calls: List[dict]) -> dict:
         """
@@ -752,7 +755,7 @@ class Account:
             ]
         """
         body = {"add": [], "remove": validate_calls(calls)}
-        return self.make_request('post', '/main/call-log/change-sync/', body)
+        return self._make_request('post', '/main/call-log/change-sync/', body)
 
     def block_profile(self, phone_number: Union[str, int], block_contact=True, me_full_block=True) -> bool:
         """
@@ -768,8 +771,8 @@ class Account:
         :rtype: bool
         """
         body = {"block_contact": block_contact, "me_full_block": me_full_block,
-                "phone_number": str(self.valid_phone_number(phone_number))}
-        return self.make_request('post', '/main/users/profile/block/', body)['success']
+                "phone_number": str(valid_phone_number(phone_number))}
+        return self._make_request('post', '/main/users/profile/block/', body)['success']
 
     def unblock_profile(self, phone_number: int, block_contact=False, me_full_block=False) -> bool:
         """
@@ -785,8 +788,8 @@ class Account:
         :rtype: bool
         """
         body = {"block_contact": block_contact, "me_full_block": me_full_block,
-                "phone_number": str(self.valid_phone_number(phone_number))}
-        return self.make_request('post', '/main/users/profile/block/', body)['success']
+                "phone_number": str(valid_phone_number(phone_number))}
+        return self._make_request('post', '/main/users/profile/block/', body)['success']
 
     def block_numbers(self, numbers: Union[int, List[int]]) -> bool:
         """
@@ -810,7 +813,7 @@ class Account:
         if not isinstance(numbers, list):
             numbers = [numbers]
         body = {"phone_numbers": numbers}
-        return self.make_request('post', '/main/users/profile/bulk-block/', body)['block_contact']
+        return self._make_request('post', '/main/users/profile/bulk-block/', body)['block_contact']
 
     def unblock_numbers(self, numbers: Union[int, List[int]]) -> bool:
         """
@@ -824,7 +827,7 @@ class Account:
         if not isinstance(numbers, list):
             numbers = [numbers]
         body = {"phone_numbers": numbers}
-        return self.make_request('post', '/main/users/profile/bulk-unblock/', body)['success']
+        return self._make_request('post', '/main/users/profile/bulk-unblock/', body)['success']
 
     def get_blocked_numbers(self) -> List[BlockedNumber]:
         """
@@ -843,7 +846,7 @@ class Account:
                 }
             ]
         """
-        return [BlockedNumber.new_from_json_dict(blocked_number) for blocked_number in self.make_request('get', '/main/settings/blocked-phone-numbers/')]
+        return [BlockedNumber.new_from_json_dict(blocked_number) for blocked_number in self._make_request('get', '/main/settings/blocked-phone-numbers/')]
 
     def upload_random_data(self, contacts=True, calls=True, location=True):
         """

@@ -2,6 +2,7 @@ from re import match, sub
 from typing import List, Union, Tuple
 from meapi.exceptions import MeException
 from datetime import datetime, date
+from meapi.helpers import valid_phone_number
 from meapi.models import Friendship, Deleter, Watcher, Group, Socials, User, Comment
 
 
@@ -33,7 +34,7 @@ class Social:
                 "my_comment": None,
             }
         """
-        return Friendship.new_from_json_dict(self.make_request('get', '/main/contacts/friendship/?phone_number=' + str(self.valid_phone_number(phone_number))))
+        return Friendship.new_from_json_dict(self._make_request('get', '/main/contacts/friendship/?phone_number=' + str(valid_phone_number(phone_number))))
 
     def report_spam(self, country_code: str, spam_name: str, phone_number: Union[str, int]) -> bool:
         """
@@ -49,8 +50,8 @@ class Social:
         :rtype: bool
         """
         body = {"country_code": country_code.upper(), "is_spam": True, "is_from_v": False,
-                "name": str(spam_name), "phone_number": str(self.valid_phone_number(phone_number))}
-        return self.make_request('post', '/main/names/suggestion/report/', body)['success']
+                "name": str(spam_name), "phone_number": str(valid_phone_number(phone_number))}
+        return self._make_request('post', '/main/names/suggestion/report/', body)['success']
 
     def who_deleted(self) -> List[Deleter]:
         """
@@ -82,7 +83,7 @@ class Social:
                 }
             ]
         """
-        return [Deleter.new_from_json_dict(deleter) for deleter in self.make_request('get', '/main/users/profile/who-deleted/')]
+        return [Deleter.new_from_json_dict(deleter) for deleter in self._make_request('get', '/main/users/profile/who-deleted/')]
 
     def who_watched(self) -> List[Watcher]:
         """
@@ -117,7 +118,7 @@ class Social:
             ]
         """
         return sorted([Watcher.new_from_json_dict(watcher) for watcher in
-                       self.make_request('get', '/main/users/profile/who-watched/')], key=lambda x: x.count, reverse=True)
+                       self._make_request('get', '/main/users/profile/who-watched/')], key=lambda x: x.count, reverse=True)
 
     def get_comments(self, uuid: str = None) -> List[Comment]:
         """
@@ -181,13 +182,13 @@ class Social:
         """
         if not uuid:
             if self.phone_number:
-                comments: List[dict] = self.make_request('get', '/main/comments/list/' + self.uuid)['comments']
+                comments: List[dict] = self._make_request('get', '/main/comments/list/' + self.uuid)['comments']
                 for comment in comments:
                     comment.update({'my_comment': True})
             else:
                 raise MeException("In https://meapi.readthedocs.io/en/latest/setup.html#official-method mode you must to provide user uuid.")
         else:
-            comments = self.make_request('get', '/main/comments/list/' + uuid)['comments']
+            comments = self._make_request('get', '/main/comments/list/' + uuid)['comments']
         return [Comment.new_from_json_dict(comment) for comment in comments]
 
     def get_comment(self, comment_id: Union[int, str]) -> dict:
@@ -225,7 +226,7 @@ class Social:
                 "message": "Test comment",
             }
         """
-        comment = self.make_request('get', '/main/comments/retrieve/' + str(comment_id))
+        comment = self._make_request('get', '/main/comments/retrieve/' + str(comment_id))
         comment.update({'id': int(comment_id)})
         return Comment.new_from_json_dict(comment)
 
@@ -238,7 +239,7 @@ class Social:
         :return: Is approve success.
         :rtype: bool
         """
-        res = Comment.new_from_json_dict(self.make_request('post', f'/main/comments/approve/{comment_id}/'))
+        res = Comment.new_from_json_dict(self._make_request('post', f'/main/comments/approve/{comment_id}/'))
         return res, bool(res.status == 'approved')
 
     def delete_comment(self, comment_id: Union[str, int]) -> Tuple[Comment, bool]:
@@ -250,7 +251,7 @@ class Social:
         :return: Is deleting success.
         :rtype: bool
         """
-        comment = Comment.new_from_json_dict(self.make_request('delete', f'/main/comments/approve/{comment_id}/'))
+        comment = Comment.new_from_json_dict(self._make_request('delete', f'/main/comments/approve/{comment_id}/'))
         return comment, bool(comment.status == 'ignored')
 
     def like_comment(self, comment_id: Union[int, str]) -> bool:
@@ -262,7 +263,7 @@ class Social:
         :return: Is like success.
         :rtype: bool
         """
-        return self.make_request('post', f'/main/comments/like/{comment_id}/')['success']
+        return self._make_request('post', f'/main/comments/like/{comment_id}/')['success']
 
     def publish_comment(self, uuid: str, comment: str) -> Tuple[Comment, bool]:
         """
@@ -276,7 +277,7 @@ class Social:
         :rtype: Union[int, bool]
         """
         body = {"message": str(comment)}
-        comment = Comment.new_from_json_dict(self.make_request('post', f'/main/comments/add/{uuid}/', body))
+        comment = Comment.new_from_json_dict(self._make_request('post', f'/main/comments/add/{uuid}/', body))
         return comment, bool(comment.status == 'waiting')
 
     def get_groups_names(self) -> List[Group]:
@@ -317,7 +318,7 @@ class Social:
             }
         """
         return sorted([Group.new_from_json_dict(group) for group in
-                       self.make_request('get', '/main/names/groups/')['groups']],
+                       self._make_request('get', '/main/names/groups/')['groups']],
                       key=lambda x: x.count, reverse=True)
 
     def get_deleted_names(self) -> dict:
@@ -356,7 +357,7 @@ class Social:
                 "contact_ids": [409879786],
             }
         """
-        return self.make_request('get', '/main/settings/hidden-names/')
+        return self._make_request('get', '/main/settings/hidden-names/')
 
     def delete_name(self, contacts_ids: Union[int, str, List[Union[int, str]]]) -> bool:
         """
@@ -370,7 +371,7 @@ class Social:
         if not isinstance(contacts_ids, list):
             contacts_ids = [contacts_ids]
         body = {"contact_ids": [int(_id) for _id in contacts_ids]}
-        return self.make_request('post', '/main/contacts/hide/', body)['success']
+        return self._make_request('post', '/main/contacts/hide/', body)['success']
 
     def restore_name(self, contacts_ids: Union[int, str, List[Union[int, str]]]) -> bool:
         """
@@ -384,7 +385,7 @@ class Social:
         if not isinstance(contacts_ids, list):
             contacts_ids = [contacts_ids]
         body = {"contact_ids": [int(_id) for _id in contacts_ids]}
-        return self.make_request('post', '/main/settings/hidden-names/', body)['success']
+        return self._make_request('post', '/main/settings/hidden-names/', body)['success']
 
     def ask_group_rename(self, contacts_ids: Union[int, str, List[Union[int, str]]], new_name: Union[str, None] = None) -> bool:
         """
@@ -407,7 +408,7 @@ class Social:
                 new_name += (" " + my_profile.last_name)
 
         body = {"contact_ids": [int(_id) for _id in contacts_ids], "name": new_name}
-        return self.make_request('post', '/main/names/suggestion/', body)['success']
+        return self._make_request('post', '/main/names/suggestion/', body)['success']
 
     def get_socials(self, uuid: str = None) -> Socials:
         """
@@ -522,7 +523,7 @@ class Social:
             }
         """
         if not uuid:
-            return Socials.new_from_json_dict(self.make_request('post', '/main/social/update/'))
+            return Socials.new_from_json_dict(self._make_request('post', '/main/social/update/'))
         return Socials.new_from_json_dict(self.extra_info(str(uuid))['social'])
 
     def add_social(self,
@@ -572,7 +573,7 @@ class Social:
                     is_token = True
                 social_name = sub(r'_(token|url)$', '', social)
                 body = {'social_name': social_name, field_name: token_or_url}
-                results = self.make_request('post', f'/main/social/{endpoint}/', body)
+                results = self._make_request('post', f'/main/social/{endpoint}/', body)
                 if not (bool(results['success']) if is_token else bool(results[social_name]['profile_id'] == token_or_url)):
                     failed.append(social_name)
         return not bool(failed), failed
@@ -612,7 +613,7 @@ class Social:
         for social, value in args.items():
             if value and isinstance(value, bool):
                 body = {"social_name": str(social)}
-                res = self.make_request('post', '/main/social/delete/', body)
+                res = self._make_request('post', '/main/social/delete/', body)
                 print(res)
                 if res.get('success'):
                     successes += 1
@@ -655,7 +656,7 @@ class Social:
                 body = {"social_name": str(social)}
                 current_status = self.get_socials()
                 if status == current_status[social]['is_hidden'] and current_status[social]['is_active']:  # exists but status not as the required
-                    new_status = not bool(self.make_request('post', '/main/social/hide/', body)['is_hidden'])
+                    new_status = not bool(self._make_request('post', '/main/social/hide/', body)['is_hidden'])
                     if status == new_status:
                         successes += 1
 
@@ -668,7 +669,7 @@ class Social:
         :return: total count.
         :rtype: int
         """
-        return self.make_request('get', '/main/contacts/count/')['count']
+        return self._make_request('get', '/main/contacts/count/')['count']
 
     def suggest_turn_on_comments(self, uuid: str) -> bool:
         """
@@ -680,7 +681,7 @@ class Social:
         :rtype: bool
         """
         body = {"uuid": str(uuid)}
-        return self.make_request('post', '/main/users/profile/suggest-turn-on-comments/', body)['requested']
+        return self._make_request('post', '/main/users/profile/suggest-turn-on-comments/', body)['requested']
 
     def suggest_turn_on_mutual(self, uuid: str) -> bool:
         """
@@ -692,7 +693,7 @@ class Social:
         :rtype: bool
         """
         body = {"uuid": str(uuid)}
-        return self.make_request('post', '/main/users/profile/suggest-turn-on-mutual/', body)['requested']
+        return self._make_request('post', '/main/users/profile/suggest-turn-on-mutual/', body)['requested']
 
     def suggest_turn_on_location(self, uuid: str) -> bool:
         """
@@ -704,7 +705,7 @@ class Social:
         :rtype: bool
         """
         body = {"uuid": str(uuid)}
-        return self.make_request('post', '/main/users/profile/suggest-turn-on-location/', body)['requested']
+        return self._make_request('post', '/main/users/profile/suggest-turn-on-location/', body)['requested']
 
     def get_age(self, uuid=None) -> float:
         """
@@ -749,7 +750,7 @@ class Social:
         if not isinstance(lat, float) or not isinstance(lon, float):
             raise Exception("Not a valid coordination!")
         body = {"location_latitude": float(lat), "location_longitude": float(lon)}
-        return self.make_request('post', '/main/location/update/', body)['success']
+        return self._make_request('post', '/main/location/update/', body)['success']
 
     def share_location(self, uuid: str) -> bool:
         """
@@ -760,7 +761,7 @@ class Social:
         :return: is sharing success.
         :rtype: bool
         """
-        return self.make_request('post', '/main/users/profile/share-location/' + str(uuid) + "/")['success']
+        return self._make_request('post', '/main/users/profile/share-location/' + str(uuid) + "/")['success']
 
     def get_distance(self, uuid: str) -> Union[float, None]:
         """
@@ -789,7 +790,7 @@ class Social:
         if not isinstance(uuids, list):
             uuids = [uuids]
         body = {"uuids": uuids}
-        return self.make_request('post', '/main/users/profile/share-location/stop-for-me/', body)['success']
+        return self._make_request('post', '/main/users/profile/share-location/stop-for-me/', body)['success']
 
     def stop_shared_location(self, uuids: Union[str, List[str]]) -> bool:
         """
@@ -803,7 +804,7 @@ class Social:
         if not isinstance(uuids, list):
             uuids = [uuids]
         body = {"uuids": uuids}
-        return self.make_request('post', '/main/users/profile/share-location/stop/', body)['success']
+        return self._make_request('post', '/main/users/profile/share-location/stop/', body)['success']
 
     def locations_shared_by_me(self) -> List[User]:
         """
@@ -824,7 +825,7 @@ class Social:
                 }
             ]
         """
-        return [User.new_from_json_dict(user) for user in self.make_request('get', '/main/users/profile/share-location/')]
+        return [User.new_from_json_dict(user) for user in self._make_request('get', '/main/users/profile/share-location/')]
 
     def locations_shared_with_me(self) -> dict:
         """
@@ -854,4 +855,4 @@ class Social:
                 ]
             }
         """
-        return self.make_request('get', '/main/users/profile/share-location/for-me/')
+        return self._make_request('get', '/main/users/profile/share-location/for-me/')

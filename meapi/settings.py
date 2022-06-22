@@ -34,7 +34,7 @@ class Settings:
                 "who_watched_notification_enabled": True,
             }
         """
-        return Set.new_from_json_dict(self.make_request('get', '/main/settings/'))
+        return Set.new_from_json_dict(self._make_request('get', '/main/settings/'), _meobj=self)
 
     def change_social_settings(self,
                                mutual_contacts_available: bool = None,
@@ -75,9 +75,4 @@ class Settings:
         if not body:
             raise MeException("You need to change at least one setting!")
 
-        results = self.make_request('patch', '/main/settings/', body)
-        failed = []
-        for setting in body.keys():
-            if results[setting] != body[setting]:
-                failed.append(setting)
-        return not bool(failed), failed
+        return self._make_request('patch', '/main/settings/', body)
