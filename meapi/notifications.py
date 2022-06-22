@@ -1,5 +1,4 @@
-from typing import Tuple, List, Union
-from meapi.exceptions import MeException
+from typing import Union
 
 notification_categories = {
     'names': ['JOINED_ME', 'CONTACT_ADD', 'UPDATED_CONTACT', 'DELETED_CONTACT', 'NEW_NAME_REQUEST',
@@ -159,37 +158,3 @@ class Notifications:
         body = {"notification_id": int(notification_id)}
         return self._make_request('post', '/notification/notification/read/', body)['is_read']
 
-        :param who_deleted_notification_enabled: Default: ``None``.
-        :type who_deleted_notification_enabled: bool
-        :param who_watched_notification_enabled: Default: ``None``.
-        :type who_watched_notification_enabled: bool
-        :param distance_notification_enabled: Default: ``None``.
-        :type distance_notification_enabled: bool
-        :param system_notification_enabled: Default: ``None``.
-        :type system_notification_enabled: bool
-        :param birthday_notification_enabled: Default: ``None``.
-        :type birthday_notification_enabled: bool
-        :param comments_notification_enabled: Default: ``None``.
-        :type comments_notification_enabled: bool
-        :param names_notification_enabled: Default: ``None``.
-        :type names_notification_enabled: bool
-        :param notifications_enabled: Default: ``None``.
-        :type notifications_enabled: bool
-        :return: Tuple of: is success, list of failed
-        :rtype: Tuple[bool, list]
-        """
-        args = locals()
-        del args['self']
-        body = {}
-        for setting, value in args.items():
-            if value is not None:
-                body[setting] = value
-        if not body:
-            raise MeException("You need to provide at least one setting!")
-
-        results = self.make_request('patch', '/main/settings/', body)
-        failed = []
-        for setting in body.keys():
-            if results[setting] != body[setting]:
-                failed.append(setting)
-        return not bool(failed), failed

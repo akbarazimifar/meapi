@@ -1,4 +1,4 @@
-from typing import Tuple, List
+from typing import Tuple
 from meapi.exceptions import MeException
 from meapi.models import Settings as Set
 
@@ -36,15 +36,24 @@ class Settings:
         """
         return Set.new_from_json_dict(self._make_request('get', '/main/settings/'), _meobj=self)
 
-    def change_social_settings(self,
-                               mutual_contacts_available: bool = None,
-                               who_watched_enabled: bool = None,
-                               who_deleted_enabled: bool = None,
-                               comments_enabled: bool = None,
-                               location_enabled: bool = None,
-                               language: str = None) -> Tuple[bool, List[str]]:
+    def change_settings(self,
+                        mutual_contacts_available: bool = None,
+                        who_watched_enabled: bool = None,
+                        who_deleted_enabled: bool = None,
+                        comments_enabled: bool = None,
+                        location_enabled: bool = None,
+                        language: str = None,
+                        who_deleted_notification_enabled: bool = None,
+                        who_watched_notification_enabled: bool = None,
+                        distance_notification_enabled: bool = None,
+                        system_notification_enabled: bool = None,
+                        birthday_notification_enabled: bool = None,
+                        comments_notification_enabled: bool = None,
+                        names_notification_enabled: bool = None,
+                        notifications_enabled: bool = None,
+                        ) -> dict:
         """
-        Change social settings.
+        Change social, app and notification settings.
 
         :param mutual_contacts_available: Show common contacts between users. Default: ``None``.
         :type mutual_contacts_available: bool
@@ -63,6 +72,22 @@ class Settings:
         :type location_enabled: bool
         :param language: lang code, iw, en, etc. (For notifications). Default: ``None``.
         :type language: bool
+        :param who_deleted_notification_enabled: Default: ``None``.
+        :type who_deleted_notification_enabled: bool
+        :param who_watched_notification_enabled: Default: ``None``.
+        :type who_watched_notification_enabled: bool
+        :param distance_notification_enabled: Default: ``None``.
+        :type distance_notification_enabled: bool
+        :param system_notification_enabled: Default: ``None``.
+        :type system_notification_enabled: bool
+        :param birthday_notification_enabled: Default: ``None``.
+        :type birthday_notification_enabled: bool
+        :param comments_notification_enabled: Default: ``None``.
+        :type comments_notification_enabled: bool
+        :param names_notification_enabled: Default: ``None``.
+        :type names_notification_enabled: bool
+        :param notifications_enabled: Default: ``None``.
+        :type notifications_enabled: bool
         :return: Tuple: is success, list of failed
         :rtype: Tuple[bool, list]
         """
