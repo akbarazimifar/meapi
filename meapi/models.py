@@ -4,16 +4,17 @@ from abc import ABCMeta
 from datetime import datetime, date
 from typing import Union, List
 from meapi.exceptions import MeException
-from meapi.helpers import validate_profile_details
+from meapi.helpers import validate_profile_details, get_vcard
+import meapi.me as me_base
 
 IGNORED_KEYS = []
 
 
-def parse_date(date_str: str, date_only=False) -> Union[datetime, datetime.date, None]:
-    if not date_str:
+def parse_date(date_str: str, date_only=False) -> Union[datetime, date, None]:
+    if date_str is None:
         return date_str
-    date = datetime.strptime(str(date_str), '%Y-%m-%d' + ('' if date_only else 'T%H:%M:%S%z'))
-    return date.date() if date_only else date
+    date_obj = datetime.strptime(str(date_str), '%Y-%m-%d' + ('' if date_only else 'T%H:%M:%S%z'))
+    return date_obj.date() if date_only else date_obj
 
 
 class _ParameterReader(ABCMeta):
@@ -34,30 +35,39 @@ class MeModel(metaclass=_ParameterReader):
     def __init__(self):
         self.__init_done = True
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.as_json_string()
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return other and self.as_dict() == other.as_dict()
 
-    def __ne__(self, other):
+    def __ne__(self, other) -> bool:
         return not self.__eq__(other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         if hasattr(self, 'id'):
             return hash(self.id)
         else:
             raise TypeError('unhashable type: {} (no id attribute)'.format(type(self)))
 
     def __setattr__(self, key, value):
+        """
+        Prevent attr changes after the init in protected data classes
+        """
         if getattr(self, '_MeModel__init_done', None):
-            raise MeException(f"You cannot change {self.__class__.__name__} details!")
+            raise MeException(f"You cannot change the protected attr '{key}' of '{self.__class__.__name__}'!")
         return super().__setattr__(key, value)
 
-    def as_json_string(self, ensure_ascii=True):
+    def as_json_string(self, ensure_ascii=True) -> str:
+        """
+        Return class data in json format
+        """
         return json.dumps(self.as_dict(), ensure_ascii=ensure_ascii, sort_keys=True)
 
-    def as_dict(self):
+    def as_dict(self) -> dict:
+        """
+        Return class data as dict
+        """
         data = {}
         for (key, value) in self.__dict__.items():
             if str(key).startswith("_"):
@@ -81,17 +91,24 @@ class MeModel(metaclass=_ParameterReader):
         return data
 
     @classmethod
-    def new_from_json_dict(cls, data: dict, **kwargs):
+    def new_from_json_dict(cls, data: dict, _meobj=None, **kwargs):
+        """
+        Create new instance from json_dict
+        """
         if not data or data is None:
             return None
         cls_attrs = cls._init_parameters.keys()
+        if '_meobj' in cls_attrs:
+            if not isinstance(_meobj, me_base.Me):
+                raise MeException(f"When creating instance of {cls.__name__} you must provide instance of Me in order to perform calls to Me api!")
+            data['_meobj'] = _meobj
         json_data = data.copy()
         if kwargs:
             for key, val in kwargs.items():
                 json_data[key] = val
         for key in json_data.copy():
             if key not in cls_attrs:
-                if key not in IGNORED_KEYS:
+                if key not in IGNORED_KEYS and not key.startswith('_'):
                     print(f"- The key '{key}' with the value of '{json_data[key]}' just skipped. "
                           f"Try to update meapi to the latest version (pip3 install -U meapi) "
                           f"If it's still skipping, open issue in github: <https://github.com/david-lev/meapi/issues>")
@@ -102,6 +119,7 @@ class MeModel(metaclass=_ParameterReader):
 
 class Profile(MeModel):
     def __init__(self,
+                 _meobj,
                  comments_blocked: Union[bool, None] = None,
                  is_he_blocked_me: Union[bool, None] = None,
                  is_permanent: Union[bool, None] = None,
@@ -143,20 +161,21 @@ class Profile(MeModel):
                  who_watched_enabled: Union[bool, None] = None,
                  my_profile: bool = False
                  ):
+        self.__meobj = _meobj
         self.comments_blocked = comments_blocked
         self.is_he_blocked_me = is_he_blocked_me
         self.is_permanent = is_permanent
         self.is_shared_location = is_shared_location
-        self.last_comment = Comment.new_from_json_dict(last_comment)
+        self.last_comment = Comment.new_from_json_dict(last_comment, _meobj=_meobj)
         self.mutual_contacts_available = mutual_contacts_available
         self.mutual_contacts: List[MutualContact] = [MutualContact.new_from_json_dict(mutual_contact) for mutual_contact in
                                                      mutual_contacts] if mutual_contacts_available else mutual_contacts
         self.share_location = share_location
-        self.social: Socials = Socials.new_from_json_dict(social) if social else social
+        self.social: Socials = Socials.new_from_json_dict(social, _meobj=_meobj) if social else social
         self.carrier = carrier
         self.comments_enabled = comments_enabled
         self.country_code = country_code
-        self.date_of_birth: Union[datetime.date, None] = parse_date(date_of_birth, date_only=True)
+        self.date_of_birth: Union[date, None] = parse_date(date_of_birth, date_only=True)
         self.device_type = device_type
         self.distance = distance
         self.email = email
@@ -189,10 +208,8 @@ class Profile(MeModel):
         if getattr(self, '_Profile__my_profile', None) is not None:
             if self.__my_profile:
                 value = validate_profile_details(key, value)
-                # send request and make the changes in the attr
-                body = {key: value}
-                # if self._make_request('post', endpoint, body)[name] == value:
-                return super().__setattr__(key, value)
+                if self.__meobj.update_profile_info(**{key: value})[key] == value:
+                    return super().__setattr__(key, value)
             else:
                 raise MeException("You cannot update profile if it's not yours!")
         super().__setattr__(key, value)
@@ -203,17 +220,18 @@ class Profile(MeModel):
     def __str__(self):
         return f"{self.first_name} {self.last_name or ''}"
 
-    def block(self):
+    def block(self, block_contact=True, me_full_block=True) -> bool:
         if self.__my_profile:
             raise MeException("you can't block yourself!")
-        # block this profile
-        pass
+        return self.__meobj.block_profile(phone_number=self.phone_number, block_contact=block_contact, me_full_block=me_full_block)
 
-    def unblock(self):
+    def unblock(self, unblock_contact=True, me_full_unblock=True) -> bool:
         if self.__my_profile:
             raise MeException("you can't unblock yourself!")
-        # unblock this profile
-        pass
+        return self.__meobj.unblock_profile(phone_number=self.phone_number, unblock_contact=unblock_contact, me_full_unblock=me_full_unblock)
+
+    def get_vcard(self, prefix_name: str = "", profile_picture: bool = True, **kwargs) -> str:
+        return get_vcard(self.__dict__, prefix_name, profile_picture, **kwargs)
 
 
 class Socials(MeModel):
@@ -225,7 +243,8 @@ class Socials(MeModel):
                  pinterest: Union[dict, None] = None,
                  spotify: Union[dict, None] = None,
                  tiktok: Union[dict, None] = None,
-                 twitter: Union[dict, None] = None
+                 twitter: Union[dict, None] = None,
+                 _my_socials: bool = False
                  ):
         self.facebook: Social = Social.new_from_json_dict(facebook) if facebook['is_active'] else None
         self.fakebook: Social = Social.new_from_json_dict(fakebook) if fakebook['is_active'] else None
@@ -235,6 +254,7 @@ class Socials(MeModel):
         self.spotify: Social = Social.new_from_json_dict(spotify) if spotify['is_active'] else None
         self.tiktok: Social = Social.new_from_json_dict(tiktok) if tiktok['is_active'] else None
         self.twitter: Social = Social.new_from_json_dict(twitter) if twitter['is_active'] else None
+        self.__my_socials = _my_socials
         super().__init__()
 
 
@@ -345,6 +365,9 @@ class User(MeModel):
     def __str__(self):
         return self.uuid
 
+    def get_vcard(self, prefix_name: str = "", profile_picture: bool = True, **kwargs) -> str:
+        return get_vcard(self.__dict__, prefix_name, profile_picture, **kwargs)
+
 
 class Contact(MeModel):
     def __init__(self,
@@ -385,6 +408,9 @@ class Contact(MeModel):
 
     def __str__(self):
         return self.name or "Not found"
+
+    def get_vcard(self, prefix_name: str = "", profile_picture: bool = True, **kwargs) -> str:
+        return get_vcard(self.__dict__, prefix_name, profile_picture, **kwargs)
 
 
 class BlockedNumber(MeModel):
@@ -474,6 +500,7 @@ class Watcher(MeModel):
 
 class Comment(MeModel):
     def __init__(self,
+                 _meobj,
                  like_count: Union[int, None] = None,
                  status: Union[str, None] = None,
                  message: Union[str, None] = None,
@@ -493,7 +520,9 @@ class Comment(MeModel):
         self.id = id
         self.comments_blocked = comments_blocked
         self.created_at = parse_date(created_at)
-        self.comment_likes = [User.new_from_json_dict(user['author']) for user in comment_likes] if comment_likes else None
+        self.comment_likes = [User.new_from_json_dict(user['author']) for user in
+                              comment_likes] if comment_likes else None
+        self.__meobj = _meobj
         self.__my_comment = my_comment
         self.__init_done = True
 
@@ -579,7 +608,8 @@ class Settings(MeModel):
                  who_deleted_enabled: Union[bool, None] = None,
                  who_deleted_notification_enabled: Union[bool, None] = None,
                  who_watched_enabled: Union[bool, None] = None,
-                 who_watched_notification_enabled: Union[bool, None] = None
+                 who_watched_notification_enabled: Union[bool, None] = None,
+                 _meobj=None
                  ):
         self.birthday_notification_enabled = birthday_notification_enabled
         self.comments_enabled = comments_enabled
@@ -599,6 +629,7 @@ class Settings(MeModel):
         self.who_deleted_notification_enabled = who_deleted_notification_enabled
         self.who_watched_enabled = who_watched_enabled
         self.who_watched_notification_enabled = who_watched_notification_enabled
+        self.__meobj = _meobj
         self.__init_done = True
 
     def __repr__(self):
@@ -606,7 +637,7 @@ class Settings(MeModel):
 
     def __setattr__(self, key, value):
         if getattr(self, '_Settings__init_done', None):
-            if key not in ['spammers_count', 'last_backup_at', 'last_restore_at']:
+            if key not in ['spammers_count', 'last_backup_at', 'last_restore_at', 'contact_suspended']:
                 if key == 'language':
                     if isinstance(value, str) and len(value) == 2 and value.isalpha():
                         pass
@@ -614,25 +645,25 @@ class Settings(MeModel):
                     raise MeException(f"{str(key)} value must be a bool type!")
             else:
                 raise MeException("You can't change this setting!")
-            body = {key: value}
-            # make request and update attr
+            if self.__meobj.change_settings(**{key: value})[key] != value:
+                raise MeException("not updated")
+
         return super().__setattr__(key, value)
-    
+
     def __change_all(self, change_to: bool):
         to_change = {}
         for key, value in self.__dict__.items():
-            if isinstance(value, bool) and not key.startswith('_'):
+            if isinstance(value, bool) and not key.startswith('_') and key != 'contact_suspended':
                 to_change[key] = change_to
-        res = self.change_settings(**to_change)  # todo update to real func
+        res = self.__meobj.change_settings(**to_change)
         for key in to_change:
             if res[key] != change_to:
                 return False
         self.__dict__.update(to_change)
         return True
-    
+
     def enable_all(self) -> bool:
         return self.__change_all(change_to=True)
 
     def disable_all(self) -> bool:
         return self.__change_all(change_to=False)
-

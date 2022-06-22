@@ -180,7 +180,7 @@ class Social:
                 "user_comment": None,
             }
         """
-        if not uuid:
+        if not uuid or uuid == self.uuid:
             if self.phone_number:
                 comments: List[dict] = self._make_request('get', '/main/comments/list/' + self.uuid)['comments']
                 for comment in comments:
@@ -189,7 +189,7 @@ class Social:
                 raise MeException("In https://meapi.readthedocs.io/en/latest/setup.html#official-method mode you must to provide user uuid.")
         else:
             comments = self._make_request('get', '/main/comments/list/' + uuid)['comments']
-        return [Comment.new_from_json_dict(comment) for comment in comments]
+        return [Comment.new_from_json_dict(comment, _meobj=self) for comment in comments]
 
     def get_comment(self, comment_id: Union[int, str]) -> dict:
         """

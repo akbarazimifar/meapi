@@ -774,20 +774,20 @@ class Account:
                 "phone_number": str(valid_phone_number(phone_number))}
         return self._make_request('post', '/main/users/profile/block/', body)['success']
 
-    def unblock_profile(self, phone_number: int, block_contact=False, me_full_block=False) -> bool:
+    def unblock_profile(self, phone_number: int, unblock_contact=True, me_full_unblock=True) -> bool:
         """
         Unblock user profile.
 
         :param phone_number: User phone number in international format.
         :type phone_number: Union[str, int]
-        :param block_contact: To unblock for calls. Default: ``True``.
-        :type block_contact: bool
-        :param me_full_block: To unblock for social. Default: ``True``.
-        :type me_full_block: bool
+        :param unblock_contact: To unblock for calls. Default: ``True``.
+        :type unblock_contact: bool
+        :param me_full_unblock: To unblock for social. Default: ``True``.
+        :type me_full_unblock: bool
         :return: Is unblocking success.
         :rtype: bool
         """
-        body = {"block_contact": block_contact, "me_full_block": me_full_block,
+        body = {"block_contact": not unblock_contact, "me_full_block": not me_full_unblock,
                 "phone_number": str(valid_phone_number(phone_number))}
         return self._make_request('post', '/main/users/profile/block/', body)['success']
 
