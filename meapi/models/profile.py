@@ -76,7 +76,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         self.date_of_birth: Union[date, None] = parse_date(date_of_birth, date_only=True)
         self.device_type = device_type
         self.distance = distance
-        self.friends_distance = [User.new_from_json_dict(user.get('author')) for user in friends_distance.get('friends')] if friends_distance.get('friends') else None
+        self.friends_distance = [User.new_from_json_dict(user.get('author')) for user in friends_distance.get('friends')] if friends_distance else None
         self.email = email
         self.facebook_url = facebook_url
         self.first_name = first_name

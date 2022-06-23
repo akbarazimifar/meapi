@@ -1,6 +1,7 @@
 from typing import Union
 from meapi.helpers import parse_date
 from meapi.models.me_model import MeModel
+from meapi.models.user import User
 
 
 class Call(MeModel):
@@ -9,6 +10,7 @@ class Call(MeModel):
                  duration: Union[int, None] = None,
                  name: Union[str, None] = None,
                  phone_number: Union[int, None] = None,
+                 referenced_user: Union[dict, None] = None,
                  tag: Union[str, None] = None,
                  type: Union[str, None] = None
                  ):
@@ -16,6 +18,7 @@ class Call(MeModel):
         self.duration = duration
         self.name = name
         self.phone_number = phone_number
+        self.referenced_user = User.new_from_json_dict(referenced_user) if referenced_user else referenced_user
         self.tag = tag
         self.type = type
         super().__init__()

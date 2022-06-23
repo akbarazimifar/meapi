@@ -117,8 +117,10 @@ class Social:
                 }
             ]
         """
-        return sorted([watcher.Watcher.new_from_json_dict(watcher) for watcher in
-                       self._make_request('get', '/main/users/profile/who-watched/')], key=lambda x: x.count, reverse=True)
+        r = self._make_request('get', '/main/users/profile/who-watched/')
+        print(r)
+        return sorted([watcher.Watcher.new_from_json_dict(watch) for watch in
+                       r], key=lambda x: x.count, reverse=True)
 
     def get_comments(self, uuid: str = None) -> List[comment.Comment]:
         """

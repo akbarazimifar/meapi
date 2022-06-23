@@ -3,7 +3,7 @@ from typing import Union, List, Tuple
 from meapi.exceptions import MeException, MeApiException
 from meapi.models import contact, profile, blocked_number, call
 from meapi.helpers import valid_phone_number
-from meapi.random_data import get_random_data
+from meapi.helpers import get_random_data
 from random import randint
 
 
@@ -12,10 +12,10 @@ def validate_contacts(contacts: List[dict]) -> List[dict]:
     Gets list of dict of contacts and return the valid contacts in the same format. to use of add_contacts and remove_contacts methods
     """
     contacts_list = []
-    for contact in contacts:
-        if isinstance(contact, dict):
-            if contact.get('name') and contact.get('phone_number'):
-                contacts_list.append(contact)
+    for con in contacts:
+        if isinstance(con, dict):
+            if con.get('name') and con.get('phone_number'):
+                contacts_list.append(con)
     if not contacts_list:
         raise MeException("Valid contacts not found! check this example for valid contact syntax: "
                           "https://gist.github.com/david-lev/b158f1cc0cc783dbb13ff4b54416ceec#file-contacts-py")
@@ -27,22 +27,22 @@ def validate_calls(calls: List[dict]) -> List[dict]:
     Gets list of dict of calls and return the valid calls in the same format. to use of add_calls_to_log and remove_calls_from_log methods
     """
     calls_list = []
-    for call in calls:
-        if isinstance(call, dict):
-            if not call.get('name') or not call.get('phone_number'):
-                if call.get('phone_number'):
-                    call['name'] = str(call.get('phone_number'))
+    for cal in calls:
+        if isinstance(cal, dict):
+            if not cal.get('name') or not cal.get('phone_number'):
+                if cal.get('phone_number'):
+                    cal['name'] = str(cal.get('phone_number'))
                 else:
                     raise MeException("Phone number must be provided!!")
-            if call.get('type') not in ['incoming', 'missed', 'outgoing']:
-                raise MeException("No such call type as " + str(call.get('type')) + "!")
-            if not call.get('duration'):
-                call['duration'] = randint(10, 300)
-            if not call.get('tag'):
-                call['tag'] = None
-            if not call.get('called_at'):
-                call['called_at'] = f"{randint(2018, 2022)}-{randint(1, 12)}-{randint(1, 31)}T{randint(1, 23)}:{randint(10, 59)}:{randint(10, 59)}Z"
-            calls_list.append(call)
+            if cal.get('type') not in ['incoming', 'missed', 'outgoing']:
+                raise MeException("No such call type as " + str(cal.get('type')) + "!")
+            if not cal.get('duration'):
+                cal['duration'] = randint(10, 300)
+            if not cal.get('tag'):
+                cal['tag'] = None
+            if not cal.get('called_at'):
+                cal['called_at'] = f"{randint(2018, 2022)}-{randint(1, 12)}-{randint(1, 31)}T{randint(1, 23)}:{randint(10, 59)}:{randint(10, 59)}Z"
+            calls_list.append(cal)
     if not calls_list:
         raise MeException("Valid calls not found! check this example for valid call syntax: "
                           "https://gist.github.com/david-lev/b158f1cc0cc783dbb13ff4b54416ceec#file-calls_log-py")
@@ -329,7 +329,6 @@ class Account:
                     account_details: dict = self.account_details
                 else:
                     account_details = {}
-                print(account_details)
                 first_name = None
                 last_name = None
                 email = None
@@ -483,7 +482,7 @@ class Account:
         """
         return self._make_request('put', '/main/settings/suspend-user/')['contact_suspended']
 
-    def add_contacts(self, contacts: List[dict]) -> List[contact.Contact]:
+    def add_contacts(self, contacts: List[dict]) -> dict:
         """
         Upload new contacts to your Me account. See :py:func:`upload_random_data`.
 
@@ -534,8 +533,7 @@ class Account:
             ]
         """
         body = {"add": validate_contacts(contacts), "is_first": False, "remove": []}
-        res = self._make_request('post', '/main/contacts/sync/', body)
-        return [contact.Contact.new_from_json_dict(con) for con in res]
+        return self._make_request('post', '/main/contacts/sync/', body)
 
     def get_saved_contacts(self) -> List[contact.Contact]:
         """
@@ -714,7 +712,8 @@ class Account:
             ]
         """
         body = {"add": validate_calls(calls), "remove": []}
-        return [call.Call.new_from_json_dict(cal) for cal in self._make_request('post', '/main/call-log/change-sync/', body)]
+        r = self._make_request('post', '/main/call-log/change-sync/', body)
+        return [call.Call.new_from_json_dict(cal) for cal in r['added_list']]
 
     def remove_calls_from_log(self, calls: List[dict]) -> List[call.Call]:
         """
@@ -757,7 +756,7 @@ class Account:
         body = {"add": [], "remove": validate_calls(calls)}
         return [call.Call.new_from_json_dict(cal) for cal in self._make_request('post', '/main/call-log/change-sync/', body)]
 
-    def block_profile(self, phone_number: Union[str, int], block_contact=True, me_full_block=True) -> bool:
+    def block_profile(self, phone_number: Union[str, int], block_contact=True, me_full_block=True) -> blocked_number.BlockedNumber:
         """
         Block user profile.
 
@@ -772,7 +771,8 @@ class Account:
         """
         body = {"block_contact": block_contact, "me_full_block": me_full_block,
                 "phone_number": str(valid_phone_number(phone_number))}
-        return self._make_request('post', '/main/users/profile/block/', body)['success']
+        if self._make_request('post', '/main/users/profile/block/', body)['success']:
+            return blocked_number.BlockedNumber.new_from_json_dict(body)
 
     def unblock_profile(self, phone_number: int, unblock_contact=True, me_full_unblock=True) -> bool:
         """
