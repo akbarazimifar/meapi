@@ -1,4 +1,5 @@
 from base64 import b64encode
+from datetime import datetime, date
 from quopri import encodestring
 from re import match, sub
 from typing import Union
@@ -22,6 +23,13 @@ def valid_phone_number(phone_number: Union[str, int]) -> int:
         if match(r"^\d{9,15}$", phone_number):
             return int(phone_number)
     raise MeException("Not a valid phone number! " + phone_number)
+
+
+def parse_date(date_str: str, date_only=False) -> Union[datetime, date, None]:
+    if date_str is None:
+        return date_str
+    date_obj = datetime.strptime(str(date_str), '%Y-%m-%d' + ('' if date_only else 'T%H:%M:%S%z'))
+    return date_obj.date() if date_only else date_obj
 
 
 def validate_profile_details(key: str, value: str) -> str:

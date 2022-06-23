@@ -1,10 +1,10 @@
 from typing import Tuple
 from meapi.exceptions import MeException
-from meapi.models import Settings as Set
+from meapi.models import settings
 
 
 class Settings:
-    def get_settings(self) -> Set:
+    def get_settings(self) -> settings.Settings:
         """
         Get current settings.
 
@@ -34,7 +34,7 @@ class Settings:
                 "who_watched_notification_enabled": True,
             }
         """
-        return Set.new_from_json_dict(self._make_request('get', '/main/settings/'), _meobj=self)
+        return settings.Settings.new_from_json_dict(self._make_request('get', '/main/settings/'), _meobj=self)
 
     def change_settings(self,
                         mutual_contacts_available: bool = None,

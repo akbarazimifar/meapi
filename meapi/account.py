@@ -1,10 +1,10 @@
 from re import match
 from typing import Union, List, Tuple
 from meapi.exceptions import MeException, MeApiException
+from meapi.models import contact, profile, blocked_number, call
 from meapi.helpers import valid_phone_number
 from meapi.random_data import get_random_data
 from random import randint
-from meapi.models import Contact, Profile, BlockedNumber
 
 
 def validate_contacts(contacts: List[dict]) -> List[dict]:
@@ -51,7 +51,7 @@ def validate_calls(calls: List[dict]) -> List[dict]:
 
 class Account:
 
-    def phone_search(self, phone_number: Union[str, int]) -> Union[Contact, None]:
+    def phone_search(self, phone_number: Union[str, int]) -> Union[contact.Contact, None]:
         """
         Get information on any phone number.
 
@@ -120,9 +120,9 @@ class Account:
                 return None
             else:
                 raise err
-        return Contact.new_from_json_dict(response['contact'])
+        return contact.Contact.new_from_json_dict(response['contact'])
 
-    def get_profile_info(self, uuid: Union[str, None] = None) -> Profile:
+    def get_profile_info(self, uuid: Union[str, None] = None) -> profile.Profile:
         """
         For Me users (those who have registered in the app) there is an account UUID obtained when receiving
         information about the phone number :py:func:`phone_search`. With it, you can get social information
@@ -300,10 +300,10 @@ class Account:
             res = self._make_request('get', '/main/users/profile/me/')
             res.update({'my_profile': True})
         try:
-            profile = res.pop('profile')
+            extra_profile = res.pop('profile')
         except KeyError:
-            profile = {}
-        return Profile.new_from_json_dict(res, _meobj=self, **profile)
+            extra_profile = {}
+        return profile.Profile.new_from_json_dict(res, _meobj=self, **extra_profile)
 
     def get_uuid(self, phone_number: Union[int, str] = None) -> Union[str, None]:
         """
@@ -483,7 +483,7 @@ class Account:
         """
         return self._make_request('put', '/main/settings/suspend-user/')['contact_suspended']
 
-    def add_contacts(self, contacts: List[dict]):
+    def add_contacts(self, contacts: List[dict]) -> List[contact.Contact]:
         """
         Upload new contacts to your Me account. See :py:func:`upload_random_data`.
 
@@ -535,9 +535,9 @@ class Account:
         """
         body = {"add": validate_contacts(contacts), "is_first": False, "remove": []}
         res = self._make_request('post', '/main/contacts/sync/', body)
-        return [Contact.new_from_json_dict(contact) for contact in res]
+        return [contact.Contact.new_from_json_dict(con) for con in res]
 
-    def get_saved_contacts(self) -> List[Contact]:
+    def get_saved_contacts(self) -> List[contact.Contact]:
         """
         Get all the contacts stored in your contacts (Which has an Me account).
 
@@ -580,7 +580,7 @@ class Account:
         """
         return [contact for group in self.get_groups_names() for contact in group.contacts if contact.in_contact_list]
 
-    def get_unsaved_contacts(self) -> List[Contact]:
+    def get_unsaved_contacts(self) -> List[contact.Contact]:
         """
         Get all the contacts that not stored in your contacts (Which has an Me account).
 
@@ -675,7 +675,7 @@ class Account:
         body = {"add": [], "is_first": False, "remove": validate_contacts(contacts)}
         return self._make_request('post', '/main/contacts/sync/', body)
 
-    def add_calls_to_log(self, calls: List[dict]) -> dict:
+    def add_calls_to_log(self, calls: List[dict]) -> List[call.Call]:
         """
         Add call to your calls log. See :py:func:`upload_random_data`.
 
@@ -714,9 +714,9 @@ class Account:
             ]
         """
         body = {"add": validate_calls(calls), "remove": []}
-        return self._make_request('post', '/main/call-log/change-sync/', body)
+        return [call.Call.new_from_json_dict(cal) for cal in self._make_request('post', '/main/call-log/change-sync/', body)]
 
-    def remove_calls_from_log(self, calls: List[dict]) -> dict:
+    def remove_calls_from_log(self, calls: List[dict]) -> List[call.Call]:
         """
         Remove calls from your calls log.
 
@@ -755,7 +755,7 @@ class Account:
             ]
         """
         body = {"add": [], "remove": validate_calls(calls)}
-        return self._make_request('post', '/main/call-log/change-sync/', body)
+        return [call.Call.new_from_json_dict(cal) for cal in self._make_request('post', '/main/call-log/change-sync/', body)]
 
     def block_profile(self, phone_number: Union[str, int], block_contact=True, me_full_block=True) -> bool:
         """
@@ -829,7 +829,7 @@ class Account:
         body = {"phone_numbers": numbers}
         return self._make_request('post', '/main/users/profile/bulk-unblock/', body)['success']
 
-    def get_blocked_numbers(self) -> List[BlockedNumber]:
+    def get_blocked_numbers(self) -> List[blocked_number.BlockedNumber]:
         """
         Get list of your blocked numbers. See :py:func:`unblock_numbers`.
 
@@ -846,7 +846,7 @@ class Account:
                 }
             ]
         """
-        return [BlockedNumber.new_from_json_dict(blocked_number) for blocked_number in self._make_request('get', '/main/settings/blocked-phone-numbers/')]
+        return [blocked_number.BlockedNumber.new_from_json_dict(blocked) for blocked in self._make_request('get', '/main/settings/blocked-phone-numbers/')]
 
     def upload_random_data(self, contacts=True, calls=True, location=True):
         """

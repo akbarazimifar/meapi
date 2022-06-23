@@ -3,12 +3,12 @@ from typing import List, Union, Tuple
 from meapi.exceptions import MeException
 from datetime import datetime, date
 from meapi.helpers import valid_phone_number
-from meapi.models import Friendship, Deleter, Watcher, Group, Socials, User, Comment
+from meapi.models import deleter, watcher, group, social, user, comment, friendship
 
 
 class Social:
 
-    def friendship(self, phone_number: Union[int, str]) -> dict:
+    def friendship(self, phone_number: Union[int, str]) -> friendship.Friendship:
         """
         Get friendship information between you and another number.
         like count mutual friends, total calls duration, how do you name each other, calls count, your watches, comments, and more.
@@ -34,7 +34,7 @@ class Social:
                 "my_comment": None,
             }
         """
-        return Friendship.new_from_json_dict(self._make_request('get', '/main/contacts/friendship/?phone_number=' + str(valid_phone_number(phone_number))))
+        return friendship.Friendship.new_from_json_dict(self._make_request('get', '/main/contacts/friendship/?phone_number=' + str(valid_phone_number(phone_number))))
 
     def report_spam(self, country_code: str, spam_name: str, phone_number: Union[str, int]) -> bool:
         """
@@ -53,7 +53,7 @@ class Social:
                 "name": str(spam_name), "phone_number": str(valid_phone_number(phone_number))}
         return self._make_request('post', '/main/names/suggestion/report/', body)['success']
 
-    def who_deleted(self) -> List[Deleter]:
+    def who_deleted(self) -> List[deleter.Deleter]:
         """
         Get list of contacts dicts who deleted you from their contacts.
 
@@ -83,9 +83,9 @@ class Social:
                 }
             ]
         """
-        return [Deleter.new_from_json_dict(deleter) for deleter in self._make_request('get', '/main/users/profile/who-deleted/')]
+        return [deleter.Deleter.new_from_json_dict(deleter) for deleter in self._make_request('get', '/main/users/profile/who-deleted/')]
 
-    def who_watched(self) -> List[Watcher]:
+    def who_watched(self) -> List[watcher.Watcher]:
         """
          Get list of contacts dicts who watched your profile.
 
@@ -117,10 +117,10 @@ class Social:
                 }
             ]
         """
-        return sorted([Watcher.new_from_json_dict(watcher) for watcher in
+        return sorted([watcher.Watcher.new_from_json_dict(watcher) for watcher in
                        self._make_request('get', '/main/users/profile/who-watched/')], key=lambda x: x.count, reverse=True)
 
-    def get_comments(self, uuid: str = None) -> List[Comment]:
+    def get_comments(self, uuid: str = None) -> List[comment.Comment]:
         """
         Get user comments.
 
@@ -183,13 +183,13 @@ class Social:
         if not uuid or uuid == self.uuid:
             if self.phone_number:
                 comments: List[dict] = self._make_request('get', '/main/comments/list/' + self.uuid)['comments']
-                for comment in comments:
-                    comment.update({'my_comment': True})
+                for com in comments:
+                    com.update({'my_comment': True})
             else:
                 raise MeException("In https://meapi.readthedocs.io/en/latest/setup.html#official-method mode you must to provide user uuid.")
         else:
             comments = self._make_request('get', '/main/comments/list/' + uuid)['comments']
-        return [Comment.new_from_json_dict(comment, _meobj=self) for comment in comments]
+        return [comment.Comment.new_from_json_dict(com, _meobj=self) for com in comments]
 
     def get_comment(self, comment_id: Union[int, str]) -> dict:
         """
@@ -226,9 +226,9 @@ class Social:
                 "message": "Test comment",
             }
         """
-        comment = self._make_request('get', '/main/comments/retrieve/' + str(comment_id))
-        comment.update({'id': int(comment_id)})
-        return Comment.new_from_json_dict(comment, _meobj=self)
+        com = self._make_request('get', '/main/comments/retrieve/' + str(comment_id))
+        com.update({'id': int(comment_id)})
+        return comment.Comment.new_from_json_dict(com, _meobj=self)
 
     def approve_comment(self, comment_id: Union[str, int]) -> bool:
         """
@@ -263,22 +263,22 @@ class Social:
         """
         return self._make_request('post', f'/main/comments/like/{comment_id}/')['success']
 
-    def publish_comment(self, uuid: str, comment: str) -> Tuple[Comment, bool]:
+    def publish_comment(self, uuid: str, your_comment: str) -> Tuple[comment.Comment, bool]:
         """
         Publish comment for another user.
 
         :param uuid: uuid of the commented user. See :py:func:`get_uuid`.
         :type uuid: str
-        :param comment: Your comment
-        :type comment: str
+        :param your_comment: Your comment
+        :type your_comment: str
         :return: comment_id if success, else False.
         :rtype: Union[int, bool]
         """
-        body = {"message": str(comment)}
-        comment = Comment.new_from_json_dict(self._make_request('post', f'/main/comments/add/{uuid}/', body))
-        return comment, bool(comment.status == 'waiting')
+        body = {"message": str(your_comment)}
+        com = comment.Comment.new_from_json_dict(self._make_request('post', f'/main/comments/add/{uuid}/', body))
+        return com, bool(com.status == 'waiting')
 
-    def get_groups_names(self) -> List[Group]:
+    def get_groups_names(self) -> List[group.Group]:
         """
         Get groups of names and see how people named you.
 
@@ -315,7 +315,7 @@ class Social:
                 ],
             }
         """
-        return sorted([Group.new_from_json_dict(group, _meobj=self, **{'status': 'active'}) for group in
+        return sorted([group.Group.new_from_json_dict(group, _meobj=self, status='active') for group in
                        self._make_request('get', '/main/names/groups/')['groups']],
                       key=lambda x: x.count, reverse=True)
 
@@ -408,7 +408,7 @@ class Social:
         body = {"contact_ids": [int(_id) for _id in contacts_ids], "name": new_name}
         return self._make_request('post', '/main/names/suggestion/', body)['success']
 
-    def get_socials(self, uuid: str = None) -> Socials:
+    def get_socials(self, uuid: str = None) -> social.Social:
         """
         Get connected social networks to Me account.
 
@@ -521,8 +521,8 @@ class Social:
             }
         """
         if not uuid:
-            return Socials.new_from_json_dict(self._make_request('post', '/main/social/update/'))
-        return Socials.new_from_json_dict(self.extra_info(str(uuid))['social'])
+            return social.Social.new_from_json_dict(self._make_request('post', '/main/social/update/'), _meobj=self, _my_social=True)
+        return self.get_profile_info(uuid).social
 
     def add_social(self,
                    twitter_token: str = None,
@@ -583,6 +583,7 @@ class Social:
                       facebook: bool = False,
                       pinterest: bool = False,
                       linkedin: bool = False,
+                      tiktok: bool = False,
                       ) -> bool:
         """
         Remove social networks from your profile. You can also hide social instead of deleting it: :py:func:`switch_social_status`.
@@ -599,6 +600,8 @@ class Social:
         :type pinterest: bool
         :param linkedin: To remove Linkedin. Default: ``False``.
         :type linkedin: bool
+        :param tiktok: To remove Tiktok. Default: ``False``.
+        :type tiktok: bool
         :return: Is removal success.
         :rtype: bool
         """
@@ -654,7 +657,9 @@ class Social:
                 body = {"social_name": str(social)}
                 current_status = self.get_socials()
                 if status == current_status[social]['is_hidden'] and current_status[social]['is_active']:  # exists but status not as the required
-                    new_status = not bool(self._make_request('post', '/main/social/hide/', body)['is_hidden'])
+                    res = self._make_request('post', '/main/social/hide/', body)
+                    print(res)
+                    new_status = not bool(res['is_hidden'])
                     if status == new_status:
                         successes += 1
 
@@ -804,7 +809,7 @@ class Social:
         body = {"uuids": uuids}
         return self._make_request('post', '/main/users/profile/share-location/stop/', body)['success']
 
-    def locations_shared_by_me(self) -> List[User]:
+    def locations_shared_by_me(self) -> List[user.User]:
         """
         Get list of users that you shared your location with them. See also :py:func:`locations_shared_with_me`.
 
@@ -823,7 +828,7 @@ class Social:
                 }
             ]
         """
-        return [User.new_from_json_dict(user) for user in self._make_request('get', '/main/users/profile/share-location/')]
+        return [user.User.new_from_json_dict(usr, _meobj=self) for usr in self._make_request('get', '/main/users/profile/share-location/')]
 
     def locations_shared_with_me(self) -> dict:
         """
