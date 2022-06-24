@@ -1,7 +1,8 @@
 from datetime import date
 from typing import List, Union
-from meapi.exceptions import MeException
-from meapi.helpers import validate_profile_details, parse_date
+from meapi.utils.exceptions import MeException
+from meapi.utils.validations import validate_profile_details
+from meapi.utils.helpers import parse_date
 from meapi.models.comment import Comment
 from meapi.models.common import _CommonMethodsForUserContactProfile
 from meapi.models.deleter import Deleter

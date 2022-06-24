@@ -2,7 +2,7 @@ from json import load, JSONDecodeError, dump
 from os import path
 from re import match
 from typing import Union
-from meapi.exceptions import MeException, MeApiException
+from meapi.utils.exceptions import MeException, MeApiException
 
 wa_auth_url = "https://wa.me/972543229534?text=Connectme"
 tg_auth_url = "http://t.me/Meofficialbot?start=__iw__{}"

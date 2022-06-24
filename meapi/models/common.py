@@ -1,5 +1,5 @@
-from meapi.exceptions import MeException
-from meapi.helpers import get_vcard
+from meapi.utils.exceptions import MeException
+from meapi.utils.helpers import get_vcard
 
 
 class _CommonMethodsForUserContactProfile:

@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Union
-from meapi.helpers import parse_date
+from meapi.utils.helpers import parse_date
 from meapi.models.me_model import MeModel
 from meapi.models.user import User
 

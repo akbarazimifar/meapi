@@ -2,7 +2,7 @@ import inspect
 import json
 from abc import ABCMeta
 from datetime import datetime, date
-from meapi.exceptions import MeException
+from meapi.utils.exceptions import MeException
 
 IGNORED_KEYS = []
 

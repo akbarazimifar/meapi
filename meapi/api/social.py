@@ -1,8 +1,8 @@
 from re import match, sub
 from typing import List, Union, Tuple
-from meapi.exceptions import MeException
+from meapi.utils.exceptions import MeException
 from datetime import datetime, date
-from meapi.helpers import valid_phone_number
+from meapi.utils.validations import validate_phone_number
 from meapi.models import deleter, watcher, group, social, user, comment, friendship
 
 
@@ -34,7 +34,7 @@ class Social:
                 "my_comment": None,
             }
         """
-        return friendship.Friendship.new_from_json_dict(self._make_request('get', '/main/contacts/friendship/?phone_number=' + str(valid_phone_number(phone_number))))
+        return friendship.Friendship.new_from_json_dict(self._make_request('get', '/main/contacts/friendship/?phone_number=' + str(validate_phone_number(phone_number))))
 
     def report_spam(self, country_code: str, spam_name: str, phone_number: Union[str, int]) -> bool:
         """
@@ -50,7 +50,7 @@ class Social:
         :rtype: bool
         """
         body = {"country_code": country_code.upper(), "is_spam": True, "is_from_v": False,
-                "name": str(spam_name), "phone_number": str(valid_phone_number(phone_number))}
+                "name": str(spam_name), "phone_number": str(validate_phone_number(phone_number))}
         return self._make_request('post', '/main/names/suggestion/report/', body)['success']
 
     def who_deleted(self) -> List[deleter.Deleter]:

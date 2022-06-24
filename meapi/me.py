@@ -2,13 +2,13 @@ from json import loads, JSONDecodeError
 from re import match
 from typing import Union
 import requests
-from meapi.account import Account
-from meapi.auth import Auth
-from meapi.exceptions import MeException, MeApiException
-from meapi.helpers import valid_phone_number
-from meapi.notifications import Notifications
-from meapi.settings import Settings
-from meapi.social import Social
+from meapi.api.account import Account
+from meapi.api.notifications import Notifications
+from meapi.api.settings import Settings
+from meapi.api.social import Social
+from meapi.utils.auth import Auth
+from meapi.utils.exceptions import MeException, MeApiException
+from meapi.utils.validations import validate_phone_number
 
 ME_BASE_API = 'https://app.mobile.me.app'
 
@@ -71,7 +71,7 @@ class Me(Auth, Account, Social, Settings, Notifications):
                 else:
                     raise MeException("Not a valid 6-digits activation code!")
 
-        self.phone_number = valid_phone_number(phone_number) if phone_number else phone_number
+        self.phone_number = validate_phone_number(phone_number) if phone_number else phone_number
         self.activation_code = activation_code
         self.access_token = access_token
         self.account_details = account_details

@@ -1,5 +1,5 @@
 from typing import Union
-from meapi.exceptions import MeException
+from meapi.utils.exceptions import MeException
 from meapi.models.me_model import MeModel
 
 

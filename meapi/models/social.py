@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Union, List
-from meapi.exceptions import MeException
-from meapi.helpers import parse_date
+from meapi.utils.exceptions import MeException
+from meapi.utils.helpers import parse_date
 from meapi.models.me_model import MeModel
 
 
