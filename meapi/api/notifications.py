@@ -1,4 +1,6 @@
-from typing import Union
+from typing import Union, List
+
+from meapi.models.notification import Notification
 
 notification_categories = {
     'names': ['JOINED_ME', 'CONTACT_ADD', 'UPDATED_CONTACT', 'DELETED_CONTACT', 'NEW_NAME_REQUEST',
@@ -32,7 +34,7 @@ class Notifications:
                           who_deleted_filter: bool = False,
                           birthday_filter: bool = False,
                           location_filter: bool = False
-                          ) -> dict:
+                          ) -> List[Notification]:
         """
         Get app notifications: new names, birthdays, comments, watches, deletes, location shares and system notifications.
 
@@ -144,7 +146,7 @@ class Notifications:
         params = f"?page={page_number}&page_size={results_limit}&status=distributed"
         if filters:
             params += f"&categories=%5B{'%2C%20'.join(filters)}%5D"
-        return self._make_request('get', '/notification/notification/items/' + params)
+        return [Notification.new_from_json_dict(notification, _meobj=self) for notification in self._make_request('get', '/notification/notification/items/' + params)['results']]
 
     def read_notification(self, notification_id: Union[int, str]) -> bool:
         """
