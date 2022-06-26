@@ -14,6 +14,144 @@ from meapi.models.watcher import Watcher
 
 
 class Profile(MeModel, _CommonMethodsForUserContactProfile):
+    """
+    * **Represents the user's profile. can also be used to update you profile details.**
+
+    Example:
+        .. code-block:: python
+
+            # Change your name.
+            my_profile = me.get_my_profile()
+            my_profile.first_name = "Chandler"
+            my_profile.last_name = "Bing"
+
+    Parameters:
+        name (``str``):
+            The user's full name (``first_name`` + ``last_name``).
+
+        first_name (``str``):
+            The user's first name.
+
+        last_name (``str`` *optional*):
+            The user's last name.
+
+        profile_picture (``str`` *optional*):
+            The user's profile picture url.
+
+        slogan (``str`` *optional*):
+            The user's bio.
+
+        email (``str`` *optional*):
+            The user's email.
+
+        gender (``str`` *optional*):
+            The user's gender: ``N`` for male and ``F`` for female.
+
+        social (:py:obj:`~meapi.models.social.Social` *optional*):
+            The user's social media networks.
+
+        phone_number (``int`` *optional*):
+            The user's phone number.
+
+        uuid (``str``):
+            The user's unique ID.
+
+        phone_prefix (``int`` *optional*):
+            The user's phone prefix.
+
+        date_of_birth (:py:obj:`~datetime.date` *optional*):
+            The user's date of birth.
+
+        device_type (``str`` *optional*):
+            The user's device type: ``android`` or ``ios``.
+
+        login_type (``str`` *optional*):
+            The user's login type: ``email`` or ``apple``.
+
+        who_deleted_enabled (``bool``):
+            Whether the user can see who deleted him (Only if ``is_premium``, Or if he uses meapi ;).
+
+        who_deleted (List[:py:obj:`~meapi.models.deleter.Deleter`] *optional*):
+            The users who deleted him.
+
+        who_watched_enabled (``bool``):
+            Whether the user can see who watched his profile (Only if ``is_premium``, Or if he uses meapi ;).
+
+        who_watched (List[:py:obj:`~meapi.models.watcher.Watcher`] *optional*):
+            The users who watched him.
+
+        friends_distance (List[:py:obj:`~meapi.models.user.User`] *optional*):
+            The users who shared their location with you.
+
+        carrier (``str`` *optional*):
+            The user's cell phone carrier.
+
+        comments_enabled (``bool``):
+            Whether the user is allowing comments.
+
+        comments_blocked (``bool``):
+            Whether the user has blocked comments.
+
+        country_code (``str`` *optional*):
+            The user's country code.
+
+        location_enabled (``bool`` *optional*):
+            Whether the user is allowing location.
+
+        is_shared_location (``bool``):
+            Whether the user is sharing their location with you.
+
+        share_location (``bool``):
+            Whether the user is sharing their location with you.
+
+        distance (``float`` *optional*):
+            The user's distance from you.
+
+        location_latitude (``float`` *optional*):
+            The user's latitude coordinate.
+
+        location_latitude (``float`` *optional*):
+            The user's latitude coordinate.
+
+        location_name (``str`` *optional*):
+            The user's location name.
+
+        is_he_blocked_me (``bool``):
+            Whether the user has blocked you.
+
+        is_permanent (``bool``):
+            Whether the user is permanent.
+
+        mutual_contacts_available (``bool``):
+            Whether the user has mutual contacts available.
+
+        mutual_contacts (List[:py:obj:`~meapi.models.mutual_contact.MutualContact`] *optional*):
+            The user's mutual contacts.
+
+        is_premium (``bool`` *optional*):
+            Whether the user is a premium user.
+
+        is_verified (``bool`` *optional*):
+            Whether the user is verified.
+
+        gdpr_consent (``bool`` *optional*):
+            Whether the user has given consent to the GDPR.
+
+        facebook_url (``str`` *optional*):
+            The user's Facebook ID.
+
+        google_url (``str`` *optional*):
+            The user's Google ID.
+
+        me_in_contacts (``bool`` *optional*):
+            Whether you are in the user's contacts.
+
+        user_type (``str`` *optional*):
+            The user's type: the color of the user in the app.
+
+        verify_subscription (``bool`` *optional*):
+            Whether the user has verified their subscription.
+    """
     def __init__(self,
                  _meobj,
                  comments_blocked: Union[bool, None] = None,
@@ -30,7 +168,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
                  country_code: Union[str, None] = None,
                  date_of_birth: Union[str, None] = None,
                  device_type: Union[str, None] = None,
-                 distance: Union[None, None] = None,
+                 distance: Union[float, None] = None,
                  email: Union[str, None] = None,
                  facebook_url: Union[str, None] = None,
                  first_name: Union[str, None] = None,
@@ -58,7 +196,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
                  who_watched_enabled: Union[bool, None] = None,
                  who_watched: Union[List[dict], None] = None,
                  friends_distance: Union[dict, None] = None,
-                 my_profile: bool = False
+                 _my_profile: bool = False
                  ):
         self.__meobj = _meobj
         self.comments_blocked = comments_blocked
@@ -104,7 +242,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         self.who_deleted = [Deleter.new_from_json_dict(deleter) for deleter in who_deleted] if who_deleted else None
         self.who_watched_enabled = who_watched_enabled
         self.who_watched = [Watcher.new_from_json_dict(watcher) for watcher in who_watched] if who_watched else None
-        self.__my_profile = my_profile
+        self.__my_profile = _my_profile
 
     def __setattr__(self, key, value):
         if getattr(self, '_Profile__my_profile', None) is not None:
@@ -127,3 +265,8 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name or ''}"
+
+    @property
+    def name(self) -> str:
+        return str(self.first_name or '' + ((' ' if self.first_name else '') + self.last_name or ''))
+
