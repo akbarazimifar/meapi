@@ -1,3 +1,4 @@
+import copy
 from datetime import datetime
 from typing import Union, List
 from meapi.utils.exceptions import MeException
@@ -6,6 +7,27 @@ from meapi.models.me_model import MeModel
 
 
 class Social(MeModel):
+    """
+    **Represents user's social media accounts.**
+
+    Parameters:
+        facebook (~meapi.models.social.SocialMediaAccount):
+            Facebook account.
+        fakebook (~meapi.models.social.SocialMediaAccount):
+            Fakebook account.
+        instagram (~meapi.models.social.SocialMediaAccount):
+            Instagram account.
+        linkedin (~meapi.models.social.SocialMediaAccount):
+            LinkedIn account.
+        pinterest (~meapi.models.social.SocialMediaAccount):
+            Pinterest account.
+        spotify (~meapi.models.social.SocialMediaAccount):
+            Spotify account.
+        tiktok (~meapi.models.social.SocialMediaAccount):
+            Tiktok account.
+        twitter (~meapi.models.social.SocialMediaAccount):
+            Twitter account.
+    """
     def __init__(self=None,
                  facebook: Union[dict, None] = None,
                  fakebook: Union[dict, None] = None,
@@ -18,18 +40,40 @@ class Social(MeModel):
                  _my_social: bool = False,
                  _meobj = None
                  ):
-        self.facebook = SocialMediaAccount.new_from_json_dict(facebook, _meobj=_meobj, _my_social=_my_social, name='facebook')
-        self.fakebook = SocialMediaAccount.new_from_json_dict(fakebook, _meobj=_meobj, _my_social=_my_social, name='fakebook')
-        self.instagram = SocialMediaAccount.new_from_json_dict(instagram, _meobj=_meobj, _my_social=_my_social, name='instagram')
-        self.linkedin = SocialMediaAccount.new_from_json_dict(linkedin, _meobj=_meobj, _my_social=_my_social, name='linkedin')
-        self.pinterest = SocialMediaAccount.new_from_json_dict(pinterest, _meobj=_meobj, _my_social=_my_social, name='pinterest')
-        self.spotify = SocialMediaAccount.new_from_json_dict(spotify, _meobj=_meobj, _my_social=_my_social, name='spotify')
-        self.tiktok = SocialMediaAccount.new_from_json_dict(tiktok, _meobj=_meobj, _my_social=_my_social, name='tiktok')
-        self.twitter = SocialMediaAccount.new_from_json_dict(twitter, _meobj=_meobj, _my_social=_my_social, name='twitter')
+        self.facebook: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(facebook, _meobj=_meobj, _my_social=_my_social, name='facebook')
+        self.fakebook: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(fakebook, _meobj=_meobj, _my_social=_my_social, name='fakebook')
+        self.instagram: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(instagram, _meobj=_meobj, _my_social=_my_social, name='instagram')
+        self.linkedin: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(linkedin, _meobj=_meobj, _my_social=_my_social, name='linkedin')
+        self.pinterest: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(pinterest, _meobj=_meobj, _my_social=_my_social, name='pinterest')
+        self.spotify: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(spotify, _meobj=_meobj, _my_social=_my_social, name='spotify')
+        self.tiktok: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(tiktok, _meobj=_meobj, _my_social=_my_social, name='tiktok')
+        self.twitter: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(twitter, _meobj=_meobj, _my_social=_my_social, name='twitter')
         super().__init__()
 
 
 class SocialMediaAccount(MeModel):
+    """
+    **Represents user's social media account.**
+
+    Parameters:
+        name (``str``):
+            Name of social media account.
+        profile_id (``str``):
+            Profile ID or username of social media account.
+        posts (List[:py:obj:`~meapi.models.social.Post`]):
+            List of posts from social media account.
+        is_active (``bool``):
+            Is social media account active.
+        is_hidden (``bool``):
+            Is social media account hidden by the user (You can see it because the API sends it anyway ;).
+
+    Methods:
+
+    .. automethod:: add
+    .. automethod:: remove
+    .. automethod:: hide
+    .. automethod:: unhide
+    """
     def __init__(self,
                  name: str,
                  _my_social: bool,
@@ -55,20 +99,34 @@ class SocialMediaAccount(MeModel):
         return super().__setattr__(key, value)
 
     def __repr__(self):
-        return f"<Social profile_id={self.profile_id} is_active={self.is_active}>"
+        return f"<{self.name.capitalize()} profile_id={self.profile_id} is_active={self.is_active}>"
 
     def __str__(self):
-        return str(self.profile_id)
+        return str(self.name)
 
-    def add(self, token_or_url) -> bool:
+    def add(self, token_or_url: str) -> bool:
+        """
+        **Add social media account to your Me profile.**
+            - If you have at least two social media accounts, you get verification tag on your profile. ``is_verified`` = ``True``.
+
+        Parameters:
+            token_or_url (``str``):
+                Token or URL of social media account. See :py:func:`~meapi.Me.add_social` for more information.
+        """
         if not self.__my_social:
             raise MeException(f"You cannot add social to another user!")
-        if self.name in ['linkedin', 'pinterest']:
-            key = f'{self.name}_url'
-        else:
-            key = f'{self.name}_token'
+        if self.is_active:
+            raise MeException("This social is already active, No need to add it again!")
+        key = f'{self.name}_url' if self.name in ['linkedin', 'pinterest'] else f'{self.name}_token'
+        if self.__meobj.add_social(**{key: token_or_url}):
+            self.__dict__ = copy.deepcopy(getattr(self.__meobj.get_socials(), self.name).__dict__)
+            return True
+        return False
 
     def remove(self) -> bool:
+        """
+        - Remove social media account from your Me profile.
+        """
         if not self.__my_social:
             raise MeException("You cannot remove social from another user!")
         if not self.is_active:
@@ -82,31 +140,54 @@ class SocialMediaAccount(MeModel):
         return False
 
     def hide(self) -> bool:
+        """
+        - Hide social media account in your Me profile.
+        """
         if not self.__my_social:
             raise MeException("You cannot remove social from another user!")
         if not self.is_active:
             raise MeException("This social is not active!")
         if self.is_hidden:
             raise MeException("This social is already hidden!")
-        if self.__meobj.switch_social_status(**{self.name: True}):  # todo create separate methods to hide and to unhide
+        if self.__meobj.switch_social_status(**{self.name: False}):
             self.is_hidden = True
             return True
         return False
 
     def unhide(self) -> bool:
+        """
+        - Unhide social media account in your Me profile.
+        """
         if not self.__my_social:
             raise MeException("You cannot remove social from another user!")
         if not self.is_active:
             raise MeException("This social is not active!")
         if not self.is_hidden:
             raise MeException("This social is already unhidden!")
-        if self.__meobj.switch_social_status(**{self.name: True}):  # todo create separate methods to hide and to hide
+        if self.__meobj.switch_social_status(**{self.name: True}):
             self.is_hidden = False
             return True
         return False
 
 
 class Post(MeModel):
+    """
+    **Represents Social Media post.**
+
+    Parameters:
+        author (``str`` *optional*):
+            Author of post.
+        owner (``str`` *optional*):
+            Owner of post.
+        text_first (``str`` *optional*):
+            First text of post.
+        text_second (``str`` *optional*):
+            Second text of post.
+        redirect_id (``str`` *optional*):
+            Redirect ID of post.
+        photo (``str`` *optional*):
+            Photo of post.
+    """
     def __init__(self,
                  posted_at: Union[str, None] = None,
                  photo: Union[str, None] = None,

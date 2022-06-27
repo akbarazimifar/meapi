@@ -15,7 +15,7 @@ from meapi.models.watcher import Watcher
 
 class Profile(MeModel, _CommonMethodsForUserContactProfile):
     """
-    * **Represents the user's profile. can also be used to update you profile details.**
+    **Represents the user's profile. can also be used to update you profile details.**
 
     Example:
         .. code-block:: python
@@ -151,6 +151,12 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
 
         verify_subscription (``bool`` *optional*):
             Whether the user has verified their subscription.
+
+    Methods:
+
+    .. automethod:: get_vcard
+    .. automethod:: block
+    .. automethod:: unblock
     """
     def __init__(self,
                  _meobj,
