@@ -4,6 +4,8 @@ from meapi.utils.exceptions import MeException
 from datetime import datetime, date
 from meapi.utils.validations import validate_phone_number
 from meapi.models import deleter, watcher, group, social, user, comment, friendship
+from meapi.api.raw.social import *
+from operator import attrgetter
 
 
 class Social:
@@ -15,30 +17,15 @@ class Social:
 
         :param phone_number: International phone number format.
         :type phone_number: Union[int, str]
-        :return: Dict with friendship data.
-        :rtype: dict
-
-        Example of friendship::
-
-            {
-                "calls_duration": None,
-                "he_called": 0,
-                "he_named": "He named",
-                "he_watched": 3,
-                "his_comment": None,
-                "i_called": 0,
-                "i_named": "You named",
-                "i_watched": 2,
-                "is_premium": False,
-                "mutual_friends_count": 6,
-                "my_comment": None,
-            }
+        :return: Friendship object.
+        :rtype: :py:obj:`~meapi.models.friendship.Friendship`
         """
-        return friendship.Friendship.new_from_json_dict(self._make_request('get', '/main/contacts/friendship/?phone_number=' + str(validate_phone_number(phone_number))))
+        return friendship.Friendship.new_from_json_dict(friendship_raw(self, validate_phone_number(phone_number)))
 
     def report_spam(self, country_code: str, spam_name: str, phone_number: Union[str, int]) -> bool:
         """
         Report spam on another phone number.
+            - You get notify when your report is approved. See :py:func:`get_notifications`.
 
         :param country_code: Two letters code, ``IL``, ``IT``, ``US`` etc. // `Country codes <https://countrycode.org/>`_.
         :type country_code: str
@@ -49,78 +36,46 @@ class Social:
         :return: Is report success
         :rtype: bool
         """
-        body = {"country_code": country_code.upper(), "is_spam": True, "is_from_v": False,
-                "name": str(spam_name), "phone_number": str(validate_phone_number(phone_number))}
-        return self._make_request('post', '/main/names/suggestion/report/', body)['success']
+        return report_spam_raw(self, country_code.upper(), str(validate_phone_number(phone_number)), spam_name)['success']
 
-    def who_deleted(self) -> List[deleter.Deleter]:
+    def who_deleted(self, incognito: bool = False) -> List[deleter.Deleter]:
         """
-        Get list of contacts dicts who deleted you from their contacts.
+        Get list of users who deleted you from their contacts.
 
-        **The** ``who_deleted`` **configuration must be enabled in your settings account in order to see who deleted you. See** :py:func:`change_social_settings`.
+        **The** ``who_deleted`` **setting must be enabled in your settings account in order to see who deleted you. See** :py:func:`change_settings`.
 
-        :return: list of dicts
-        :rtype: List[dict]
+        :param incognito: If ``True``, this will set ``who_deleted`` to ``True``, and in the end, return it back to ``False``. *Default:* ``False``.
+        :type incognito: bool
 
-        Example::
-
-            [
-                {
-                    "created_at": "2021-09-12T15:42:57Z",
-                    "user": {
-                        "email": "",
-                        "profile_picture": None,
-                        "first_name": "Test",
-                        "last_name": "Test",
-                        "gender": None,
-                        "uuid": "aa221ae8-XXX-4679-XXX-91307XXX5a9a2",
-                        "is_verified": False,
-                        "phone_number": 123456789012,
-                        "slogan": None,
-                        "is_premium": False,
-                        "verify_subscription": True,
-                    },
-                }
-            ]
+        :return: list of Deleter objects.
+        :rtype: List[:py:obj:`~meapi.models.deleter.Deleter`]
         """
-        return [deleter.Deleter.new_from_json_dict(deleter) for deleter in self._make_request('get', '/main/users/profile/who-deleted/')]
+        if incognito:
+            self.change_settings(who_deleted=True)
+        res = who_deleted_raw(self)
+        if incognito:
+            self.change_settings(who_deleted=False)
+        return [deleter.Deleter.new_from_json_dict(dlt) for dlt in res]
 
-    def who_watched(self) -> List[watcher.Watcher]:
+    def who_watched(self, incognito: bool = False) -> List[watcher.Watcher]:
         """
-         Get list of contacts dicts who watched your profile.
+        Get list of users who watch your profile.
 
-        **The** ``who_watched`` **configuration must be enabled in your settings account in order to see watched. See** :py:func:`change_social_settings`.
+        **The** ``who_watched`` **setting must be enabled in your settings account in order to see who watched your profile. See** :py:func:`change_settings`.
 
-        :return: list of dicts
-        :rtype: List[dict]
+        :param incognito: If ``True``, this will set ``who_watched`` to ``True``, and in the end, return it back to ``False``. *Default:* ``False``.
+        :type incognito: bool
 
-        Example::
-
-            [
-                {
-                    "last_view": "2022-04-16T17:13:24Z",
-                    "user": {
-                        "email": "eliezXXXXXXXXX94@gmail.com",
-                        "profile_picture": "https://d18zXXXXXXXXXXXXXcb14529ccc7db.jpg",
-                        "first_name": "Test",
-                        "last_name": None,
-                        "gender": None,
-                        "uuid": "f8d03XXX97b-ae86-35XXXX9c6e5",
-                        "is_verified": False,
-                        "phone_number": 97876453245,
-                        "slogan": None,
-                        "is_premium": True,
-                        "verify_subscription": True,
-                    },
-                    "count": 14,
-                    "is_search": None,
-                }
-            ]
+        :return: list of Watcher objects sorted by watch count.
+        :rtype: List[:py:obj:`~meapi.models.watcher.Watcher`]
         """
-        r = self._make_request('get', '/main/users/profile/who-watched/')
-        print(r)
+        if incognito:
+            self.change_settings(who_watched=True)
+        res = who_watched_raw(self)
+        if incognito:
+            self.change_settings(who_watched=False)
         return sorted([watcher.Watcher.new_from_json_dict(watch) for watch in
-                       r], key=lambda x: x.count, reverse=True)
+                       res], key=lambda x: x.count, reverse=True)
 
     def get_comments(self, uuid: str = None) -> List[comment.Comment]:
         """
@@ -128,109 +83,30 @@ class Social:
 
         :param uuid: User uuid. See :py:func:`get_uuid`. Default: Your uuid.
         :type uuid: str
-        :return: Dict with list of comments.
-        :rtype: Dict[list]
-
-        Example::
-
-            {
-                "comments": [
-                    {
-                        "like_count": 2,
-                        "status": "approved",
-                        "message": "Test comment",
-                        "author": {
-                            "email": "user@domain.com",
-                            "profile_picture": "https://d18zaexen4dp1s.cloudfront.net/593a9XXXXXXd7437XXXX7.jpg",
-                            "first_name": "Name test",
-                            "last_name": "",
-                            "gender": None,
-                            "uuid": "8a0XXXXXXXXXXX0a-83XXXXXXb597",
-                            "is_verified": True,
-                            "phone_number": 123456789098,
-                            "slogan": "https://example.com",
-                            "is_premium": False,
-                            "verify_subscription": True,
-                        },
-                        "is_liked": False,
-                        "id": 662,
-                        "comments_blocked": False,
-                    },
-                    {
-                        "like_count": 2,
-                        "status": "approved",
-                        "message": "hhaha",
-                        "author": {
-                            "email": "haXXXXiel@gmail.com",
-                            "profile_picture": None,
-                            "first_name": "Test",
-                            "last_name": "Test",
-                            "gender": None,
-                            "uuid": "59XXXXXXXXXXXX-b6c7-f2XXXXXXXXXX26d267",
-                            "is_verified": False,
-                            "phone_number": 914354653176,
-                            "slogan": None,
-                            "is_premium": False,
-                            "verify_subscription": True,
-                        },
-                        "is_liked": True,
-                        "id": 661,
-                        "comments_blocked": False,
-                    },
-                ],
-                "count": 2,
-                "user_comment": None,
-            }
+        :return: List of Comment objects sorted by their like count.
+        :rtype: List[:py:obj:`~meapi.models.comment.Comment`]
         """
         if not uuid or uuid == self.uuid:
             if self.phone_number:
-                comments: List[dict] = self._make_request('get', '/main/comments/list/' + self.uuid)['comments']
-                for com in comments:
-                    com.update({'my_comment': True})
+                _my_comment = True
+                uuid = self.uuid
             else:
                 raise MeException("In https://meapi.readthedocs.io/en/latest/setup.html#official-method mode you must to provide user uuid.")
         else:
-            comments = self._make_request('get', '/main/comments/list/' + uuid)['comments']
-        return [comment.Comment.new_from_json_dict(com, _meobj=self) for com in comments]
+            _my_comment = False
+        comments = get_comments_raw(self, str(uuid))['comments']
+        return sorted([comment.Comment.new_from_json_dict(com, _meobj=self) for com in comments], key=lambda x: x.like_count, reverse=True)
 
     def get_comment(self, comment_id: Union[int, str]) -> dict:
         """
         Get comment details, comment text, who and how many liked, create time and more.
 
-        :param comment_id: Comment id from :py:func:`get_comments`
+        :param comment_id: Comment id from :py:func:`get_comments`.
         :type comment_id: Union[int, str]
-        :return: Dict with comment details.
-        :rtype: dict
-
-        Example::
-
-            {
-                "comment_likes": [
-                    {
-                        "author": {
-                            "email": "yonXXXXXX@gmail.com",
-                            "first_name": "Jonatan",
-                            "gender": "M",
-                            "is_premium": False,
-                            "is_verified": True,
-                            "last_name": "Fa",
-                            "phone_number": 97655764547,
-                            "profile_picture": "https://d18zaexXXXp1s.cloudfront.net/2eXXefea6dXXXXXXe3.jpg",
-                            "slogan": None,
-                            "uuid": "807XXXXX2-414a-b7XXXXX92cd679",
-                            "verify_subscription": True,
-                        },
-                        "created_at": "2022-04-17T16:53:49Z",
-                        "id": 194404,
-                    }
-                ],
-                "like_count": 1,
-                "message": "Test comment",
-            }
+        :return: Comment object.
+        :rtype: :py:obj:`~meapi.models.comment.Comment`
         """
-        com = self._make_request('get', '/main/comments/retrieve/' + str(comment_id))
-        com.update({'id': int(comment_id)})
-        return comment.Comment.new_from_json_dict(com, _meobj=self)
+        return comment.Comment.new_from_json_dict(get_comment_raw(self, int(comment_id)), _meobj=self, id=int(comment_id))
 
     def approve_comment(self, comment_id: Union[str, int]) -> bool:
         """
@@ -393,7 +269,7 @@ class Social:
 
         :param contacts_ids: Single or list of contact ids from the same group. See :py:func:`get_groups_names`.
         :type contacts_ids: Union[int, str, List[Union[int, str]]]
-        :param new_name: Suggested name, Default: Your profile name from :py:func:`get_profile_info`.
+        :param new_name: Suggested name, Default: Your profile name from :py:func:`get_profile`.
         :type new_name: Union[str, None]
         :return: Is asking success.
         :rtype: bool
@@ -402,7 +278,7 @@ class Social:
             contacts_ids = [contacts_ids]
 
         if not new_name:  # suggest your name in your profile
-            my_profile = self.get_profile_info()
+            my_profile = self.get_profile()
             new_name += str(my_profile.first_name)
             if my_profile.last_name:
                 new_name += (" " + my_profile.last_name)
@@ -524,15 +400,16 @@ class Social:
         """
         if not uuid:
             return social.Social.new_from_json_dict(self._make_request('post', '/main/social/update/'), _meobj=self, _my_social=True)
-        return self.get_profile_info(uuid).social
+        return self.get_profile(uuid).social
 
     def add_social(self,
                    twitter_token: str = None,
                    spotify_token: str = None,
                    instagram_token: str = None,
                    facebook_token: str = None,
+                   tiktok_token: str = None,
                    pinterest_url: str = None,
-                   linkedin_url: str = None, ) -> Tuple[bool, List[str]]:
+                   linkedin_url: str = None, ) -> bool:
         """
         Add social network to your me account.
 
@@ -540,43 +417,45 @@ class Social:
 
         :param twitter_token: `Twitter Token <https://gist.github.com/david-lev/b158f1cc0cc783dbb13ff4b54416ceec#file-twitter_token-md>`_. Default = ``None``.
         :type twitter_token: str
-        :param spotify_token: Log in to `spotify <https://accounts.spotify.com/authorize?client_id=0b1ea72f7dce420583038b49fd04be50&response_type=code&redirect_uri=https://app.mobile.me.app/&scope=user-read-email%20playlist-read-private>`_ and copy the token after the ``https://app.mobile.me.app/?code=``. Default = ``None``.
+        :param spotify_token: Log in to `Spotify <https://accounts.spotify.com/authorize?client_id=0b1ea72f7dce420583038b49fd04be50&response_type=code&redirect_uri=https://app.mobile.me.app/&scope=user-read-email%20playlist-read-private>`_ and copy the token after the ``https://app.mobile.me.app/?code=``. Default = ``None``.
         :type spotify_token: str
-        :param instagram_token: Log in to `instagram <https://api.instagram.com/oauth/authorize/?app_id=195953705182737&redirect_uri=https://app.mobile.me.app/&response_type=code&scope=user_profile,user_media>`_ and copy the token after the ``https://app.mobile.me.app/?code=``. Default = ``None``.
+        :param instagram_token: Log in to `Instagram <https://api.instagram.com/oauth/authorize/?app_id=195953705182737&redirect_uri=https://app.mobile.me.app/&response_type=code&scope=user_profile,user_media>`_ and copy the token after the ``https://app.mobile.me.app/?code=``. Default = ``None``.
         :type instagram_token: str
         :param facebook_token: `Facebook token <https://facebook.com/v12.0/dialog/oauth?cct_prefetching=0&client_id=799397013456724>`_. Default = ``None``.
         :type facebook_token: str
+        :param tiktok_token: Log in to `TikTok <https://www.tiktok.com/auth/authorize?response_type=code&redirect_uri=https%3A%2F%2Fopen-api.tiktok.com%2Foauth%2Fauthorize%2Fcallback%2F&client_key=awwprdkduitl3ym8&state=xxx&from=opensdk&scope=user.info.basic%2Cvideo.list&optionalScope=&signature=f906b98d2febaad72580c16652d737ef&app_identity=02fc9e030144d785e61407f04a0ff171&device_platform=android>`_ and copy the token from ``data`` > ``code``. Default = ``None``.
+        :type tiktok_token: str
         :param pinterest_url: Profile url - ``https://www.pinterest.com/username/``. Default = ``None``.
         :type pinterest_url: str
         :param linkedin_url: Profile url - ``https://www.linkedin.com/in/username``. Default = ``None``.
         :type linkedin_url: str
         :return: Tuple of: is_success, list of failed.
-        :rtype: Tuple[bool, List[str]]
+        :rtype: bool
         """
         args = locals()
         del args['self']
         if sum(bool(i) for i in args.values()) < 1:
             raise MeException("You need to provide at least one social!")
         failed = []
-        for social, token_or_url in args.items():
+        for soc, token_or_url in args.items():
             if token_or_url is not None:
-                if 'url' in social:
-                    if match(r"^https?:\/\/.*{domain}.*$".format(domain=social.replace('_url', '')), token_or_url):
+                if 'url' in soc:
+                    if match(r"^https?:\/\/.*{domain}.*$".format(domain=soc.replace('_url', '')), token_or_url):
                         field_name = 'profile_id'
                         endpoint = 'update-url'
                         is_token = False
                     else:
-                        raise MeException(f"You must provide a valid link to the {social.replace('_url', '').capitalize()} profile!")
+                        raise MeException(f"You must provide a valid link to the {soc.replace('_url', '').capitalize()} profile!")
                 else:
                     field_name = 'code_first'
                     endpoint = 'save-auth-token'
                     is_token = True
-                social_name = sub(r'_(token|url)$', '', social)
+                social_name = sub(r'_(token|url)$', '', soc)
                 body = {'social_name': social_name, field_name: token_or_url}
                 results = self._make_request('post', f'/main/social/{endpoint}/', body)
                 if not (bool(results['success']) if is_token else bool(results[social_name]['profile_id'] == token_or_url)):
                     failed.append(social_name)
-        return not bool(failed), failed
+        return not bool(failed)
 
     def remove_social(self,
                       twitter: bool = False,
@@ -609,7 +488,7 @@ class Social:
         """
         args = locals()
         del args['self']
-        true_values = sum(bool(i) for i in args.values())
+        true_values = sum(args.values())
         if true_values < 1:
             raise MeException("You need to remove at least one social!")
         successes = 0
@@ -617,7 +496,6 @@ class Social:
             if value and isinstance(value, bool):
                 body = {"social_name": str(social)}
                 res = self._make_request('post', '/main/social/delete/', body)
-                print(res)
                 if res.get('success'):
                     successes += 1
         return bool(true_values == successes)
@@ -627,6 +505,7 @@ class Social:
                              spotify: bool = None,
                              instagram: bool = None,
                              facebook: bool = None,
+                             tiktok: bool = None,
                              pinterest: bool = None,
                              linkedin: bool = None,
                              ) -> bool:
@@ -641,30 +520,32 @@ class Social:
         :type instagram: bool
         :param facebook: Switch Facebook status Default: ``None``.
         :type facebook: bool
+        :param tiktok: Switch TikTok status Default: ``None``.
+        :type tiktok: bool
         :param pinterest: Switch Pinterest status Default: ``None``.
         :type pinterest: bool
         :param linkedin: Switch Linkedin status Default: ``None``.
         :type linkedin: bool
-        :return: is switch success (you get ``True`` even if social won't set before).
+        :return: is switch success (you get ``True`` even if social active or was un/hidden before).
         :rtype: bool
         """
         args = locals()
         del args['self']
-        not_null_values = sum(bool(i) for i in args.values() if i is not None) or sum(not bool(i) for i in args.values() if i is not None)
+        not_null_values = sum(True for i in args.values() if i is not None)
         if not_null_values < 1:
             raise MeException("You need to switch status to at least one social!")
         successes = 0
-        for social, status in args.items():
+        for soc, status in args.items():
             if status is not None and isinstance(status, bool):
-                body = {"social_name": str(social)}
-                current_status = self.get_socials()
-                if status == current_status[social]['is_hidden'] and current_status[social]['is_active']:  # exists but status not as the required
+                is_active, is_hidden = attrgetter(f'{soc}.is_active', f'{soc}.is_hidden')(self.get_socials())
+                if not is_active or (not is_hidden and status) or (is_hidden and not status):
+                    successes += 1
+                    continue
+                else:
+                    body = {"social_name": str(soc)}
                     res = self._make_request('post', '/main/social/hide/', body)
-                    print(res)
-                    new_status = not bool(res['is_hidden'])
-                    if status == new_status:
+                    if status != bool(res['is_hidden']):
                         successes += 1
-
         return bool(not_null_values == successes)
 
     def numbers_count(self) -> int:
@@ -714,14 +595,14 @@ class Social:
 
     def get_age(self, uuid=None) -> float:
         """
-        Get user age. calculate from ``date_of_birth``, provided by :py:func:`get_profile_info`.
+        Get user age. calculate from ``date_of_birth``, provided by :py:func:`get_profile`.
 
         :param uuid: User uuid. See :py:func:`get_uuid`. Default: Your uuid.
         :type uuid: str
         :return: User age if date of birth exists. else - 0.0
         :rtype: float
         """
-        date_of_birth = self.get_profile_info(uuid)['profile']['date_of_birth']
+        date_of_birth = self.get_profile(uuid)['profile']['date_of_birth']
         if match(r"^\d{4}(\-)([0-2][0-9]|(3)[0-1])(\-)(((0)[0-9])|((1)[0-2]))$", str(date_of_birth)):
             days_in_year = 365.2425
             return round((date.today() - datetime.strptime(date_of_birth, "%Y-%m-%d").date()).days / days_in_year, 1)
@@ -778,7 +659,7 @@ class Social:
         :return: The distance between you in kilometers. None if the user not shared his location with you.
         :rtype: Union[float, None]
         """
-        results = self.get_profile_info(uuid)
+        results = self.get_profile(uuid)
         if results['profile'].get('distance'):
             return results['profile']['distance']
         return None

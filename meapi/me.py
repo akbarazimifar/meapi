@@ -2,10 +2,10 @@ from json import loads, JSONDecodeError
 from re import match
 from typing import Union
 import requests
-from meapi.api.account import Account
-from meapi.api.notifications import Notifications
-from meapi.api.settings import Settings
-from meapi.api.social import Social
+from meapi.api.client.account import Account
+from meapi.api.client.notifications import Notifications
+from meapi.api.client.settings import Settings
+from meapi.api.client.social import Social
 from meapi.utils.auth import Auth
 from meapi.utils.exceptions import MeException, MeApiException
 from meapi.utils.validations import validate_phone_number

@@ -17,7 +17,7 @@ class Comment(MeModel):
                  comments_blocked: Union[bool, None] = None,
                  created_at: Union[str, None] = None,
                  comment_likes: Union[dict, None] = None,
-                 my_comment: bool = False
+                 _my_comment: bool = False
                  ):
         self.like_count = like_count
         self.status = status
@@ -30,7 +30,7 @@ class Comment(MeModel):
         self.comment_likes = [User.new_from_json_dict(user['author']) for user in
                               comment_likes] if comment_likes else None
         self.__meobj = _meobj
-        self.__my_comment = my_comment
+        self.__my_comment = _my_comment
         self.__init_done = True
 
     def __setattr__(self, key, value):

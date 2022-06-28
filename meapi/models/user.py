@@ -40,6 +40,10 @@ class User(MeModel, _CommonMethodsForUserContactProfile):
         self.distance = distance
         super().__init__()
 
+    @property
+    def name(self):
+        return str(self.first_name or '' + ((' ' if self.first_name else '') + self.last_name or ''))
+
     def __repr__(self):
         return f"User name={self.first_name} {self.last_name or ''}>"
 
