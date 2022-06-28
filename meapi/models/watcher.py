@@ -6,6 +6,9 @@ from meapi.models.user import User
 
 
 class Watcher(MeModel):
+    """
+        - For more information about Watcher <https://me.app/who-viewed-my-profile/>
+    """
     def __init__(self, last_view: Union[str, None] = None,
                  user: Union[dict, None] = None,
                  count: Union[int, None] = None,

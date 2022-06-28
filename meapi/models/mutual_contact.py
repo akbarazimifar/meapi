@@ -4,6 +4,9 @@ from meapi.models.user import User
 
 
 class MutualContact(MeModel):
+    """
+    - `For more information about MutualContact <https://me.app/mutual-contacts/>`_
+    """
     def __init__(self,
                  phone_number: Union[int, None] = None,
                  name: Union[str, None] = None,

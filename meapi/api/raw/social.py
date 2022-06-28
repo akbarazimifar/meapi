@@ -217,3 +217,113 @@ def get_comment_raw(me_obj, comment_id: int) -> dict:
     """
     return me_obj._make_request('get', f'/main/comments/retrieve/{comment_id}')
 
+
+def publish_comment_raw(meobj, uuid: str, your_comment: str) -> dict:
+    """
+    Publish comment.
+
+    :param uuid: User uuid.
+    :type uuid: str
+    :param your_comment: Comment text.
+    :type your_comment: str
+    :return: Dict with comment details.
+    :rtype: dict
+
+    Example::
+
+        {
+            'like_count': 0,
+            'status': 'waiting',
+            'message': 'your comment',
+            'author': {
+                'email': 'exmaple@gmail.com',
+                'profile_picture': 'https://d18zp1s.cloudfront.net/b.jpg',
+                'first_name': 'Ross',
+                'last_name': '',
+                'gender': None,
+                'uuid': 'ds-dfdf-dcd-af6a-sdffdfdf',
+                'is_verified': True,
+                'phone_number': 9125342435483,
+                'slogan': 'bla bla',
+                'is_premium': False,
+                'verify_subscription': True
+            },
+            'is_liked': False,
+            'id': 123565,
+            'comments_blocked': False
+        }
+    """
+    body = {"message": your_comment}
+    return meobj._make_request('post', f'/main/comments/add/{uuid}/', body)
+
+def approve_comment_raw(meobj, comment_id: int) -> dict:
+    """
+    Approve comment.
+
+    :param comment_id: Comment id.
+    :type comment_id: int
+    :return: Dict with comment details.
+    :rtype: dict
+
+    Example::
+
+        {
+            'like_count': 0,
+            'status': 'approved',
+            'message': 'your comment',
+            'author': {
+                'email': 'exmaple@gmail.com',
+                'profile_picture': 'https://d18zp1s.cloudfront.net/b.jpg',
+                'first_name': 'Ross',
+                'last_name': '',
+                'gender': None,
+                'uuid': 'ds-dfdf-dcd-af6a-sdffdfdf',
+                'is_verified': True,
+                'phone_number': 9125342435483,
+                'slogan': 'bla bla',
+                'is_premium': False,
+                'verify_subscription': True
+            },
+            'is_liked': False,
+            'id': 123565,
+            'comments_blocked': False
+        }
+    """
+    return meobj._make_request('post', f'/main/comments/approve/{comment_id}')
+
+
+def delete_comment_raw(meobj, comment_id: int) -> dict:
+    """
+    Delete comment.
+
+    :param comment_id: Comment id.
+    :type comment_id: int
+    :return: Dict with comment details.
+    :rtype: dict
+
+    Example::
+
+        {
+            'like_count': 0,
+            'status': 'ignored',
+            'message': 'your comment',
+            'author': {
+                'email': 'exmaple@gmail.com',
+                'profile_picture': 'https://d18zp1s.cloudfront.net/b.jpg',
+                'first_name': 'Ross',
+                'last_name': '',
+                'gender': None,
+                'uuid': 'ds-dfdf-dcd-af6a-sdffdfdf',
+                'is_verified': True,
+                'phone_number': 9125342435483,
+                'slogan': 'bla bla',
+                'is_premium': False,
+                'verify_subscription': True
+            },
+            'is_liked': False,
+            'id': 123565,
+            'comments_blocked': False
+        }
+    """
+    return meobj._make_request('delete', f'/main/comments/approve/{comment_id}/')
+

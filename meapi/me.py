@@ -110,7 +110,6 @@ class Me(Auth, Account, Social, Settings, Notifications):
         :return: API response as dict or list.
         :rtype: Union[dict, list]
         """
-        getattr(requests, 'post')
         url = ME_BASE_API + endpoint
         request_types = ['post', 'get', 'put', 'patch', 'delete']
         if req_type not in request_types:
@@ -132,7 +131,11 @@ class Me(Auth, Account, Social, Settings, Notifications):
                 continue
 
             if response.status_code >= 400:
-                raise MeApiException(response.status_code, str(response_text.get('detail') or response_text.get('phone_number') or response_text), response.reason)
+                raise MeApiException(http_status=response.status_code,
+                                     msg=((str(response_text.get('detail') or response_text.get('phone_number'))
+                                           if isinstance(response_text, dict) else
+                                           response_text[0] if isinstance(response_text, list) else None) or response_text),
+                                     reason=response.reason)
             return response_text
         else:
             raise MeException(f"Error when trying to send a {req_type} request to {url}, with body:\n{body} and with headers:\n{headers}.")

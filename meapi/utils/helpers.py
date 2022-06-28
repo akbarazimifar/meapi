@@ -11,7 +11,7 @@ from meapi.utils.exceptions import MeException
 RANDOM_API = "https://random-data-api.com/api"
 
 
-def parse_date(date_str: str, date_only=False) -> Union[datetime, date, None]:
+def parse_date(date_str: Union[str, None], date_only=False) -> Union[datetime, date, None]:
     if date_str is None:
         return date_str
     date_obj = datetime.strptime(str(date_str), '%Y-%m-%d' + ('' if date_only else 'T%H:%M:%S%z'))

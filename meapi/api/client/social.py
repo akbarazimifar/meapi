@@ -1,6 +1,9 @@
 from re import match, sub
 from typing import List, Union, Tuple
-from meapi.utils.exceptions import MeException
+from meapi.models.contact import Contact
+from meapi.models.profile import Profile
+from meapi.models.user import User
+from meapi.utils.exceptions import MeException, MeApiException
 from datetime import datetime, date
 from meapi.utils.validations import validate_phone_number
 from meapi.models import deleter, watcher, group, social, user, comment, friendship
@@ -38,123 +41,222 @@ class Social:
         """
         return report_spam_raw(self, country_code.upper(), str(validate_phone_number(phone_number)), spam_name)['success']
 
-    def who_deleted(self, incognito: bool = False) -> List[deleter.Deleter]:
+    def who_deleted(self, incognito: bool = False, sorted_by: Union[str, None] = 'created_at') -> List[deleter.Deleter]:
         """
         Get list of users who deleted you from their contacts.
 
         **The** ``who_deleted`` **setting must be enabled in your settings account in order to see who deleted you. See** :py:func:`change_settings`.
 
         :param incognito: If ``True``, this will set ``who_deleted`` to ``True``, and in the end, return it back to ``False``. *Default:* ``False``.
+         (Required two more API calls to enable ``who_deleted`` and to disable it after.)
         :type incognito: bool
-
-        :return: list of Deleter objects.
+        :param sorted_by: Sort by ``created_at`` or ``None``. *Default:* ``created_at``.
+        :type sorted_by: Union[str, None]
+        :return: List of Deleter objects sorted by their creation time.
         :rtype: List[:py:obj:`~meapi.models.deleter.Deleter`]
         """
+        if sorted_by not in ['created_at', None]:
+            raise MeException("sorted_by must be 'created_at' or None.")
         if incognito:
             self.change_settings(who_deleted=True)
         res = who_deleted_raw(self)
         if incognito:
             self.change_settings(who_deleted=False)
-        return [deleter.Deleter.new_from_json_dict(dlt) for dlt in res]
+        deleters = [deleter.Deleter.new_from_json_dict(dlt) for dlt in res]
+        return sorted(deleters, key=attrgetter(sorted_by), reverse=True) if sorted_by else deleters
 
-    def who_watched(self, incognito: bool = False) -> List[watcher.Watcher]:
+    def who_watched(self, incognito: bool = False, sorted_by: str = 'count') -> List[watcher.Watcher]:
         """
-        Get list of users who watch your profile.
+        Get list of users who watched your profile.
 
         **The** ``who_watched`` **setting must be enabled in your settings account in order to see who watched your profile. See** :py:func:`change_settings`.
 
         :param incognito: If ``True``, this will set ``who_watched`` to ``True``, and in the end, return it back to ``False``. *Default:* ``False``.
+         (Required two more API calls to enable ``who_watched`` and to disable it after.)
         :type incognito: bool
-
-        :return: list of Watcher objects sorted by watch count.
+        :param sorted_by: Sort by ``count`` or ``last_view``. *Default:* ``count``.
+        :type sorted_by: str
+        :return: List of Watcher objects sorted by watch count (By default) or by last view.
         :rtype: List[:py:obj:`~meapi.models.watcher.Watcher`]
         """
+        if sorted_by not in ['count', 'last_view']:
+            raise MeException("sorted_by must be 'count' or 'last_view'.")
         if incognito:
             self.change_settings(who_watched=True)
         res = who_watched_raw(self)
         if incognito:
             self.change_settings(who_watched=False)
         return sorted([watcher.Watcher.new_from_json_dict(watch) for watch in
-                       res], key=lambda x: x.count, reverse=True)
+                       res], key=attrgetter(sorted_by), reverse=True)
 
-    def get_comments(self, uuid: str = None) -> List[comment.Comment]:
+    def get_comments(self, uuid: Union[str, Profile, User, Contact] = None) -> List[comment.Comment]:
         """
-        Get user comments.
+        Get comments in user's profile.
+            - Call the method with no parameters to get comments in your profile.
 
-        :param uuid: User uuid. See :py:func:`get_uuid`. Default: Your uuid.
-        :type uuid: str
-        :return: List of Comment objects sorted by their like count.
+        Example:
+            .. code-block:: python
+
+                # By uuid
+                comments = me.get_comments('xx-yy-zz')
+                # By User object
+                search = me.phone_search('+1234567890')
+                if hasattr(search, 'user'): # search can be None if no user found
+                    comments = me.get_comments(search.user)
+
+        :param uuid: User uuid. See :py:func:`get_uuid`.
+         Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
+        :type uuid: Union[str, Profile, User, Contact]
+        :return: List of :py:obj:`~meapi.models.comment.Comment` objects sorted by their like count.
         :rtype: List[:py:obj:`~meapi.models.comment.Comment`]
         """
+        if isinstance(uuid, (User, Profile)):
+            uuid = uuid.uuid
+        if isinstance(uuid, Contact):
+            if uuid.user:
+                uuid = uuid.user.uuid
+            else:
+                raise MeException("Contact has no user.")
         if not uuid or uuid == self.uuid:
             if self.phone_number:
                 _my_comment = True
                 uuid = self.uuid
             else:
-                raise MeException("In https://meapi.readthedocs.io/en/latest/setup.html#official-method mode you must to provide user uuid.")
+                raise MeException("In the official-auth-method mode you must to provide user uuid.")
         else:
             _my_comment = False
         comments = get_comments_raw(self, str(uuid))['comments']
-        return sorted([comment.Comment.new_from_json_dict(com, _meobj=self) for com in comments], key=lambda x: x.like_count, reverse=True)
+        return sorted([comment.Comment.new_from_json_dict(com, _meobj=self, _my_comment=_my_comment, profile_uuid=uuid)
+                       for com in comments], key=lambda x: x.like_count, reverse=True)
 
     def get_comment(self, comment_id: Union[int, str]) -> dict:
         """
         Get comment details, comment text, who and how many liked, create time and more.
+            - This methods return :py:obj:`~meapi.models.comment.Comment` object with just ``message``, ``like_count`` and ``comment_likes`` atrrs.
 
         :param comment_id: Comment id from :py:func:`get_comments`.
         :type comment_id: Union[int, str]
         :return: Comment object.
         :rtype: :py:obj:`~meapi.models.comment.Comment`
         """
+        if isinstance(comment_id, comment.Comment):
+            comment_id = comment_id.id
         return comment.Comment.new_from_json_dict(get_comment_raw(self, int(comment_id)), _meobj=self, id=int(comment_id))
 
-    def approve_comment(self, comment_id: Union[str, int]) -> bool:
+    def publish_comment(self, uuid: Union[str, Profile, User, Contact], your_comment: str) -> comment.Comment:
+        """
+        Publish comment in user's profile.
+            - You can publish comment on your own profile or on someone else's profile.
+            - When you publish comment on someone else's profile, the user need to approve your comment before it will be visible.
+            - You can edit your comment by simple calling :py:func:`publish_comment` again. The comment status will be changed to ``waiting`` until the user approves it.
+
+        :param uuid: uuid of the commented user. See :py:func:`get_uuid`.
+         Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
+        :type uuid: Union[str, :py:obj:`~meapi.models.profile.Profile`, :py:obj:`~meapi.models.user.User`, :py:obj:`~meapi.models.contact.Contact`]
+        :param your_comment: Your comment.
+        :type your_comment: str
+        :return: :py:obj:`~meapi.models.comment.Comment` object.
+        :rtype: :py:obj:`~meapi.models.comment.Comment`
+        """
+        if isinstance(uuid, (User, Profile)):
+            uuid = uuid.uuid
+        if isinstance(uuid, Contact):
+            if uuid.user:
+                uuid = uuid.user.uuid
+            else:
+                raise MeException("Contact has no user.")
+        return comment.Comment.new_from_json_dict(publish_comment_raw(self, str(uuid), your_comment),
+                                                  _meobj=self, profile_uuid=uuid, _my_comment=True if self.uuid == uuid else False)
+
+    def approve_comment(self, comment_id: Union[str, int, comment.Comment]) -> bool:
         """
         Approve comment. (You can always delete it with :py:func:`delete_comment`.)
+            - You can only approve comments in your profile!
+            - If the comment already approved, you get ``True`` anyway.
 
-        :param comment_id: Comment id from :py:func:`get_comments`.
-        :type comment_id: Union[str, int]
+        :param comment_id: Comment id from :py:func:`get_comments`. or just :py:obj:`~meapi.models.comment.Comment` object.
+        :type comment_id: Union[str, int, :py:obj:`~meapi.models.comment.Comment`]
         :return: Is approve success.
         :rtype: bool
         """
-        return bool(self._make_request('post', f'/main/comments/approve/{comment_id}/') == 'approved')
+        if isinstance(comment_id, comment.Comment):
+            if comment_id._Comment__my_comment:
+                if comment_id.status == 'approved':
+                    return True  # already approved
+                comment_id = comment_id.id
+            else:
+                raise MeException("You cannot approve comment of someone else profile!")
+        try:
+            return bool(approve_comment_raw(self, int(comment_id))['status'] == 'approved')
+        except MeApiException as err:
+            if err.http_status == 400 and err.msg == 'comment_already_approved':
+                return True
+            else:
+                raise err
 
-    def delete_comment(self, comment_id: Union[str, int]) -> bool:
+    def delete_comment(self, comment_id: Union[str, int, comment.Comment]) -> bool:
         """
         Delete (Ignore) comment. (you can always approve it with :py:func:`approve_comment`.)
+            - You can only delete comments from your profile!
 
-        :param comment_id: Comment id from :py:func:`get_comments`.
-        :type comment_id: Union[int, str]
+        :param comment_id: Comment id from :py:func:`get_comments`. or just :py:obj:`~meapi.models.comment.Comment` object.
+        :type comment_id: Union[int, str, :py:obj:`~meapi.models.comment.Comment`]
         :return: Is deleting success.
         :rtype: bool
         """
-        return bool(self._make_request('delete', f'/main/comments/approve/{comment_id}/') == 'ignored')
+        if isinstance(comment_id, comment.Comment):
+            if comment_id._Comment__my_comment:
+                if comment_id.status == 'ignored':
+                    return True  # already ignored
+                comment_id = comment_id.id
+            else:
+                raise MeException("You cannot delete comment of someone else profile!")
+        try:
+            return bool(delete_comment_raw(self, int(comment_id))['status'] == 'ignored')
+        except MeApiException as err:
+            if err.http_status == 400 and err.msg == 'comment_already_ignored':
+                return True
+            else:
+                raise err
 
     def like_comment(self, comment_id: Union[int, str]) -> bool:
         """
         Like comment.
+            - If the comment is already liked, you get ``True`` anyway.
+            - If the comment not approved, you get ``False``.
 
-        :param comment_id: Comment id from :py:func:`get_comments`.
-        :type comment_id: Union[int, str]
+        :param comment_id: Comment id from :py:func:`get_comments`. or just :py:obj:`~meapi.models.comment.Comment` object.
+        :type comment_id: Union[int, str, :py:obj:`~meapi.models.comment.Comment`]
         :return: Is like success.
         :rtype: bool
         """
-        return self._make_request('post', f'/main/comments/like/{comment_id}/')['success']
+        if isinstance(comment_id, comment.Comment):
+            comment_id = comment_id.id
+        try:
+            return self._make_request('post', f'/main/comments/like/{comment_id}/')['author']['uuid'] == self.uuid
+        except MeApiException as err:
+            if err.http_status == 404:
+                return False
+            raise err
 
-    def publish_comment(self, uuid: str, your_comment: str) -> Tuple[comment.Comment, bool]:
+    def unlike_comment(self, comment_id: Union[int, str, comment.Comment]) -> bool:
         """
-        Publish comment for another user.
+        Unlike comment.
+            - If the comment is already unliked, you get ``True`` anyway.
+            - If the comment not approved, you get ``False``.
 
-        :param uuid: uuid of the commented user. See :py:func:`get_uuid`.
-        :type uuid: str
-        :param your_comment: Your comment
-        :type your_comment: str
-        :return: comment_id if success, else False.
-        :rtype: Union[int, bool]
+        :param comment_id: Comment id from :py:func:`get_comments`. or just :py:obj:`~meapi.models.comment.Comment` object.
+        :type comment_id: Union[int, str, :py:obj:`~meapi.models.comment.Comment`]
+        :return: Is unlike success.
+        :rtype: bool
         """
-        body = {"message": str(your_comment)}
-        com = comment.Comment.new_from_json_dict(self._make_request('post', f'/main/comments/add/{uuid}/', body))
-        return com, bool(com.status == 'waiting')
+
+        try:
+            return self._make_request('delete', f'/main/comments/like/{comment_id}/')['author']['uuid'] == self.uuid
+        except MeApiException as err:
+            if err.http_status == 404:
+                return False
+            raise err
 
     def get_groups_names(self) -> List[group.Group]:
         """

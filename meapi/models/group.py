@@ -7,6 +7,9 @@ from meapi.models.me_model import MeModel
 
 
 class Group(MeModel):
+    """
+    - For more information about Group <https://me.app/category/who-saved-my-number/>
+    """
     def __init__(self,
                  _meobj,
                  name: Union[str, None] = None,

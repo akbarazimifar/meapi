@@ -3,6 +3,9 @@ from meapi.models.me_model import MeModel
 
 
 class Friendship(MeModel):
+    """
+    - `For more information about Friendship <https://me.app/friendship/>`_
+    """
     def __init__(self,
                  calls_duration: Union[None, None] = None,
                  he_called: Union[int, None] = None,

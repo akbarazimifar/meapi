@@ -3,6 +3,9 @@ from meapi.models.me_model import MeModel
 
 
 class BlockedNumber(MeModel):
+    """
+    - `For more information about BlockedNumber <https://me.app/block-or-unblock-a-phone-number-me-user/>`_
+    """
     def __init__(self,
                  block_contact: Union[bool, None] = None,
                  me_full_block: Union[bool, None] = None,

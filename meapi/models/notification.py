@@ -5,6 +5,10 @@ from meapi.utils.helpers import parse_date
 
 
 class Notification(MeModel):
+    """
+
+    - `For more information about Notification <https://me.app/notifications/>`_
+    """
     def __init__(self,
                  _meobj,
                  id: Union[int, None] = None,

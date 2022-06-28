@@ -5,6 +5,10 @@ from meapi.models.user import User
 
 
 class Deleter(MeModel):
+    """
+
+    - `For more information about Deleter <https://me.app/who-deleted-my-phone-number/>`_
+    """
     def __init__(self,
                  created_at: Union[str, None] = None,
                  user: Union[dict, None] = None
