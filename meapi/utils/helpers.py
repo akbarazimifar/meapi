@@ -85,7 +85,7 @@ def get_random_data(contacts=True, calls=True, location=True) -> dict:
 
         if contacts:
             random_data['contacts'] = []
-            for contact in range(1, randint(10, 30)):
+            for contact in range(1, count + 1):
                 random_data['contacts'].append({
                     "country_code": "XX",
                     "date_of_birth": None,
@@ -95,7 +95,7 @@ def get_random_data(contacts=True, calls=True, location=True) -> dict:
 
         if calls:
             random_data['calls'] = []
-            for call in range(1, randint(10, 30)):
+            for call in range(1, count + 1):
                 random_data['calls'].append({
                     "called_at": random_date(),
                     "duration": randint(10, 300),
