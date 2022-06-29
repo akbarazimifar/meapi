@@ -296,182 +296,89 @@ class Social:
                 del name['hidden_at']
                 del name['in_contact_list']
                 name['contact_ids'] = [name.pop('contact_id')]
-                name['contacts'] = [name.pop('user')]
+                name['contacts'] = [{'user': name.pop('user')}]
                 groups[group_name] = name
             else:
                 groups[name['name']]['contact_ids'].append(name.pop('contact_id'))
-                groups[name['name']]['contacts'].append(name.pop('user'))
+                groups[name['name']]['contacts'].append({'user': name.pop('user')})
 
         return sorted([group.Group.new_from_json_dict(grp, _meobj=self, status='hidden', count=len(grp['contact_ids']))
                        for grp in groups.values()], key=lambda x: x.count, reverse=True)
 
-    def delete_group(self, contacts_ids: Union[int, str, List[Union[int, str]]]) -> bool:
+    def delete_group(self, contacts_ids: Union[group.Group, int, str, List[Union[int, str]]]) -> bool:
         """
-        Delete group name
+        Delete group name.
             - You can restore deleted group with :py:func:`restore_name`.
             - You can also ask for rename with :py:func:`ask_group_rename`.
 
-        :param contacts_ids: Single or list of contact ids from the same group. See :py:func:`get_groups_names`.
-        :type contacts_ids: Union[int, str, List[Union[int, str]]]
+        :param contacts_ids: :py:obj:`~meapi.models.group.Group` object, single or list of contact ids from the same group. See :py:func:`get_groups`.
+        :type contacts_ids: :py:obj:`~meapi.models.group.Group` | ``int`` | ``str`` | List[``int``, ``str``]
         :return: Is delete success.
         :rtype: bool
         """
-        if not isinstance(contacts_ids, list):
+        if isinstance(contacts_ids, group.Group):
+            contacts_ids = contacts_ids.contact_ids
+        if isinstance(contacts_ids, (int, str)):
             contacts_ids = [contacts_ids]
-        body = {"contact_ids": [int(_id) for _id in contacts_ids]}
-        return self._make_request('post', '/main/contacts/hide/', body)['success']
+        return delete_group_raw(self, [int(_id) for _id in contacts_ids])['success']
 
     def restore_group(self, contacts_ids: Union[int, str, List[Union[int, str]]]) -> bool:
         """
-        Restore deleted group name from :py:func:`get_deleted_names`.
+        Restore deleted group from.
+            - You can get deleted groups with :py:func:`get_deleted_groups`.
 
-        :param contacts_ids: Single or list of contact ids from the same deleted group. See :py:func:`get_groups_names`.
-        :type contacts_ids: Union[int, str, List[Union[int, str]]]
-        :return: Is restoring success.
+        :param contacts_ids: :py:obj:`~meapi.models.group.Group` object, single or list of contact ids from the same group. See :py:func:`get_groups`.
+        :type contacts_ids: :py:obj:`~meapi.models.group.Group` | ``int`` | ``str`` | List[``int``, ``str``]
+        :return: Is delete success.
         :rtype: bool
         """
-        if not isinstance(contacts_ids, list):
+        if isinstance(contacts_ids, group.Group):
+            contacts_ids = contacts_ids.contact_ids
+        if isinstance(contacts_ids, (int, str)):
             contacts_ids = [contacts_ids]
-        body = {"contact_ids": [int(_id) for _id in contacts_ids]}
-        return self._make_request('post', '/main/settings/hidden-names/', body)['success']
+        return restore_group_raw(self, [int(_id) for _id in contacts_ids])['success']
 
-    def ask_group_rename(self, contacts_ids: Union[int, str, List[Union[int, str]]], new_name: Union[str, None] = None) -> bool:
+    def ask_group_rename(self, contacts_ids: Union[group.Group, int, str, List[Union[int, str]]], new_name: Union[str, None] = None) -> bool:
         """
         Suggest new name to group of people and ask them to rename you in their contacts book.
 
-        :param contacts_ids: Single or list of contact ids from the same group. See :py:func:`get_groups_names`.
-        :type contacts_ids: Union[int, str, List[Union[int, str]]]
+        :param contacts_ids: :py:obj:`~meapi.models.group.Group` object, single or list of contact ids from the same group. See :py:func:`get_groups`.
+        :type contacts_ids: :py:obj:`~meapi.models.group.Group` | ``int`` | ``str`` | List[``int``, ``str``]
         :param new_name: Suggested name, Default: Your profile name from :py:func:`get_profile`.
         :type new_name: Union[str, None]
         :return: Is asking success.
         :rtype: bool
         """
-        if not isinstance(contacts_ids, list):
-            contacts_ids = [contacts_ids]
-
         if not new_name:  # suggest your name in your profile
-            my_profile = self.get_profile()
-            new_name += str(my_profile.first_name)
-            if my_profile.last_name:
-                new_name += (" " + my_profile.last_name)
+            new_name = self.get_my_profile().name
+        if isinstance(contacts_ids, (int, str)):
+            contacts_ids = [contacts_ids]
+        if isinstance(contacts_ids, group.Group):
+            if contacts_ids.name == new_name:
+                raise MeException("The name of the group is already the same as the suggested name.")
+            contacts_ids = contacts_ids.contact_ids
+        return ask_group_rename_raw(self, [int(_id) for _id in contacts_ids], new_name)['success']
 
-        body = {"contact_ids": [int(_id) for _id in contacts_ids], "name": new_name}
-        return self._make_request('post', '/main/names/suggestion/', body)['success']
-
-    def get_socials(self, uuid: str = None) -> social.Social:
+    def get_socials(self, uuid: Union[str, Profile, User, Contact] = None) -> social.Social:
         """
         Get connected social networks to Me account.
 
-        :param uuid: User uuid. See :py:func:`get_uuid`. Default: Your uuid.
-        :type uuid: str
+        :param uuid: uuid of the commented user. See :py:func:`get_uuid`.
+         Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
+        :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
         :return: Dict with social networks and posts.
         :rtype: dict
 
-        Example::
-
-            {
-                "social": {
-                    "facebook": {
-                        "posts": [],
-                        "profile_id": "https://www.facebook.com/app_scoped_user_id/XXXXXXXXXXX/",
-                        "is_active": True,
-                        "is_hidden": True,
-                    },
-                    "fakebook": {
-                        "is_active": False,
-                        "is_hidden": True,
-                        "posts": [],
-                        "profile_id": None,
-                    },
-                    "instagram": {
-                        "posts": [
-                            {
-                                "posted_at": "2021-12-23T22:21:06Z",
-                                "photo": "https://d18zaexen4dp1s.cloudfront.net/XXXXXXXXXXXXXX.jpg",
-                                "text_first": None,
-                                "text_second": "IMAGE",
-                                "author": "username",
-                                "redirect_id": "CXXXXIz-0",
-                                "owner": "username",
-                            }
-                        ],
-                        "profile_id": "username",
-                        "is_active": True,
-                        "is_hidden": False,
-                    },
-                    "linkedin": {
-                        "is_active": True,
-                        "is_hidden": False,
-                        "posts": [],
-                        "profile_id": "https://www.linkedin.com/in/username",
-                    },
-                    "pinterest": {
-                        "posts": [],
-                        "profile_id": "https://pin.it/XXXXXXXX",
-                        "is_active": True,
-                        "is_hidden": False,
-                    },
-                    "spotify": {
-                        "is_active": True,
-                        "is_hidden": False,
-                        "posts": [
-                            {
-                                "author": "Chandler bing",
-                                "owner": "4xgXXXXXXXt0pv",
-                                "photo": "https://d18zaexen4dp1s.cloudfront.net/9bcXXXfa7dXXXXXXXac.jpg",
-                                "posted_at": None,
-                                "redirect_id": "4KgES5cs3SnMhuAXuBREW2",
-                                "text_first": "My friends playlist songs",
-                                "text_second": "157",
-                            },
-                            {
-                                "author": "Chandler Bing",
-                                "owner": "4xgoXcoriuXXXXpt0pv",
-                                "photo": "https://d18zaexen4dp1s.cloudfront.net/55d3XXXXXXXXXXXXXXXXXX4.jpg",
-                                "posted_at": None,
-                                "redirect_id": "3FjSXXXCQPB14Xt",
-                                "text_first": "My favorite songs!",
-                                "text_second": "272",
-                            },
-                        ],
-                        "profile_id": "4xgot8coriuXXXXXpt0pv",
-                    },
-                    "tiktok": {
-                        "is_active": False,
-                        "is_hidden": True,
-                        "posts": [],
-                        "profile_id": None,
-                    },
-                    "twitter": {
-                        "is_active": True,
-                        "is_hidden": False,
-                        "posts": [
-                            {
-                                "author": "username",
-                                "owner": "username",
-                                "photo": "https://pbs.twimg.com/profile_images/13XXXXX76/AvBXXXX_normal.jpg",
-                                "posted_at": "2021-08-24T10:02:45Z",
-                                "redirect_id": "https://twitter.com/username/status/1XXXXXX423",
-                                "text_first": "My tweet #1 https://t.co/PLXXXX2Tw https://t.co/zXXXXkk",
-                                "text_second": None,
-                            },
-                            {
-                                "author": "username",
-                                "owner": "username",
-                                "photo": "https://pbs.twimg.com/profile_images/1318XXXX0976/AvBXXXUk_normal.jpg",
-                                "posted_at": "2021-08-12T10:09:23Z",
-                                "redirect_id": "https://twitter.com/username/status/142XXXXX86624",
-                                "text_first": "My second tweet https://t.co/xtqXXXtAC",
-                                "text_second": None,
-                            },
-                        ],
-                        "profile_id": "username",
-                    },
-                },
-            }
         """
+        if isinstance(uuid, (User, Profile)):
+            uuid = uuid.uuid
+        if isinstance(uuid, Contact):
+            if uuid.user:
+                uuid = uuid.user.uuid
+            else:
+                raise MeException("Contact has no user.")
         if not uuid:
-            return social.Social.new_from_json_dict(self._make_request('post', '/main/social/update/'), _meobj=self, _my_social=True)
+            return social.Social.new_from_json_dict(get_my_social_raw(self), _meobj=self, _my_social=True)
         return self.get_profile(uuid).social
 
     def add_social(self,
@@ -483,9 +390,8 @@ class Social:
                    pinterest_url: str = None,
                    linkedin_url: str = None, ) -> bool:
         """
-        Add social network to your me account.
-
-        - **if you have at least 2 socials, you get** ``is_verified`` = ``True`` **in your profile (Blue check).**
+        Connect social network to your me account.
+            - if you have at least 2 socials, you get** ``is_verified`` = ``True`` **in your profile (Blue check).
 
         :param twitter_token: `Twitter Token <https://gist.github.com/david-lev/b158f1cc0cc783dbb13ff4b54416ceec#file-twitter_token-md>`_. Default = ``None``.
         :type twitter_token: str
@@ -508,26 +414,21 @@ class Social:
         del args['self']
         if sum(bool(i) for i in args.values()) < 1:
             raise MeException("You need to provide at least one social!")
-        failed = []
+        successes = []
         for soc, token_or_url in args.items():
             if token_or_url is not None:
-                if 'url' in soc:
+                if soc.endswith('url'):
                     if match(r"^https?:\/\/.*{domain}.*$".format(domain=soc.replace('_url', '')), token_or_url):
-                        field_name = 'profile_id'
-                        endpoint = 'update-url'
                         is_token = False
                     else:
                         raise MeException(f"You must provide a valid link to the {soc.replace('_url', '').capitalize()} profile!")
                 else:
-                    field_name = 'code_first'
-                    endpoint = 'save-auth-token'
                     is_token = True
                 social_name = sub(r'_(token|url)$', '', soc)
-                body = {'social_name': social_name, field_name: token_or_url}
-                results = self._make_request('post', f'/main/social/{endpoint}/', body)
-                if not (bool(results['success']) if is_token else bool(results[social_name]['profile_id'] == token_or_url)):
-                    failed.append(social_name)
-        return not bool(failed)
+                results = add_social_token_raw(self, social_name, token_or_url) if is_token else add_social_url_raw(self, social_name, token_or_url)
+                if results['success'] if is_token else bool(results[social_name]['profile_id'] == token_or_url):
+                    successes.append(social_name)
+        return bool(successes)
 
     def remove_social(self,
                       twitter: bool = False,
@@ -539,7 +440,8 @@ class Social:
                       tiktok: bool = False,
                       ) -> bool:
         """
-        Remove social networks from your profile. You can also hide social instead of deleting it: :py:func:`switch_social_status`.
+        Remove social networks from your profile.
+            - You can also hide social instead of deleting it: :py:func:`switch_social_status`.
 
         :param twitter: To remove Twitter. Default: ``False``.
         :type twitter: bool
@@ -564,11 +466,10 @@ class Social:
         if true_values < 1:
             raise MeException("You need to remove at least one social!")
         successes = 0
-        for social, value in args.items():
-            if value and isinstance(value, bool):
-                body = {"social_name": str(social)}
-                res = self._make_request('post', '/main/social/delete/', body)
-                if res.get('success'):
+        for soc, value in args.items():
+            if value is True:
+                body = {"social_name": str(soc)}
+                if remove_social_raw(self, str(soc))['success']:
                     successes += 1
         return bool(true_values == successes)
 
@@ -614,9 +515,7 @@ class Social:
                     successes += 1
                     continue
                 else:
-                    body = {"social_name": str(soc)}
-                    res = self._make_request('post', '/main/social/hide/', body)
-                    if status != bool(res['is_hidden']):
+                    if status != switch_social_status_raw(self, str(soc))['is_hidden']:
                         successes += 1
         return bool(not_null_values == successes)
 

@@ -462,3 +462,271 @@ def get_deleted_groups_raw(meobj) -> dict:
         }
     """
     return meobj._make_request('get', '/main/settings/hidden-names/')
+
+
+def delete_group_raw(meobj, contact_ids: List[int]) -> dict:
+    """
+    Delete group.
+
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
+    :param contact_ids: list with contacts ids in the same group.
+    :type contact_ids: List[int]
+    :return: dict with delete success.
+    :rtype: dict
+
+    Example::
+
+        {
+            'success': True
+        }
+    """
+    return meobj._make_request('post', '/main/contacts/hide/', {'contact_ids': contact_ids})
+
+
+def restore_group_raw(meobj, contact_ids: List[int]) -> dict:
+    """
+    Restore group.
+
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
+    :param contact_ids: list with contacts ids in the same group.
+    :type contact_ids: List[int]
+    :return: dict with restore success.
+    :rtype: dict
+
+    Example::
+
+        {
+            'success': True
+        }
+    """
+    return meobj._make_request('post', '/main/settings/hidden-names/', {'contact_ids': contact_ids})
+
+
+def ask_group_rename_raw(meobj, contact_ids: List[int], new_name: str) -> dict:
+    """
+    Ask contacts in a group to rename you in their contact book.
+
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
+    :param contact_ids: list with contacts ids in the same group.
+    :type contact_ids: List[int]
+    :param new_name: New name.
+    :type new_name: str
+    :return: dict with rename success.
+    :rtype: dict
+
+    Example::
+
+        {
+            'success': True
+        }
+    """
+    return meobj._make_request('post', '/main/names/suggestion/', {'contact_ids': contact_ids, 'name': new_name})
+
+
+def get_my_social_raw(meobj) -> dict:
+    """
+    Get connected social networks to your Me account.
+
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
+    :param uuid: UUID of the user.
+    :type uuid: str
+    :return: Dict with social networks and posts.
+    :rtype: dict
+
+    Example::
+
+        {
+            "social": {
+                "facebook": {
+                    "posts": [],
+                    "profile_id": "https://www.facebook.com/app_scoped_user_id/XXXXXXXXXXX/",
+                    "is_active": True,
+                    "is_hidden": True,
+                },
+                "fakebook": {
+                    "is_active": False,
+                    "is_hidden": True,
+                    "posts": [],
+                    "profile_id": None,
+                },
+                "instagram": {
+                    "posts": [
+                        {
+                            "posted_at": "2021-12-23T22:21:06Z",
+                            "photo": "https://d18zaexen4dp1s.cloudfront.net/XXXXXXXXXXXXXX.jpg",
+                            "text_first": None,
+                            "text_second": "IMAGE",
+                            "author": "username",
+                            "redirect_id": "CXXXXIz-0",
+                            "owner": "username",
+                        }
+                    ],
+                    "profile_id": "username",
+                    "is_active": True,
+                    "is_hidden": False,
+                },
+                "linkedin": {
+                    "is_active": True,
+                    "is_hidden": False,
+                    "posts": [],
+                    "profile_id": "https://www.linkedin.com/in/username",
+                },
+                "pinterest": {
+                    "posts": [],
+                    "profile_id": "https://pin.it/XXXXXXXX",
+                    "is_active": True,
+                    "is_hidden": False,
+                },
+                "spotify": {
+                    "is_active": True,
+                    "is_hidden": False,
+                    "posts": [
+                        {
+                            "author": "Chandler bing",
+                            "owner": "4xgXXXXXXXt0pv",
+                            "photo": "https://d18zaexen4dp1s.cloudfront.net/9bcXXXfa7dXXXXXXXac.jpg",
+                            "posted_at": None,
+                            "redirect_id": "4KgES5cs3SnMhuAXuBREW2",
+                            "text_first": "My friends playlist songs",
+                            "text_second": "157",
+                        },
+                        {
+                            "author": "Chandler Bing",
+                            "owner": "4xgoXcoriuXXXXpt0pv",
+                            "photo": "https://d18zaexen4dp1s.cloudfront.net/55d3XXXXXXXXXXXXXXXXXX4.jpg",
+                            "posted_at": None,
+                            "redirect_id": "3FjSXXXCQPB14Xt",
+                            "text_first": "My favorite songs!",
+                            "text_second": "272",
+                        },
+                    ],
+                    "profile_id": "4xgot8coriuXXXXXpt0pv",
+                },
+                "tiktok": {
+                    "is_active": False,
+                    "is_hidden": True,
+                    "posts": [],
+                    "profile_id": None,
+                },
+                "twitter": {
+                    "is_active": True,
+                    "is_hidden": False,
+                    "posts": [
+                        {
+                            "author": "username",
+                            "owner": "username",
+                            "photo": "https://pbs.twimg.com/profile_images/13XXXXX76/AvBXXXX_normal.jpg",
+                            "posted_at": "2021-08-24T10:02:45Z",
+                            "redirect_id": "https://twitter.com/username/status/1XXXXXX423",
+                            "text_first": "My tweet #1 https://t.co/PLXXXX2Tw https://t.co/zXXXXkk",
+                            "text_second": None,
+                        },
+                        {
+                            "author": "username",
+                            "owner": "username",
+                            "photo": "https://pbs.twimg.com/profile_images/1318XXXX0976/AvBXXXUk_normal.jpg",
+                            "posted_at": "2021-08-12T10:09:23Z",
+                            "redirect_id": "https://twitter.com/username/status/142XXXXX86624",
+                            "text_first": "My second tweet https://t.co/xtqXXXtAC",
+                            "text_second": None,
+                        },
+                    ],
+                    "profile_id": "username",
+                },
+            },
+        }
+    """
+    return meobj._make_request('post', '/main/social/update/')
+
+
+def add_social_token_raw(meobj, social_name: str, token: str) -> dict:
+    """
+    Connect social network (that required token) to your Me account.
+        - Available social networks: ``facebook``, ``instagram``, ``spotify``, ``twitter``, ``tiktok``.
+
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
+    :param social_name: Social network name.
+    :type social_name: str
+    :param token: Token.
+    :type token: str
+    :return: Dict with added success.
+    :rtype: dict
+
+    Example::
+
+        {
+            "success": True
+        }
+    """
+    return meobj.self._make_request('post', f'/main/social/save-auth-token/', {'social_name': social_name, 'code_first': token})
+
+
+def add_social_url_raw(meobj, social_name: str, url: str) -> dict:
+    """
+    Connect social network (that required url) to your Me account.
+        - Available for ``linkedin`` and ``pintrest``.
+
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
+    :param social_name: Social network name.
+    :type social_name: str
+    :param url: Url to your social profile.
+    :type url: str
+    :return: Dict with added success.
+    :rtype: dict
+
+    Example::
+
+        {
+            "success": True
+        }
+    """
+    return meobj._make_request('post', '/main/social/update-url/', {'social_name': social_name, 'profile_id': url})
+
+
+def remove_social_raw(meobj, social_name: str) -> dict:
+    """
+    Remove social network from your Me account.
+        - Available social networks: ``facebook``, ``instagram``, ``spotify``, ``twitter``, ``tiktok``, ``linkedin``, ``pintrest``.
+
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
+    :param social_name: Social network name.
+    :type social_name: str
+    :return: Dict with removed success.
+    :rtype: dict
+
+    Example::
+
+        {
+            "success": True
+        }
+    """
+    return meobj._make_request('post', '/main/social/delete/', {'social_name': social_name})
+
+
+def switch_social_status_raw(meobj, social_name: str) -> dict:
+    """
+    Switch social network status (hidden or shown) from your Me account.
+        - Available social networks: ``facebook``, ``instagram``, ``spotify``, ``twitter``, ``tiktok``, ``linkedin``, ``pintrest``.
+
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
+    :param social_name: Social network name.
+    :type social_name: str
+    :return: Dict with switched success.
+    :rtype: dict
+
+    Example::
+
+        {
+            'is_hidden': False
+        }
+    """
+    return meobj._make_request('post', '/main/social/hide/', {'social_name': social_name})
+
