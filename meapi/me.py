@@ -131,11 +131,13 @@ class Me(Auth, Account, Social, Settings, Notifications):
                 continue
 
             if response.status_code >= 400:
-                raise MeApiException(http_status=response.status_code,
-                                     msg=((str(response_text.get('detail') or response_text.get('phone_number'))
-                                           if isinstance(response_text, dict) else
-                                           response_text[0] if isinstance(response_text, list) else None) or response_text),
-                                     reason=response.reason)
+                if isinstance(response_text, dict):
+                    msg = response_text.get('detail') or response_text.get('phone_number') or list(response_text.values())[0][0]
+                elif isinstance(response_text, list):
+                    msg = response_text[0]
+                else:
+                    msg = response_text
+                raise MeApiException(http_status=response.status_code, msg=str(msg), reason=response.reason)
             return response_text
         else:
             raise MeException(f"Error when trying to send a {req_type} request to {url}, with body:\n{body} and with headers:\n{headers}.")
