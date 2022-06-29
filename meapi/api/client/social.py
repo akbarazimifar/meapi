@@ -265,88 +265,51 @@ class Social:
                 return False
             raise err
 
-    def get_groups_names(self) -> List[group.Group]:
+    def get_groups(self, sorted_by: str = 'count') -> List[group.Group]:
         """
         Get groups of names and see how people named you.
+            - For more information about Group: <https://me.app/who-saved-my-number/>
 
-        :return: Dict with groups.
-        :rtype: dict
-
-        Example::
-
-            {
-                "cached": False,
-                "groups": [
-                    {
-                        "name": "This is how they name you",
-                        "count": 1,
-                        "last_contact_at": "2020-06-09T12:24:51Z",
-                        "contacts": [
-                            {
-                                "id": 2218840161,
-                                "created_at": "2020-06-09T12:24:51Z",
-                                "modified_at": "2020-06-09T12:24:51Z",
-                                "user": {
-                                    "profile_picture": "https://XXXXp1s.cloudfront.net/28d5XXX96953feX6.jpg",
-                                    "first_name": "joz",
-                                    "last_name": "me",
-                                    "uuid": "0577XXX-1XXXe-d338XXX74483",
-                                    "is_verified": False,
-                                    "phone_number": 954353655531,
-                                },
-                                "in_contact_list": True,
-                            }
-                        ],
-                        "contact_ids": [2213546561],
-                    }
-                ],
-            }
+        :param sorted_by: Sort by ``count`` or ``last_contact_at``. *Default:* ``count``.
+        :type sorted_by: ``str``
+        :return: List of :py:obj:`~meapi.models.group.Group` objects.
+        :rtype: List[:py:obj:`~meapi.models.group.Group`]
         """
-        return sorted([group.Group.new_from_json_dict(group, _meobj=self, status='active') for group in
-                       self._make_request('get', '/main/names/groups/')['groups']],
-                      key=lambda x: x.count, reverse=True)
+        if sorted_by not in ['count', 'last_contact_at']:
+            raise MeException("sorted_by must be one of 'count' or 'last_contact_at'.")
+        return sorted([group.Group.new_from_json_dict(grp, _meobj=self, status='active') for grp in
+                       get_groups_raw(self)['groups']],
+                      key=attrgetter(sorted_by), reverse=True)
 
-    def get_deleted_names(self) -> dict:
+    def get_deleted_groups(self) -> List[group.Group]:
         """
         Get group names that you deleted.
 
-        :return: dict with names and contact ids.
-        :rtype: dict
-
-        Example::
-
-            {
-                "names": [
-                    {
-                        "contact_id": 40108734246,
-                        "created_at": "2022-04-18T06:08:33Z",
-                        "hidden_at": "2022-04-23T20:45:19Z",
-                        "name": "My delivery guy",
-                        "user": {
-                            "email": "pnhfdishfois@gmail.com",
-                            "profile_picture": None,
-                            "first_name": "Joe",
-                            "last_name": "",
-                            "gender": None,
-                            "uuid": "52XXXXX-b952-XXXX-853e-XXXXXX",
-                            "is_verified": False,
-                            "phone_number": 9890987986,
-                            "slogan": None,
-                            "is_premium": False,
-                            "verify_subscription": True,
-                        },
-                        "in_contact_list": True,
-                    }
-                ],
-                "count": 1,
-                "contact_ids": [409879786],
-            }
+        :return: List of :py:obj:`~meapi.models.group.Group` objects sorted by their count.
+        :rtype: List[:py:obj:`~meapi.models.group.Group`]
         """
-        return self._make_request('get', '/main/settings/hidden-names/')
+        groups = {}
+        for name in get_deleted_groups_raw(self)['names']:  # group names together.
+            group_name = name['name']
+            if group_name not in groups.keys():
+                del name['created_at']
+                del name['hidden_at']
+                del name['in_contact_list']
+                name['contact_ids'] = [name.pop('contact_id')]
+                name['contacts'] = [name.pop('user')]
+                groups[group_name] = name
+            else:
+                groups[name['name']]['contact_ids'].append(name.pop('contact_id'))
+                groups[name['name']]['contacts'].append(name.pop('user'))
 
-    def delete_name(self, contacts_ids: Union[int, str, List[Union[int, str]]]) -> bool:
+        return sorted([group.Group.new_from_json_dict(grp, _meobj=self, status='hidden', count=len(grp['contact_ids']))
+                       for grp in groups.values()], key=lambda x: x.count, reverse=True)
+
+    def delete_group(self, contacts_ids: Union[int, str, List[Union[int, str]]]) -> bool:
         """
-        Delete group name (You can also ask for rename with :py:func:`ask_group_rename`. and you can restore deleted group with :py:func:`restore_name`).
+        Delete group name
+            - You can restore deleted group with :py:func:`restore_name`.
+            - You can also ask for rename with :py:func:`ask_group_rename`.
 
         :param contacts_ids: Single or list of contact ids from the same group. See :py:func:`get_groups_names`.
         :type contacts_ids: Union[int, str, List[Union[int, str]]]
@@ -358,7 +321,7 @@ class Social:
         body = {"contact_ids": [int(_id) for _id in contacts_ids]}
         return self._make_request('post', '/main/contacts/hide/', body)['success']
 
-    def restore_name(self, contacts_ids: Union[int, str, List[Union[int, str]]]) -> bool:
+    def restore_group(self, contacts_ids: Union[int, str, List[Union[int, str]]]) -> bool:
         """
         Restore deleted group name from :py:func:`get_deleted_names`.
 
