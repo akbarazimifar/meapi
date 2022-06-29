@@ -6,6 +6,8 @@ def friendship_raw(meobj, phone_number: Union[int, str]) -> dict:
     Get friendship information between you and another number.
     like count mutual friends, total calls duration, how do you name each other, calls count, your watches, comments, and more.
 
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
     :param phone_number: International phone number format.
     :type phone_number: Union[int, str]
     :return: Dict with friendship data.
@@ -34,6 +36,8 @@ def report_spam_raw(meobj, country_code: str, phone_number: str, spam_name: str)
     """
     Report a number as spam.
 
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
     :param country_code: Country code.
     :type country_code: str
     :param phone_number: International phone number format.
@@ -55,6 +59,8 @@ def who_deleted_raw(meobj) -> List[dict]:
     """
     Get a list of users that deleted you from their contacts.
 
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
     :return: List of dicts with users.
     :rtype: List[dict]
 
@@ -86,6 +92,8 @@ def who_watched_raw(meobj) -> List[dict]:
     """
     Get a list of users that watched you.
 
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
     :return: List of dicts with users.
     :rtype: List[dict]
 
@@ -121,6 +129,8 @@ def get_comments_raw(meobj, uuid: str) -> dict:
     """
     Get user comments.
 
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
     :param uuid: User uuid.
     :type uuid: str
     :return: Dict with list of comments.
@@ -180,10 +190,12 @@ def get_comments_raw(meobj, uuid: str) -> dict:
     return meobj._make_request('get', f'/main/comments/list/{uuid}')
 
 
-def get_comment_raw(me_obj, comment_id: int) -> dict:
+def get_comment_raw(meobj, comment_id: int) -> dict:
     """
     Get comment details, comment text, who and how many liked, create time and more.
 
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
     :param comment_id: Comment id.
     :type comment_id: int
     :return: Dict with comment details.
@@ -215,13 +227,15 @@ def get_comment_raw(me_obj, comment_id: int) -> dict:
             "message": "Test comment",
         }
     """
-    return me_obj._make_request('get', f'/main/comments/retrieve/{comment_id}')
+    return meobj._make_request('get', f'/main/comments/retrieve/{comment_id}')
 
 
 def publish_comment_raw(meobj, uuid: str, your_comment: str) -> dict:
     """
     Publish comment.
 
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
     :param uuid: User uuid.
     :type uuid: str
     :param your_comment: Comment text.
@@ -256,10 +270,13 @@ def publish_comment_raw(meobj, uuid: str, your_comment: str) -> dict:
     body = {"message": your_comment}
     return meobj._make_request('post', f'/main/comments/add/{uuid}/', body)
 
+
 def approve_comment_raw(meobj, comment_id: int) -> dict:
     """
     Approve comment.
 
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
     :param comment_id: Comment id.
     :type comment_id: int
     :return: Dict with comment details.
@@ -296,6 +313,8 @@ def delete_comment_raw(meobj, comment_id: int) -> dict:
     """
     Delete comment.
 
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
     :param comment_id: Comment id.
     :type comment_id: int
     :return: Dict with comment details.
@@ -332,6 +351,8 @@ def like_comment_raw(meobj, comment_id: int) -> dict:
     """
     Like comment.
 
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
     :param comment_id: Comment id.
     :type comment_id: int
     :return: Dict with comment details.
@@ -347,6 +368,8 @@ def unlike_comment_raw(meobj, comment_id: int) -> dict:
     """
     Unlike comment.
 
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
     :param comment_id: Comment id.
     :type comment_id: int
     :return: Dict with comment details.
@@ -356,3 +379,86 @@ def unlike_comment_raw(meobj, comment_id: int) -> dict:
 
     """
     return meobj._make_request('delete', f'/main/comments/like/{comment_id}/')
+
+
+def get_groups_raw(meobj) -> dict:
+    """
+    Get groups of names and see how people named you.
+
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
+    :return: Dict with groups.
+    :rtype: dict
+
+    Example::
+
+        {
+            "cached": False,
+            "groups": [
+                {
+                    "name": "This is how they name you",
+                    "count": 1,
+                    "last_contact_at": "2020-06-09T12:24:51Z",
+                    "contacts": [
+                        {
+                            "id": 2218840161,
+                            "created_at": "2020-06-09T12:24:51Z",
+                            "modified_at": "2020-06-09T12:24:51Z",
+                            "user": {
+                                "profile_picture": "https://XXXXp1s.cloudfront.net/28d5XXX96953feX6.jpg",
+                                "first_name": "joz",
+                                "last_name": "me",
+                                "uuid": "0577XXX-1XXXe-d338XXX74483",
+                                "is_verified": False,
+                                "phone_number": 954353655531,
+                            },
+                            "in_contact_list": True,
+                        }
+                    ],
+                    "contact_ids": [2213546561],
+                }
+            ],
+        }
+    """
+    return meobj._make_request('get', '/main/names/groups/')
+
+
+def get_deleted_groups_raw(meobj) -> dict:
+    """
+    Get group names that you deleted.
+
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
+    :return: dict with names and contact ids.
+    :rtype: dict
+
+    Example::
+
+        {
+            "names": [
+                {
+                    "contact_id": 40108734246,
+                    "created_at": "2022-04-18T06:08:33Z",
+                    "hidden_at": "2022-04-23T20:45:19Z",
+                    "name": "My delivery guy",
+                    "user": {
+                        "email": "pnhfdishfois@gmail.com",
+                        "profile_picture": None,
+                        "first_name": "Joe",
+                        "last_name": "",
+                        "gender": None,
+                        "uuid": "52XXXXX-b952-XXXX-853e-XXXXXX",
+                        "is_verified": False,
+                        "phone_number": 9890987986,
+                        "slogan": None,
+                        "is_premium": False,
+                        "verify_subscription": True,
+                    },
+                    "in_contact_list": True,
+                }
+            ],
+            "count": 1,
+            "contact_ids": [409879786],
+        }
+    """
+    return meobj._make_request('get', '/main/settings/hidden-names/')

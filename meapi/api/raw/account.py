@@ -5,6 +5,8 @@ def phone_search_raw(meobj, phone_number: Union[str, int]) -> dict:
     """
     Get information on any phone number.
 
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
     :param phone_number: International phone number format.
     :type phone_number: Union[str, int])
     :rtype: dict
@@ -68,6 +70,8 @@ def get_profile_raw(meobj, uuid: Union[str, None]) -> dict:
     """
     Get other users profile.
 
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
     :param uuid: uuid of the Me user..
     :type uuid: str
     :raises MeApiException: msg: ``api_profile_view_passed_limit`` if you passed the limit (About 500 per day in the unofficial auth method).
@@ -241,6 +245,8 @@ def get_my_profile_raw(meobj) -> dict:
     """
     Get your profile.
 
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
     :rtype: dict
 
     Example::
@@ -275,11 +281,24 @@ def get_my_profile_raw(meobj) -> dict:
 
 
 def delete_account_raw(meobj) -> dict:
+    """
+    Delete your account.
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
+    :rtype: dict
+    """
     # todo add json exmaple
     return meobj._make_request('delete', '/main/settings/remove-user/')
 
 
 def suspend_account_raw(meobj) -> dict:
+    """
+    Suspend your account.
+
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
+    :rtype: dict
+    """
     # todo add json example
     return meobj._make_request('put', '/main/settings/suspend-user/')
 
@@ -292,6 +311,10 @@ def _contact_handler(meobj, to_add: bool, contacts: List[dict]) -> dict:
 def add_contacts_raw(meobj, contacts: List[dict]) -> dict:
     """
     Upload new contacts to your Me account.
+
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
+    :rtype: dict
 
     Example of list of contacts to add::
 
@@ -334,6 +357,10 @@ def remove_contacts_raw(meobj, contacts: List[dict]) -> dict:
     """
     Remove contacts from your Me account.
 
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
+    :rtype: dict
+
     Example of list of contacts to remove::
 
         [
@@ -365,8 +392,8 @@ def block_profile_raw(meobj, phone_number: int, block_contact: bool, me_full_blo
     """
     Block user profile.
 
-    :param meobj: Me client.
-    :type meobj: Me
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
     :param phone_number: User phone number in international format.
     :type phone_number: Union[str, int]
     :param block_contact: To block for calls.
@@ -391,8 +418,8 @@ def unblock_profile_raw(meobj, phone_number: int, unblock_contact=True, me_full_
     """
     Unlock user profile.
 
-    :param meobj: Me client.
-    :type meobj: Me
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
     :param phone_number: User phone number in international format.
     :type phone_number: int
     :param unblock_contact: To unblock for calls.
@@ -417,6 +444,8 @@ def block_numbers_raw(meobj, numbers: List[int]) -> dict:
     """
     Block numbers.
 
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
     :param numbers: Single or list of phone numbers in international format.
     :type numbers: List[int]
     :return: list of dicts with the blocked numbers.
@@ -439,6 +468,8 @@ def unblock_numbers_raw(meobj, numbers: List[int]) -> dict:
     """
     Unblock phone numbers.
 
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
     :param numbers: Single or list of phone numbers in international format.
     :type numbers: List[int]
     :return: dict with unblock success details.
@@ -458,6 +489,8 @@ def get_blocked_numbers_raw(meobj) -> List[dict]:
     """
     Get your blocked numbers.
 
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
     :return: list of dicts.
     :rtype: List[dict]
 

@@ -106,12 +106,15 @@ class SocialMediaAccount(MeModel):
 
     def add(self, token_or_url: str) -> bool:
         """
-        **Add social media account to your Me profile.**
+        Add social media account to your Me profile.
             - If you have at least two social media accounts, you get verification tag on your profile. ``is_verified`` = ``True``.
 
         Parameters:
             token_or_url (``str``):
                 Token or URL of social media account. See :py:func:`~meapi.Me.add_social` for more information.
+
+        Returns:
+            ``bool``: ``True`` if successfully added, ``False`` otherwise.
         """
         if not self.__my_social:
             raise MeException(f"You cannot add social to another user!")
@@ -125,7 +128,10 @@ class SocialMediaAccount(MeModel):
 
     def remove(self) -> bool:
         """
-        - Remove social media account from your Me profile.
+        Remove social media account from your Me profile.
+
+        Returns:
+            ``bool``: ``True`` if successfully removed, ``False`` otherwise.
         """
         if not self.__my_social:
             raise MeException("You cannot remove social from another user!")
@@ -141,7 +147,10 @@ class SocialMediaAccount(MeModel):
 
     def hide(self) -> bool:
         """
-        - Hide social media account in your Me profile.
+        Hide social media account in your Me profile.
+
+        Returns:
+            ``bool``: ``True`` if successfully hidden, ``False`` otherwise.
         """
         if not self.__my_social:
             raise MeException("You cannot remove social from another user!")
@@ -156,7 +165,10 @@ class SocialMediaAccount(MeModel):
 
     def unhide(self) -> bool:
         """
-        - Unhide social media account in your Me profile.
+        Unhide social media account in your Me profile.
+
+        Returns:
+            ``bool``: ``True`` if successfully unhidden, ``False`` otherwise.
         """
         if not self.__my_social:
             raise MeException("You cannot remove social from another user!")

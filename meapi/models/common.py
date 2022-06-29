@@ -15,6 +15,9 @@ class _CommonMethodsForUserContactProfile:
                 If you want to block the contact from calls. *Default: True*
             me_full_block: (``bool``):
                 If you want to block the contact from Me platform. *Default: True*
+
+        Returns:
+            ``bool``: ``True`` if the contact was blocked successfully, else ``False``.
         """
         if getattr(self, f'_{self.__class__.__name__}__my_profile', None):
             raise MeException("you can't block yourself!")
@@ -29,6 +32,9 @@ class _CommonMethodsForUserContactProfile:
                 If you want to unblock the contact from calls. *Default: True*
             me_full_unblock: (``bool``):
                 If you want to unblock the contact from Me platform. *Default: True*
+
+        Returns:
+            ``bool``: ``True`` if the contact was unblocked successfully, else ``False``.
         """
         if getattr(self, f'_{self.__class__.__name__}__my_profile', None):
             raise MeException("you can't unblock yourself!")
@@ -55,6 +61,9 @@ class _CommonMethodsForUserContactProfile:
                 If you want to download and add profile picture to the vcard (if available). *Default: True*
             kwargs: (``dict``):
                 Add any other data to the ``notes`` field of the vcard. The key must be, of course, exists in the object.
+
+        Returns:
+            ``str``: String data in vcard format.
         """
         return get_vcard(self.__dict__, prefix_name, profile_picture, **kwargs)
 

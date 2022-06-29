@@ -74,7 +74,7 @@ class Comment(MeModel):
             - The same as :py:func:`~meapi.Me.approve_comment`.
 
         Returns:
-            - (``bool`` ) Is approve success.
+            ``bool``: Is approve success.
         """
         if not self.__my_comment:
             raise MeException("You can only approve others comments!")
@@ -97,7 +97,7 @@ class Comment(MeModel):
                 The new message of the comment.
 
         Returns:
-            - (``bool`` ) Is edit success.
+            ``bool``: Is edit success.
         """
         if self.author.uuid == self.__meobj.uuid:
             if self.__meobj.publish_comment(self.profile_uuid, new_msg):
@@ -115,7 +115,7 @@ class Comment(MeModel):
             - The same as :py:func:`~meapi.Me.delete_comment`.
 
         Returns:
-            - (``bool`` ) Is delete success.
+            ``bool``: Is delete success.
         """
         if not self.__my_comment:
             raise MeException("You can delete others comments!")
@@ -133,7 +133,7 @@ class Comment(MeModel):
             - The same as :py:func:`~meapi.Me.like_comment`.
 
         Returns:
-            - (``bool`` ) Is like success.
+            ``bool``: Is like success.
         """
         if self.status != 'approved':
             raise MeException("You can only like approved comments!")
@@ -148,7 +148,7 @@ class Comment(MeModel):
             - The same as :py:func:`~meapi.Me.unlike_comment`.
 
         Returns:
-            - (``bool`` ) Is unlike success.
+            ``bool``: Is unlike success.
         """
         if self.status != 'approved':
             raise MeException("You can only unlike approved comments!")
