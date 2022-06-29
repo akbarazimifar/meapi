@@ -327,3 +327,32 @@ def delete_comment_raw(meobj, comment_id: int) -> dict:
     """
     return meobj._make_request('delete', f'/main/comments/approve/{comment_id}/')
 
+
+def like_comment_raw(meobj, comment_id: int) -> dict:
+    """
+    Like comment.
+
+    :param comment_id: Comment id.
+    :type comment_id: int
+    :return: Dict with comment details.
+    :rtype: dict
+
+    Example::
+
+    """
+    return meobj._make_request('post', f'/main/comments/like/{comment_id}/')
+
+
+def unlike_comment_raw(meobj, comment_id: int) -> dict:
+    """
+    Unlike comment.
+
+    :param comment_id: Comment id.
+    :type comment_id: int
+    :return: Dict with comment details.
+    :rtype: dict
+
+    Example::
+
+    """
+    return meobj._make_request('delete', f'/main/comments/like/{comment_id}/')

@@ -101,12 +101,12 @@ class Social:
                 comments = me.get_comments('xx-yy-zz')
                 # By User object
                 search = me.phone_search('+1234567890')
-                if hasattr(search, 'user'): # search can be None if no user found
+                if getattr(search, 'user', None): # search can be None if no user found
                     comments = me.get_comments(search.user)
 
         :param uuid: User uuid. See :py:func:`get_uuid`.
          Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
-        :type uuid: Union[str, Profile, User, Contact]
+        :type uuid: ``str`` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.contact.Contact`
         :return: List of :py:obj:`~meapi.models.comment.Comment` objects sorted by their like count.
         :rtype: List[:py:obj:`~meapi.models.comment.Comment`]
         """
@@ -135,7 +135,7 @@ class Social:
             - This methods return :py:obj:`~meapi.models.comment.Comment` object with just ``message``, ``like_count`` and ``comment_likes`` atrrs.
 
         :param comment_id: Comment id from :py:func:`get_comments`.
-        :type comment_id: Union[int, str]
+        :type comment_id: ``int`` | ``str``
         :return: Comment object.
         :rtype: :py:obj:`~meapi.models.comment.Comment`
         """
@@ -152,7 +152,7 @@ class Social:
 
         :param uuid: uuid of the commented user. See :py:func:`get_uuid`.
          Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
-        :type uuid: Union[str, :py:obj:`~meapi.models.profile.Profile`, :py:obj:`~meapi.models.user.User`, :py:obj:`~meapi.models.contact.Contact`]
+        :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
         :param your_comment: Your comment.
         :type your_comment: str
         :return: :py:obj:`~meapi.models.comment.Comment` object.
@@ -175,7 +175,7 @@ class Social:
             - If the comment already approved, you get ``True`` anyway.
 
         :param comment_id: Comment id from :py:func:`get_comments`. or just :py:obj:`~meapi.models.comment.Comment` object.
-        :type comment_id: Union[str, int, :py:obj:`~meapi.models.comment.Comment`]
+        :type comment_id: ``str`` | ``int`` | :py:obj:`~meapi.models.comment.Comment`
         :return: Is approve success.
         :rtype: bool
         """
@@ -200,7 +200,7 @@ class Social:
             - You can only delete comments from your profile!
 
         :param comment_id: Comment id from :py:func:`get_comments`. or just :py:obj:`~meapi.models.comment.Comment` object.
-        :type comment_id: Union[int, str, :py:obj:`~meapi.models.comment.Comment`]
+        :type comment_id: ``int`` | ``str`` | :py:obj:`~meapi.models.comment.Comment`
         :return: Is deleting success.
         :rtype: bool
         """
@@ -219,21 +219,24 @@ class Social:
             else:
                 raise err
 
-    def like_comment(self, comment_id: Union[int, str]) -> bool:
+    def like_comment(self, comment_id: Union[int, str, comment.Comment]) -> bool:
         """
         Like comment.
             - If the comment is already liked, you get ``True`` anyway.
             - If the comment not approved, you get ``False``.
 
         :param comment_id: Comment id from :py:func:`get_comments`. or just :py:obj:`~meapi.models.comment.Comment` object.
-        :type comment_id: Union[int, str, :py:obj:`~meapi.models.comment.Comment`]
+        :type comment_id: ``int`` | ``str`` | :py:obj:`~meapi.models.comment.Comment`
         :return: Is like success.
         :rtype: bool
         """
         if isinstance(comment_id, comment.Comment):
+            if getattr(comment_id, 'comment_likes', None):
+                if self.uuid in [usr.uuid for usr in comment_id.comment_likes]:
+                    return True
             comment_id = comment_id.id
         try:
-            return self._make_request('post', f'/main/comments/like/{comment_id}/')['author']['uuid'] == self.uuid
+            return like_comment_raw(self, int(comment_id))['author']['uuid'] == self.uuid
         except MeApiException as err:
             if err.http_status == 404:
                 return False
@@ -246,13 +249,17 @@ class Social:
             - If the comment not approved, you get ``False``.
 
         :param comment_id: Comment id from :py:func:`get_comments`. or just :py:obj:`~meapi.models.comment.Comment` object.
-        :type comment_id: Union[int, str, :py:obj:`~meapi.models.comment.Comment`]
+        :type comment_id: ``int`` | ``str`` | :py:obj:`~meapi.models.comment.Comment`
         :return: Is unlike success.
         :rtype: bool
         """
-
+        if isinstance(comment_id, comment.Comment):
+            if getattr(comment_id, 'comment_likes', None):
+                if self.uuid not in [usr.uuid for usr in comment_id.comment_likes]:
+                    return True
+            comment_id = comment_id.id
         try:
-            return self._make_request('delete', f'/main/comments/like/{comment_id}/')['author']['uuid'] == self.uuid
+            return unlike_comment_raw(self, int(comment_id))['status'] == 'approved'
         except MeApiException as err:
             if err.http_status == 404:
                 return False

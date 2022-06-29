@@ -71,6 +71,10 @@ class Comment(MeModel):
         """
         Approve the comment.
             - You can only approve comments that posted by others on your own profile.
+            - The same as :py:func:`~meapi.Me.approve_comment`.
+
+        Returns:
+            - (``bool`` ) Is approve success.
         """
         if not self.__my_comment:
             raise MeException("You can only approve others comments!")
@@ -85,7 +89,15 @@ class Comment(MeModel):
     def edit(self, new_msg: str) -> bool:
         """
         Edit the comment.
-            - You can only edit comments that posted by you on others profile.
+            - You can only edit comments that posted by you.
+            - The same as :py:func:`~meapi.Me.publish_comment`.
+
+        Parameters:
+            new_msg (``str``):
+                The new message of the comment.
+
+        Returns:
+            - (``bool`` ) Is edit success.
         """
         if self.author.uuid == self.__meobj.uuid:
             if self.__meobj.publish_comment(self.profile_uuid, new_msg):
@@ -100,6 +112,10 @@ class Comment(MeModel):
         """
         Ignore and hide the comment.
             - You can only ignore and hide comments that posted by others on your own profile.
+            - The same as :py:func:`~meapi.Me.delete_comment`.
+
+        Returns:
+            - (``bool`` ) Is delete success.
         """
         if not self.__my_comment:
             raise MeException("You can delete others comments!")
@@ -114,6 +130,10 @@ class Comment(MeModel):
     def like(self) -> bool:
         """
         Like the comment.
+            - The same as :py:func:`~meapi.Me.like_comment`.
+
+        Returns:
+            - (``bool`` ) Is like success.
         """
         if self.status != 'approved':
             raise MeException("You can only like approved comments!")
@@ -125,6 +145,10 @@ class Comment(MeModel):
     def unlike(self) -> bool:
         """
         Unlike the comment.
+            - The same as :py:func:`~meapi.Me.unlike_comment`.
+
+        Returns:
+            - (``bool`` ) Is unlike success.
         """
         if self.status != 'approved':
             raise MeException("You can only unlike approved comments!")
