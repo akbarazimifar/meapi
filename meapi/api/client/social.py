@@ -412,9 +412,10 @@ class Social:
         """
         args = locals()
         del args['self']
-        if sum(bool(i) for i in args.values()) < 1:
+        not_null_values = sum(bool(i) for i in args.values())
+        if not_null_values < 1:
             raise MeException("You need to provide at least one social!")
-        successes = []
+        successes = 0
         for soc, token_or_url in args.items():
             if token_or_url is not None:
                 if soc.endswith('url'):
@@ -427,8 +428,8 @@ class Social:
                 social_name = sub(r'_(token|url)$', '', soc)
                 results = add_social_token_raw(self, social_name, token_or_url) if is_token else add_social_url_raw(self, social_name, token_or_url)
                 if results['success'] if is_token else bool(results[social_name]['profile_id'] == token_or_url):
-                    successes.append(social_name)
-        return bool(successes)
+                    successes += 1
+        return bool(successes == not_null_values)
 
     def remove_social(self,
                       twitter: bool = False,
@@ -468,7 +469,6 @@ class Social:
         successes = 0
         for soc, value in args.items():
             if value is True:
-                body = {"social_name": str(soc)}
                 if remove_social_raw(self, str(soc))['success']:
                     successes += 1
         return bool(true_values == successes)
@@ -508,9 +508,10 @@ class Social:
         if not_null_values < 1:
             raise MeException("You need to switch status to at least one social!")
         successes = 0
+        my_socials = self.get_socials()
         for soc, status in args.items():
             if status is not None and isinstance(status, bool):
-                is_active, is_hidden = attrgetter(f'{soc}.is_active', f'{soc}.is_hidden')(self.get_socials())
+                is_active, is_hidden = attrgetter(f'{soc}.is_active', f'{soc}.is_hidden')(my_socials)
                 if not is_active or (not is_hidden and status) or (is_hidden and not status):
                     successes += 1
                     continue
@@ -526,58 +527,110 @@ class Social:
         :return: total count.
         :rtype: int
         """
-        return self._make_request('get', '/main/contacts/count/')['count']
+        return numbers_count_raw(self)['count']
 
-    def suggest_turn_on_comments(self, uuid: str) -> bool:
+    def suggest_turn_on_comments(self, uuid: Union[str, Profile, User, Contact]) -> bool:
         """
         Ask another user to turn on comments in his profile.
 
-        :param uuid: User uuid. See :py:func:`get_uuid`.
-        :type uuid: str
+        :param uuid: uuid of the user. See :py:func:`get_uuid`.
+         Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
+        :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
         :return: Is request success.
         :rtype: bool
         """
-        body = {"uuid": str(uuid)}
-        return self._make_request('post', '/main/users/profile/suggest-turn-on-comments/', body)['requested']
+        if isinstance(uuid, Profile):
+            if uuid.comments_enabled:
+                return True
+            uuid = uuid.uuid
+        if isinstance(uuid, User):
+            uuid = uuid.uuid
+        if isinstance(uuid, Contact):
+            if uuid.user:
+                uuid = uuid.user.uuid
+            else:
+                raise MeException("Contact has no user.")
+        if uuid == self.uuid:
+            raise MeException("You can't suggest to yourself!")
 
-    def suggest_turn_on_mutual(self, uuid: str) -> bool:
+        return suggest_turn_on_comments_raw(self, str(uuid))['requested']
+
+    def suggest_turn_on_mutual(self, uuid: Union[str, Profile, User, Contact]) -> bool:
         """
         Ask another user to turn on mutual contacts on his profile.
 
-        :param uuid: User uuid. See :py:func:`get_uuid`.
-        :type uuid: str
+        :param uuid: uuid of the user. See :py:func:`get_uuid`.
+         Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
+        :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
         :return: Is request success.
         :rtype: bool
         """
-        body = {"uuid": str(uuid)}
-        return self._make_request('post', '/main/users/profile/suggest-turn-on-mutual/', body)['requested']
+        if isinstance(uuid, Profile):
+            if uuid.mutual_contacts_available:
+                return True
+            uuid = uuid.uuid
+        if isinstance(uuid, User):
+            uuid = uuid.uuid
+        if isinstance(uuid, Contact):
+            if uuid.user:
+                uuid = uuid.user.uuid
+            else:
+                raise MeException("Contact has no user.")
+        if uuid == self.uuid:
+            raise MeException("You can't suggest to yourself!")
 
-    def suggest_turn_on_location(self, uuid: str) -> bool:
+        return suggest_turn_on_mutual_raw(self, str(uuid))['requested']
+
+    def suggest_turn_on_location(self, uuid: Union[str, Profile, User, Contact]) -> bool:
         """
         Ask another user to share his location with you.
 
-        :param uuid: User uuid. See :py:func:`get_uuid`. Default: Your uuid.
-        :type uuid: str
+        :param uuid: uuid of the user. See :py:func:`get_uuid`.
+         Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
+        :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
         :return: Is request success.
         :rtype: bool
         """
-        body = {"uuid": str(uuid)}
-        return self._make_request('post', '/main/users/profile/suggest-turn-on-location/', body)['requested']
+        if isinstance(uuid, (Profile, User)):
+            uuid = uuid.uuid
+        if isinstance(uuid, Contact):
+            if uuid.user:
+                uuid = uuid.user.uuid
+            else:
+                raise MeException("Contact has no user.")
+        if uuid == self.uuid:
+            raise MeException("You can't suggest to yourself!")
 
-    def get_age(self, uuid=None) -> float:
+        return suggest_turn_on_location_raw(self, str(uuid))['requested']
+
+    def get_age(self, uuid: Union[str, Profile, User, Contact] = None) -> int:
         """
         Get user age. calculate from ``date_of_birth``, provided by :py:func:`get_profile`.
 
-        :param uuid: User uuid. See :py:func:`get_uuid`. Default: Your uuid.
-        :type uuid: str
-        :return: User age if date of birth exists. else - 0.0
-        :rtype: float
+        :param uuid: uuid of the user. See :py:func:`get_uuid`.
+         Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
+        :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
+        :return: User age if date of birth exists. else - ``0``.
+        :rtype: int
         """
-        date_of_birth = self.get_profile(uuid)['profile']['date_of_birth']
-        if match(r"^\d{4}(\-)([0-2][0-9]|(3)[0-1])(\-)(((0)[0-9])|((1)[0-2]))$", str(date_of_birth)):
-            days_in_year = 365.2425
-            return round((date.today() - datetime.strptime(date_of_birth, "%Y-%m-%d").date()).days / days_in_year, 1)
-        return 0.0
+        if isinstance(uuid, Profile):
+            return uuid.age
+        if isinstance(uuid, User):
+            uuid = uuid.uuid
+        if isinstance(uuid, Contact):
+            if uuid.user:
+                uuid = uuid.user.uuid
+            else:
+                raise MeException("Contact has no user.")
+        if uuid is None:
+            uuid = self.uuid
+        profile = self.get_profile(uuid)
+        if profile.date_of_birth:
+            today = date.today()
+            if profile.date_of_birth > today:
+                return 0
+            return (today - profile.date_of_birth).days / 365
+        return 0
 
     def is_spammer(self, phone_number: Union[int, str]) -> int:
         """
@@ -585,83 +638,95 @@ class Social:
 
         :param phone_number: International phone number format.
         :type phone_number: Union[int, str]
-        :return: count of spam reports. 0 if None.
+        :return: count of spam reports. ``0`` if None.
         :rtype: int
         """
         results = self.phone_search(phone_number)
         if results:
-            return results['contact']['suggested_as_spam']
+            return results.suggested_as_spam
         return 0
 
-    def update_location(self, lat: float, lon: float) -> bool:
+    def update_location(self, latitude: float, longitude: float) -> bool:
         """
         Update your location. See :py:func:`upload_random_data`.
 
-        :param lat: location latitude coordinates.
-        :type lat: float
-        :param lon: location longitude coordinates.
-        :type lon: float
+        :param latitude: location latitude coordinates.
+        :type latitude: float
+        :param longitude: location longitude coordinates.
+        :type longitude: float
         :return: Is location update success.
         :rtype: bool
         """
-        if not isinstance(lat, float) or not isinstance(lon, float):
-            raise Exception("Not a valid coordination!")
-        body = {"location_latitude": float(lat), "location_longitude": float(lon)}
-        return self._make_request('post', '/main/location/update/', body)['success']
+        if not isinstance(latitude, float) or not isinstance(longitude, float):
+            raise MeException("Not a valid coordination!")
+        return update_location_raw(self, latitude, longitude)['success']
 
-    def share_location(self, uuid: str) -> bool:
+    def share_location(self, uuid: Union[str, Profile, User, Contact]) -> bool:
         """
-        Share your :py:func:`update_location` with another user.
+        Share your location with another user.
 
-        :param uuid: User uuid. See :py:func:`get_uuid`.
-        :type uuid: str
-        :return: is sharing success.
+        :param uuid: uuid of the user. See :py:func:`get_uuid`.
+         Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
+        :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
+        :return: Is sharing success.
         :rtype: bool
         """
-        return self._make_request('post', '/main/users/profile/share-location/' + str(uuid) + "/")['success']
+        if isinstance(uuid, (Profile, User)):
+            uuid = uuid.uuid
+        if isinstance(uuid, Contact):
+            if uuid.user:
+                uuid = uuid.user.uuid
+            else:
+                raise MeException("Contact has no user.")
+        if uuid == self.uuid:
+            raise MeException("You can't share location with yourself!")
+        return share_location_raw(self, uuid)['success']
 
-    def get_distance(self, uuid: str) -> Union[float, None]:
-        """
-        Get your distance between you and another user.
-         - Only if the user shared his location with you. you can ask his location with :py:func:`suggest_turn_on_location`.
-
-        :param uuid: User uuid. See :py:func:`get_uuid`.
-        :type uuid: str
-        :return: The distance between you in kilometers. None if the user not shared his location with you.
-        :rtype: Union[float, None]
-        """
-        results = self.get_profile(uuid)
-        if results['profile'].get('distance'):
-            return results['profile']['distance']
-        return None
-
-    def stop_sharing_location(self, uuids: Union[str, List[str]]) -> bool:
+    def stop_sharing_location(self, uuids: Union[str, Profile, User, Contact, List[str, Profile, User, Contact]]) -> bool:
         """
         Stop sharing your :py:func:`update_location` with users.
 
-        :param uuids: Single or list of uuids that you want to stop them from watching you location. See :py:func:`locations_shared_by_me`.
-        :type uuids: Union[str, List[str]]
+        :param uuids: uuid/s of the user/s that you want to stop sharing your location with.
+        :type uuids: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact` | List[``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
         :return: is stopping success.
         :rtype: bool
         """
         if not isinstance(uuids, list):
             uuids = [uuids]
-        body = {"uuids": uuids}
-        return self._make_request('post', '/main/users/profile/share-location/stop-for-me/', body)['success']
+        if isinstance(uuids, list):
+            for uuid, index in enumerate(uuids):
+                if isinstance(uuid, (Profile, User)):
+                    uuids[index] = uuid.uuid
+                if isinstance(uuid, Contact):
+                    if uuid.user:
+                        uuids[index] = uuid.user.uuid
+                    else:
+                        print(f"Skip contact {uuid.name} with no user.")
 
-    def stop_shared_location(self, uuids: Union[str, List[str]]) -> bool:
+        return stop_sharing_location_raw(self, uuids)['success']
+
+    def stop_shared_location(self, uuids: Union[str, Profile, User, Contact, List[str, Profile, User, Contact]]) -> bool:
         """
         Stop locations that shared with you.
 
-        :param uuids: Single or list of uuids that you want to stop their location. See :py:func:`locations_shared_with_me`.
-        :type uuids: Union[str, List[str]]
+        :param uuids: uuid/s of the user/s that you want to stop sharing your location with.
+        :type uuids: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact` | List[``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
         :return: is stopping success.
         :rtype: bool
         """
         if not isinstance(uuids, list):
             uuids = [uuids]
-        body = {"uuids": uuids}
-        return self._make_request('post', '/main/users/profile/share-location/stop/', body)['success']
+        if isinstance(uuids, list):
+            for uuid, index in enumerate(uuids):
+                if isinstance(uuid, (Profile, User)):
+                    uuids[index] = uuid.uuid
+                if isinstance(uuid, Contact):
+                    if uuid.user:
+                        uuids[index] = uuid.user.uuid
+                    else:
+                        print(f"Skip contact {uuid.name} with no user.")
+
+        return stop_shared_locations_raw(self, uuids)['success']
 
     def locations_shared_by_me(self) -> List[user.User]:
         """

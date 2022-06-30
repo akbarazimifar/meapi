@@ -730,3 +730,163 @@ def switch_social_status_raw(meobj, social_name: str) -> dict:
     """
     return meobj._make_request('post', '/main/social/hide/', {'social_name': social_name})
 
+
+def numbers_count_raw(meobj) -> dict:
+    """
+    Get total count of numbers on Me.
+
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
+    :return: Dict with numbers count.
+    :rtype: dict
+
+    Example::
+
+        {
+            'count': 5783726484
+        }
+    """
+    return meobj._make_request('get', '/main/contacts/count/')
+
+
+def suggest_turn_on_comments_raw(meobj, uuid: str):
+    """
+    Ask from user to turn on comments in his profile.
+
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
+    :param uuid: UUID of the user.
+    :type uuid: str
+    :return: Dict with turned on comments success.
+    :rtype: dict
+
+    Example::
+
+        {
+            'requested': True
+        }
+    """
+    return meobj._make_request('post', '/main/users/profile/suggest-turn-on-comments/', {'uuid': uuid})
+
+
+def suggest_turn_on_mutual_raw(meobj, uuid: str):
+    """
+    Ask from user to turn on mutual contacts in his profile.
+
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
+    :param uuid: UUID of the user.
+    :type uuid: str
+    :return: Dict with turned on mutual success.
+    :rtype: dict
+
+    Example::
+
+        {
+            'requested': True
+        }
+    """
+    return meobj._make_request('post', '/main/users/profile/suggest-turn-on-mutual/', {'uuid': uuid})
+
+
+def suggest_turn_on_location_raw(meobj, uuid: str):
+    """
+    Ask from user to share his location with you.
+
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
+    :param uuid: UUID of the user.
+    :type uuid: str
+    :return: Dict with requested location success.
+    :rtype: dict
+
+    Example::
+
+        {
+            'requested': True
+        }
+    """
+    return meobj._make_request('post', '/main/users/profile/suggest-turn-on-location/', {'uuid': uuid})
+
+
+def update_location_raw(meobj, latitude: float, longitude: float):
+    """
+    Update your location.
+
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
+    :param latitude: Latitude.
+    :type latitude: float
+    :param longitude: Longitude.
+    :type longitude: float
+    :return: Dict with updated location success.
+    :rtype: dict
+
+    Example::
+
+        {
+            'success': True
+        }
+    """
+    body = {"location_latitude": latitude, "location_longitude": longitude}
+    return meobj._make_request('post', '/main/location/update/', body)
+
+
+def share_location_raw(meobj, uuid: str):
+    """
+    Share your location with user.
+
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
+    :param uuid: UUID of the user that you want to share the location with him.
+    :type uuid: str
+    :return: Dict with shared location success.
+    :rtype: dict
+
+    Example::
+
+        {
+            'success': True
+        }
+    """
+    return meobj._make_request('post', f'/main/users/profile/share-location/{uuid}/')
+
+
+def stop_sharing_location_raw(meobj, uuids: list[str]) -> dict:
+    """
+    Stop sharing your location with user.
+
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
+    :param uuids: List of users UUID's that you want to stop sharing the location with them.
+    :type uuids: List[str]
+    :return: Dict with stopped sharing location success.
+    :rtype: dict
+
+    Example::
+
+        {
+            'success': True
+        }
+    """
+    return meobj._make_request('post', '/main/users/profile/share-location/stop-for-me/', {"uuids": uuids})
+
+
+def stop_shared_locations_raw(meobj, uuids: List[str]) -> dict:
+    """
+    Stop location that shared with you.
+
+    :param meobj: :py:obj:`~meapi.Me` client object.
+    :type meobj: :py:obj:`~meapi.Me`
+    :param uuids: List of users UUID's that you want get their location.
+    :type uuids: List[str]
+    :return: Dict with stopped shared location success.
+    :rtype: dict
+
+    Example::
+
+        {
+            'success': True
+        }
+    """
+    return meobj._make_request('post', '/main/users/profile/share-location/stop/', {"uuids": uuids})
