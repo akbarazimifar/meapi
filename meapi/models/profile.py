@@ -62,6 +62,9 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         date_of_birth (:py:obj:`~datetime.date` *optional*):
             The user's date of birth.
 
+        age (``int``):
+            The user's age. calculated from ``date_of_birth`` if exists, else ``0``.
+
         device_type (``str`` *optional*):
             The user's device type: ``android`` or ``ios``.
 
@@ -209,12 +212,12 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         self.is_he_blocked_me = is_he_blocked_me
         self.is_permanent = is_permanent
         self.is_shared_location = is_shared_location
-        self.last_comment = Comment.new_from_json_dict(last_comment, _meobj=_meobj)
+        self.last_comment = Comment.new_from_json_dict(last_comment, _meobj=_meobj, profile_uuid=uuid)
         self.mutual_contacts_available = mutual_contacts_available
         self.mutual_contacts: List[MutualContact] = [MutualContact.new_from_json_dict(mutual_contact) for mutual_contact in
                                                      mutual_contacts] if mutual_contacts_available else mutual_contacts
         self.share_location = share_location
-        self.social: Social = Social.new_from_json_dict(social, _meobj=_meobj) if social else social
+        self.social: Social = Social.new_from_json_dict(social, _meobj=_meobj, _my_social=_my_profile) if social else social
         self.carrier = carrier
         self.comments_enabled = comments_enabled
         self.country_code = country_code
@@ -274,5 +277,17 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
 
     @property
     def name(self) -> str:
+        """
+        Returns the full name of the user. ``first_name`` + ``last_name``.
+        """
         return str(self.first_name or '' + ((' ' if self.first_name else '') + self.last_name or ''))
+
+    @property
+    def age(self) -> int:
+        """
+        Calculates the age of the user.
+        """
+        if not self.date_of_birth or self.date_of_birth > date.today():
+            return 0
+        return (date.today() - self.date_of_birth).days // 365
 
