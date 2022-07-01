@@ -45,7 +45,7 @@ class User(MeModel, _CommonMethodsForUserContactProfile):
         return str(self.first_name or '' + ((' ' if self.first_name else '') + self.last_name or ''))
 
     def __repr__(self):
-        return f"User name={self.first_name} {self.last_name or ''}>"
+        return f"<User name={self.first_name} {self.last_name or ''}>"
 
     def __str__(self):
         return self.uuid

@@ -1,17 +1,17 @@
 from typing import Union, List
 
 
-def friendship_raw(meobj, phone_number: Union[int, str]) -> dict:
+def friendship_raw(client, phone_number: int) -> dict:
     """
     Get friendship information between you and another number.
     like count mutual friends, total calls duration, how do you name each other, calls count, your watches, comments, and more.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param phone_number: International phone number format.
-    :type phone_number: Union[int, str]
+    :type phone_number: ``int``
     :return: Dict with friendship data.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example of friendship::
 
@@ -29,21 +29,21 @@ def friendship_raw(meobj, phone_number: Union[int, str]) -> dict:
             "my_comment": None,
         }
     """
-    return meobj._make_request('get', f'/main/contacts/friendship/?phone_number={phone_number}')
+    return client._make_request('get', f'/main/contacts/friendship/?phone_number={phone_number}')
 
 
-def report_spam_raw(meobj, country_code: str, phone_number: str, spam_name: str) -> dict:
+def report_spam_raw(client, country_code: str, phone_number: str, spam_name: str) -> dict:
     """
     Report a number as spam.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param country_code: Country code.
-    :type country_code: str
+    :type country_code: ``str``
     :param phone_number: International phone number format.
-    :type phone_number: Union[int, str]
+    :type phone_number: ``str``
     :param spam_name: Name of the spammer.
-    :type spam_name: str
+    :type spam_name: ``str``
     :return: Dict with spam report success.
     :rtype: dict
 
@@ -52,17 +52,17 @@ def report_spam_raw(meobj, country_code: str, phone_number: str, spam_name: str)
     """
     body = {"country_code": country_code, "is_spam": True, "is_from_v": False,
      "name": spam_name, "phone_number": phone_number}
-    return meobj._make_request('post', f'/main/names/suggestion/report/', body=body)
+    return client._make_request('post', f'/main/names/suggestion/report/', body=body)
 
 
-def who_deleted_raw(meobj) -> List[dict]:
+def who_deleted_raw(client) -> List[dict]:
     """
     Get a list of users that deleted you from their contacts.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :return: List of dicts with users.
-    :rtype: List[dict]
+    :rtype: List[``dict``]
 
     Example of results::
 
@@ -85,17 +85,17 @@ def who_deleted_raw(meobj) -> List[dict]:
             }
         ]
     """
-    return meobj._make_request('get', '/main/users/profile/who-deleted/')
+    return client._make_request('get', '/main/users/profile/who-deleted/')
 
 
-def who_watched_raw(meobj) -> List[dict]:
+def who_watched_raw(client) -> List[dict]:
     """
     Get a list of users that watched you.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :return: List of dicts with users.
-    :rtype: List[dict]
+    :rtype: List[``dict``]
 
     Example of results::
 
@@ -122,19 +122,19 @@ def who_watched_raw(meobj) -> List[dict]:
             }
         ]
     """
-    return meobj._make_request('get', '/main/users/profile/who-watched/')
+    return client._make_request('get', '/main/users/profile/who-watched/')
 
 
-def get_comments_raw(meobj, uuid: str) -> dict:
+def get_comments_raw(client, uuid: str) -> dict:
     """
     Get user comments.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param uuid: User uuid.
-    :type uuid: str
+    :type uuid: ``str``
     :return: Dict with list of comments.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
@@ -187,19 +187,19 @@ def get_comments_raw(meobj, uuid: str) -> dict:
             "user_comment": None,
         }
     """
-    return meobj._make_request('get', f'/main/comments/list/{uuid}')
+    return client._make_request('get', f'/main/comments/list/{uuid}')
 
 
-def get_comment_raw(meobj, comment_id: int) -> dict:
+def get_comment_raw(client, comment_id: int) -> dict:
     """
     Get comment details, comment text, who and how many liked, create time and more.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param comment_id: Comment id.
-    :type comment_id: int
+    :type comment_id: ``int``
     :return: Dict with comment details.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
@@ -227,21 +227,21 @@ def get_comment_raw(meobj, comment_id: int) -> dict:
             "message": "Test comment",
         }
     """
-    return meobj._make_request('get', f'/main/comments/retrieve/{comment_id}')
+    return client._make_request('get', f'/main/comments/retrieve/{comment_id}')
 
 
-def publish_comment_raw(meobj, uuid: str, your_comment: str) -> dict:
+def publish_comment_raw(client, uuid: str, your_comment: str) -> dict:
     """
     Publish comment.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param uuid: User uuid.
-    :type uuid: str
+    :type uuid: ``str``
     :param your_comment: Comment text.
-    :type your_comment: str
+    :type your_comment: ``str``
     :return: Dict with comment details.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
@@ -268,19 +268,19 @@ def publish_comment_raw(meobj, uuid: str, your_comment: str) -> dict:
         }
     """
     body = {"message": your_comment}
-    return meobj._make_request('post', f'/main/comments/add/{uuid}/', body)
+    return client._make_request('post', f'/main/comments/add/{uuid}/', body)
 
 
-def approve_comment_raw(meobj, comment_id: int) -> dict:
+def approve_comment_raw(client, comment_id: int) -> dict:
     """
     Approve comment.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param comment_id: Comment id.
-    :type comment_id: int
+    :type comment_id: ``int``
     :return: Dict with comment details.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
@@ -306,19 +306,19 @@ def approve_comment_raw(meobj, comment_id: int) -> dict:
             'comments_blocked': False
         }
     """
-    return meobj._make_request('post', f'/main/comments/approve/{comment_id}')
+    return client._make_request('post', f'/main/comments/approve/{comment_id}')
 
 
-def delete_comment_raw(meobj, comment_id: int) -> dict:
+def delete_comment_raw(client, comment_id: int) -> dict:
     """
     Delete comment.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param comment_id: Comment id.
-    :type comment_id: int
+    :type comment_id: ``int``
     :return: Dict with comment details.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
@@ -344,51 +344,51 @@ def delete_comment_raw(meobj, comment_id: int) -> dict:
             'comments_blocked': False
         }
     """
-    return meobj._make_request('delete', f'/main/comments/approve/{comment_id}/')
+    return client._make_request('delete', f'/main/comments/approve/{comment_id}/')
 
 
-def like_comment_raw(meobj, comment_id: int) -> dict:
+def like_comment_raw(client, comment_id: int) -> dict:
     """
     Like comment.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param comment_id: Comment id.
-    :type comment_id: int
+    :type comment_id: ``int``
     :return: Dict with comment details.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
     """
-    return meobj._make_request('post', f'/main/comments/like/{comment_id}/')
+    return client._make_request('post', f'/main/comments/like/{comment_id}/')
 
 
-def unlike_comment_raw(meobj, comment_id: int) -> dict:
+def unlike_comment_raw(client, comment_id: int) -> dict:
     """
     Unlike comment.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param comment_id: Comment id.
-    :type comment_id: int
+    :type comment_id: ``int``
     :return: Dict with comment details.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
     """
-    return meobj._make_request('delete', f'/main/comments/like/{comment_id}/')
+    return client._make_request('delete', f'/main/comments/like/{comment_id}/')
 
 
-def get_groups_raw(meobj) -> dict:
+def get_groups_raw(client) -> dict:
     """
     Get groups of names and see how people named you.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :return: Dict with groups.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
@@ -420,17 +420,17 @@ def get_groups_raw(meobj) -> dict:
             ],
         }
     """
-    return meobj._make_request('get', '/main/names/groups/')
+    return client._make_request('get', '/main/names/groups/')
 
 
-def get_deleted_groups_raw(meobj) -> dict:
+def get_deleted_groups_raw(client) -> dict:
     """
     Get group names that you deleted.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :return: dict with names and contact ids.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
@@ -461,19 +461,19 @@ def get_deleted_groups_raw(meobj) -> dict:
             "contact_ids": [409879786],
         }
     """
-    return meobj._make_request('get', '/main/settings/hidden-names/')
+    return client._make_request('get', '/main/settings/hidden-names/')
 
 
-def delete_group_raw(meobj, contact_ids: List[int]) -> dict:
+def delete_group_raw(client, contact_ids: List[int]) -> dict:
     """
     Delete group.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param contact_ids: list with contacts ids in the same group.
-    :type contact_ids: List[int]
+    :type contact_ids: List[``int``]
     :return: dict with delete success.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
@@ -481,19 +481,19 @@ def delete_group_raw(meobj, contact_ids: List[int]) -> dict:
             'success': True
         }
     """
-    return meobj._make_request('post', '/main/contacts/hide/', {'contact_ids': contact_ids})
+    return client._make_request('post', '/main/contacts/hide/', {'contact_ids': contact_ids})
 
 
-def restore_group_raw(meobj, contact_ids: List[int]) -> dict:
+def restore_group_raw(client, contact_ids: List[int]) -> dict:
     """
     Restore group.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param contact_ids: list with contacts ids in the same group.
-    :type contact_ids: List[int]
+    :type contact_ids: List[``int``]
     :return: dict with restore success.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
@@ -501,21 +501,21 @@ def restore_group_raw(meobj, contact_ids: List[int]) -> dict:
             'success': True
         }
     """
-    return meobj._make_request('post', '/main/settings/hidden-names/', {'contact_ids': contact_ids})
+    return client._make_request('post', '/main/settings/hidden-names/', {'contact_ids': contact_ids})
 
 
-def ask_group_rename_raw(meobj, contact_ids: List[int], new_name: str) -> dict:
+def ask_group_rename_raw(client, contact_ids: List[int], new_name: str) -> dict:
     """
     Ask contacts in a group to rename you in their contact book.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param contact_ids: list with contacts ids in the same group.
-    :type contact_ids: List[int]
+    :type contact_ids: List[``int``]
     :param new_name: New name.
-    :type new_name: str
+    :type new_name: ``str``
     :return: dict with rename success.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
@@ -523,19 +523,19 @@ def ask_group_rename_raw(meobj, contact_ids: List[int], new_name: str) -> dict:
             'success': True
         }
     """
-    return meobj._make_request('post', '/main/names/suggestion/', {'contact_ids': contact_ids, 'name': new_name})
+    return client._make_request('post', '/main/names/suggestion/', {'contact_ids': contact_ids, 'name': new_name})
 
 
-def get_my_social_raw(meobj) -> dict:
+def get_my_social_raw(client) -> dict:
     """
     Get connected social networks to your Me account.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param uuid: UUID of the user.
-    :type uuid: str
+    :type uuid: ``str``
     :return: Dict with social networks and posts.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
@@ -640,22 +640,22 @@ def get_my_social_raw(meobj) -> dict:
             },
         }
     """
-    return meobj._make_request('post', '/main/social/update/')
+    return client._make_request('post', '/main/social/update/')
 
 
-def add_social_token_raw(meobj, social_name: str, token: str) -> dict:
+def add_social_token_raw(client, social_name: str, token: str) -> dict:
     """
     Connect social network (that required token) to your Me account.
         - Available social networks: ``facebook``, ``instagram``, ``spotify``, ``twitter``, ``tiktok``.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param social_name: Social network name.
-    :type social_name: str
-    :param token: Token.
-    :type token: str
+    :type social_name: ``str``
+    :param token: Token from the social network.
+    :type token: ``str``
     :return: Dict with added success.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
@@ -663,22 +663,22 @@ def add_social_token_raw(meobj, social_name: str, token: str) -> dict:
             "success": True
         }
     """
-    return meobj.self._make_request('post', f'/main/social/save-auth-token/', {'social_name': social_name, 'code_first': token})
+    return client.self._make_request('post', f'/main/social/save-auth-token/', {'social_name': social_name, 'code_first': token})
 
 
-def add_social_url_raw(meobj, social_name: str, url: str) -> dict:
+def add_social_url_raw(client, social_name: str, url: str) -> dict:
     """
     Connect social network (that required url) to your Me account.
         - Available for ``linkedin`` and ``pintrest``.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param social_name: Social network name.
-    :type social_name: str
+    :type social_name: ``str``
     :param url: Url to your social profile.
-    :type url: str
+    :type url: ``str``
     :return: Dict with added success.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
@@ -686,20 +686,20 @@ def add_social_url_raw(meobj, social_name: str, url: str) -> dict:
             "success": True
         }
     """
-    return meobj._make_request('post', '/main/social/update-url/', {'social_name': social_name, 'profile_id': url})
+    return client._make_request('post', '/main/social/update-url/', {'social_name': social_name, 'profile_id': url})
 
 
-def remove_social_raw(meobj, social_name: str) -> dict:
+def remove_social_raw(client, social_name: str) -> dict:
     """
     Remove social network from your Me account.
         - Available social networks: ``facebook``, ``instagram``, ``spotify``, ``twitter``, ``tiktok``, ``linkedin``, ``pintrest``.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param social_name: Social network name.
-    :type social_name: str
+    :type social_name: ``str``
     :return: Dict with removed success.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
@@ -707,20 +707,20 @@ def remove_social_raw(meobj, social_name: str) -> dict:
             "success": True
         }
     """
-    return meobj._make_request('post', '/main/social/delete/', {'social_name': social_name})
+    return client._make_request('post', '/main/social/delete/', {'social_name': social_name})
 
 
-def switch_social_status_raw(meobj, social_name: str) -> dict:
+def switch_social_status_raw(client, social_name: str) -> dict:
     """
     Switch social network status (hidden or shown) from your Me account.
         - Available social networks: ``facebook``, ``instagram``, ``spotify``, ``twitter``, ``tiktok``, ``linkedin``, ``pintrest``.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param social_name: Social network name.
-    :type social_name: str
+    :type social_name: ``str``
     :return: Dict with switched success.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
@@ -728,17 +728,17 @@ def switch_social_status_raw(meobj, social_name: str) -> dict:
             'is_hidden': False
         }
     """
-    return meobj._make_request('post', '/main/social/hide/', {'social_name': social_name})
+    return client._make_request('post', '/main/social/hide/', {'social_name': social_name})
 
 
-def numbers_count_raw(meobj) -> dict:
+def numbers_count_raw(client) -> dict:
     """
     Get total count of numbers on Me.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :return: Dict with numbers count.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
@@ -746,19 +746,19 @@ def numbers_count_raw(meobj) -> dict:
             'count': 5783726484
         }
     """
-    return meobj._make_request('get', '/main/contacts/count/')
+    return client._make_request('get', '/main/contacts/count/')
 
 
-def suggest_turn_on_comments_raw(meobj, uuid: str):
+def suggest_turn_on_comments_raw(client, uuid: str):
     """
     Ask from user to turn on comments in his profile.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param uuid: UUID of the user.
-    :type uuid: str
+    :type uuid: ``str``
     :return: Dict with turned on comments success.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
@@ -766,19 +766,19 @@ def suggest_turn_on_comments_raw(meobj, uuid: str):
             'requested': True
         }
     """
-    return meobj._make_request('post', '/main/users/profile/suggest-turn-on-comments/', {'uuid': uuid})
+    return client._make_request('post', '/main/users/profile/suggest-turn-on-comments/', {'uuid': uuid})
 
 
-def suggest_turn_on_mutual_raw(meobj, uuid: str):
+def suggest_turn_on_mutual_raw(client, uuid: str):
     """
     Ask from user to turn on mutual contacts in his profile.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param uuid: UUID of the user.
-    :type uuid: str
+    :type uuid: ``str``
     :return: Dict with turned on mutual success.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
@@ -786,19 +786,19 @@ def suggest_turn_on_mutual_raw(meobj, uuid: str):
             'requested': True
         }
     """
-    return meobj._make_request('post', '/main/users/profile/suggest-turn-on-mutual/', {'uuid': uuid})
+    return client._make_request('post', '/main/users/profile/suggest-turn-on-mutual/', {'uuid': uuid})
 
 
-def suggest_turn_on_location_raw(meobj, uuid: str):
+def suggest_turn_on_location_raw(client, uuid: str):
     """
     Ask from user to share his location with you.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param uuid: UUID of the user.
-    :type uuid: str
+    :type uuid: ``str``
     :return: Dict with requested location success.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
@@ -806,21 +806,21 @@ def suggest_turn_on_location_raw(meobj, uuid: str):
             'requested': True
         }
     """
-    return meobj._make_request('post', '/main/users/profile/suggest-turn-on-location/', {'uuid': uuid})
+    return client._make_request('post', '/main/users/profile/suggest-turn-on-location/', {'uuid': uuid})
 
 
-def update_location_raw(meobj, latitude: float, longitude: float):
+def update_location_raw(client, latitude: float, longitude: float):
     """
     Update your location.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param latitude: Latitude.
-    :type latitude: float
+    :type latitude: ``float``
     :param longitude: Longitude.
-    :type longitude: float
+    :type longitude: ``float``
     :return: Dict with updated location success.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
@@ -829,19 +829,19 @@ def update_location_raw(meobj, latitude: float, longitude: float):
         }
     """
     body = {"location_latitude": latitude, "location_longitude": longitude}
-    return meobj._make_request('post', '/main/location/update/', body)
+    return client._make_request('post', '/main/location/update/', body)
 
 
-def share_location_raw(meobj, uuid: str):
+def share_location_raw(client, uuid: str):
     """
     Share your location with user.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param uuid: UUID of the user that you want to share the location with him.
-    :type uuid: str
+    :type uuid: ``str``
     :return: Dict with shared location success.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
@@ -849,19 +849,19 @@ def share_location_raw(meobj, uuid: str):
             'success': True
         }
     """
-    return meobj._make_request('post', f'/main/users/profile/share-location/{uuid}/')
+    return client._make_request('post', f'/main/users/profile/share-location/{uuid}/')
 
 
-def stop_sharing_location_raw(meobj, uuids: list[str]) -> dict:
+def stop_sharing_location_raw(client, uuids: list[str]) -> dict:
     """
     Stop sharing your location with user.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param uuids: List of users UUID's that you want to stop sharing the location with them.
-    :type uuids: List[str]
+    :type uuids: List[``str``]
     :return: Dict with stopped sharing location success.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
@@ -869,19 +869,19 @@ def stop_sharing_location_raw(meobj, uuids: list[str]) -> dict:
             'success': True
         }
     """
-    return meobj._make_request('post', '/main/users/profile/share-location/stop-for-me/', {"uuids": uuids})
+    return client._make_request('post', '/main/users/profile/share-location/stop-for-me/', {"uuids": uuids})
 
 
-def stop_shared_locations_raw(meobj, uuids: List[str]) -> dict:
+def stop_shared_locations_raw(client, uuids: List[str]) -> dict:
     """
     Stop location that shared with you.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param uuids: List of users UUID's that you want get their location.
-    :type uuids: List[str]
+    :type uuids: List[``str``]
     :return: Dict with stopped shared location success.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
@@ -889,4 +889,61 @@ def stop_shared_locations_raw(meobj, uuids: List[str]) -> dict:
             'success': True
         }
     """
-    return meobj._make_request('post', '/main/users/profile/share-location/stop/', {"uuids": uuids})
+    return client._make_request('post', '/main/users/profile/share-location/stop/', {"uuids": uuids})
+
+
+def locations_shared_by_me_raw(client) -> List[dict]:
+    """
+    Get list of users that you shared your location with them.
+
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
+    :return: list of dicts with contacts details.
+    :rtype: List[``dict``]
+
+    Example::
+
+        [
+            {
+                "first_name": "Rachel Green",
+                "last_name": "",
+                "phone_number": 1234567890,
+                "profile_picture": "https://d18zaexen4dp1s.cloudfront.net/59XXXXXXXXXfa67.jpg",
+                "uuid": "XXXXX-XXXXX-XXXX-XXXX-XXXXXX"
+            }
+        ]
+    """
+    return client._make_request('get', '/main/users/profile/share-location/')
+
+
+def locations_shared_with_me_raw(client) -> dict:
+    """
+    Get users who have shared a location with you. See also :py:func:`locations_shared_by_me`.
+
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
+    :return: dict with list of uuids and list with users.
+    :rtype: ``dict``
+
+    Example::
+
+        {
+            "shared_location_user_uuids": [
+                "3850XXX-XXX-XXX-XXX-XXXXX"
+            ],
+            "shared_location_users": [
+                {
+                    "author": {
+                        "first_name": "Gunther",
+                        "last_name": "",
+                        "phone_number": 3647632874324,
+                        "profile_picture": "https://d18zaexen4dp1s.cloudfront.net/dXXXXXXXXXXXXXXXXXXb.jpg",
+                        "uuid": "3850XXX-XXX-XXX-XXX-XXXXX"
+                    },
+                    "distance": 1.4099551982832228,
+                    "i_shared": False
+                }
+            ]
+        }
+    """
+    return client._make_request('get', '/main/users/profile/share-location/for-me/')

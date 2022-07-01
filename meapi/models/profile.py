@@ -1,7 +1,6 @@
 from datetime import date
 from typing import List, Union
 from meapi.utils.exceptions import MeException
-from meapi.utils.validations import validate_profile_details
 from meapi.utils.helpers import parse_date
 from meapi.models.comment import Comment
 from meapi.models.common import _CommonMethodsForUserContactProfile
@@ -253,28 +252,6 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         self.who_watched = [Watcher.new_from_json_dict(watcher) for watcher in who_watched] if who_watched else None
         self.__my_profile = _my_profile
 
-    def __setattr__(self, key, value):
-        if getattr(self, '_Profile__my_profile', None) is not None:
-            if self.__my_profile:
-                value = validate_profile_details(key, value)
-                res = self.__meobj.update_profile_info(**{key: value})
-                if res[key] == value or key == 'profile_picture':
-                    # Can't check if profile picture updated because Me convert's it to their own url.
-                    if key == 'date_of_birth':
-                        value = parse_date(value, date_only=True)
-                    return super().__setattr__(key, value)
-                else:
-                    raise MeException(f"Failed to change '{getattr(self, key)}' to '{value}'!")
-            else:
-                raise MeException("You cannot update profile if it's not yours!")
-        super().__setattr__(key, value)
-
-    def __repr__(self):
-        return f"<Profile name={self.first_name} {self.last_name or ''} uuid={self.uuid}>"
-
-    def __str__(self):
-        return f"{self.first_name} {self.last_name or ''}"
-
     @property
     def name(self) -> str:
         """
@@ -291,3 +268,26 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
             return 0
         return (date.today() - self.date_of_birth).days // 365
 
+    def __setattr__(self, key, value):
+        if getattr(self, '_Profile__my_profile', None) is not None:
+            if self.__my_profile:
+                if key not in ['country_code', 'date_of_birth', 'device_type', 'login_type', 'email', 'first_name',
+                               'last_name', 'slogan', 'gender', 'profile_picture_url', 'facebook_url']:
+                    raise MeException("You cannot change this field!")
+                res = self.__meobj.update_profile_details(**{key: value})
+                if (res[0] and str(getattr(res[1], key, None)) == str(value)) or key == 'profile_picture':
+                    # Can't check if profile picture updated because Me convert's it to their own url.
+                    if key == 'date_of_birth':
+                        value = parse_date(value, date_only=True)
+                    return super().__setattr__(key, value)
+                else:
+                    raise MeException(f"Failed to change '{getattr(self, key)}' to '{value}'!")
+            else:
+                raise MeException("You cannot update profile if it's not yours!")
+        super().__setattr__(key, value)
+
+    def __repr__(self):
+        return f"<Profile name={self.first_name} {self.last_name or ''} uuid={self.uuid}>"
+
+    def __str__(self):
+        return self.name

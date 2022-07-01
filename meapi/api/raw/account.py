@@ -1,15 +1,15 @@
 from typing import Union, List
 
 
-def phone_search_raw(meobj, phone_number: Union[str, int]) -> dict:
+def phone_search_raw(client, phone_number: Union[str, int]) -> dict:
     """
     Get information on any phone number.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param phone_number: International phone number format.
-    :type phone_number: Union[str, int])
-    :rtype: dict
+    :type phone_number: ``int``
+    :rtype: ``dict``
 
     Example for existed user::
 
@@ -63,20 +63,19 @@ def phone_search_raw(meobj, phone_number: Union[str, int]) -> dict:
             }
         }
     """
-    return meobj._make_request(req_type='get', endpoint=f'/main/contacts/search/?phone_number={phone_number}')
+    return client._make_request(req_type='get', endpoint=f'/main/contacts/search/?phone_number={phone_number}')
 
 
-def get_profile_raw(meobj, uuid: Union[str, None]) -> dict:
+def get_profile_raw(client, uuid: Union[str, None]) -> dict:
     """
     Get other users profile.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param uuid: uuid of the Me user..
-    :type uuid: str
-    :raises MeApiException: msg: ``api_profile_view_passed_limit`` if you passed the limit (About 500 per day in the unofficial auth method).
+    :type uuid: ``str``
     :return: Dict with profile details
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
@@ -238,16 +237,16 @@ def get_profile_raw(meobj, uuid: Union[str, None]) -> dict:
             },
         }
     """
-    return meobj._make_request('get', f'/main/users/profile/{uuid}')
+    return client._make_request('get', f'/main/users/profile/{uuid}')
 
 
-def get_my_profile_raw(meobj) -> dict:
+def get_my_profile_raw(client) -> dict:
     """
     Get your profile.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
-    :rtype: dict
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
+    :rtype: ``dict``
 
     Example::
 
@@ -277,44 +276,86 @@ def get_my_profile_raw(meobj) -> dict:
             'verify_subscription': True
         }
     """
-    return meobj._make_request('get', '/main/users/profile/me/')
+    return client._make_request('get', '/main/users/profile/me/')
 
 
-def delete_account_raw(meobj) -> dict:
+def update_profile_details_raw(client, **kwargs) -> dict:
+    """
+    Update your profile details.
+
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
+    :param kwargs: key value of profile details.
+    :type kwargs: ``dict``
+
+    Example::
+
+        {
+            'first_name': 'Joey',
+            'last_name': 'Tribbiani',
+            'facebook_url': '123456789',
+            'google_url': None,
+            'email': 'joeyt@friends.tv',
+            'profile_picture': 'https://refr.cloudfront.net/dde.jpg',
+            'date_of_birth': '1999-01-01',
+            'gender': 'M',
+            'location_latitude': -12.5465657,
+            'location_longitude': 32.454354,
+            'location_name': 'XX',
+            'phone_number': 95435436545765483,
+            'is_premium': False,
+            'is_verified': True,
+            'uuid': '3850f44b-3f7e-41cf-af6a-27ce13b64d0d',
+            'slogan': 'Joey doesnt share food!',
+            'device_type': 'ios',
+            'carrier': 'MobileBla',
+            'country_code': 'US',
+            'phone_prefix': '123',
+            'gdpr_consent': True,
+            'login_type': 'apple',
+            'verify_subscription': True
+        }
+    """
+    return client._make_request('patch', '/main/users/profile/', kwargs)
+
+
+def delete_account_raw(client) -> dict:
     """
     Delete your account.
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
-    :rtype: dict
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
+    :rtype: ``dict``
     """
     # todo add json exmaple
-    return meobj._make_request('delete', '/main/settings/remove-user/')
+    return client._make_request('delete', '/main/settings/remove-user/')
 
 
-def suspend_account_raw(meobj) -> dict:
+def suspend_account_raw(client) -> dict:
     """
     Suspend your account.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
-    :rtype: dict
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
+    :rtype: ``dict``
     """
     # todo add json example
-    return meobj._make_request('put', '/main/settings/suspend-user/')
+    return client._make_request('put', '/main/settings/suspend-user/')
 
 
-def _contact_handler(meobj, to_add: bool, contacts: List[dict]) -> dict:
+def _contact_handler(client, to_add: bool, contacts: List[dict]) -> dict:
     body = {"add": contacts if to_add else [], "is_first": False, "remove": contacts if not to_add else []}
-    return meobj._make_request('post', '/main/contacts/sync/', body)
+    return client._make_request('post', '/main/contacts/sync/', body)
 
 
-def add_contacts_raw(meobj, contacts: List[dict]) -> dict:
+def add_contacts_raw(client, contacts: List[dict]) -> dict:
     """
     Upload new contacts to your Me account.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
-    :rtype: dict
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
+    :param contacts: List of contacts to add.
+    :type contacts: List[``dict``]
+    :rtype: ``dict``
 
     Example of list of contacts to add::
 
@@ -350,16 +391,18 @@ def add_contacts_raw(meobj, contacts: List[dict]) -> dict:
             'failed_contacts': []
         }
     """
-    return _contact_handler(meobj, to_add=True, contacts=contacts)
+    return _contact_handler(client, to_add=True, contacts=contacts)
 
 
-def remove_contacts_raw(meobj, contacts: List[dict]) -> dict:
+def remove_contacts_raw(client, contacts: List[dict]) -> dict:
     """
     Remove contacts from your Me account.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
-    :rtype: dict
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
+    :param contacts: List of contacts to remove.
+    :type contacts: List[``dict``]
+    :rtype: ``dict``
 
     Example of list of contacts to remove::
 
@@ -384,24 +427,27 @@ def remove_contacts_raw(meobj, contacts: List[dict]) -> dict:
             'result': [],
             'failed_contacts': []
         }
+
+    Args:
+        contacts:
     """
-    return _contact_handler(meobj, to_add=False, contacts=contacts)
+    return _contact_handler(client, to_add=False, contacts=contacts)
 
 
-def block_profile_raw(meobj, phone_number: int, block_contact: bool, me_full_block: bool) -> dict:
+def block_profile_raw(client, phone_number: int, block_contact: bool, me_full_block: bool) -> dict:
     """
     Block user profile.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param phone_number: User phone number in international format.
     :type phone_number: Union[str, int]
     :param block_contact: To block for calls.
-    :type block_contact: bool
+    :type block_contact: ``bool``
     :param me_full_block: To block for social.
-    :type me_full_block: bool
+    :type me_full_block: ``bool``
     :return: Dict of results.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example of results::
 
@@ -411,21 +457,21 @@ def block_profile_raw(meobj, phone_number: int, block_contact: bool, me_full_blo
         }
     """
     body = {"block_contact": block_contact, "me_full_block": me_full_block, "phone_number": phone_number}
-    return meobj._make_request('post', '/main/users/profile/block/', body)
+    return client._make_request('post', '/main/users/profile/block/', body)
 
 
-def unblock_profile_raw(meobj, phone_number: int, unblock_contact=True, me_full_unblock=True) -> dict:
+def unblock_profile_raw(client, phone_number: int, unblock_contact=True, me_full_unblock=True) -> dict:
     """
     Unlock user profile.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param phone_number: User phone number in international format.
-    :type phone_number: int
+    :type phone_number: ``int``
     :param unblock_contact: To unblock for calls.
-    :type unblock_contact: bool
+    :type unblock_contact: ``bool``
     :param me_full_unblock: To unblock for social.
-    :type me_full_unblock: bool
+    :type me_full_unblock: ``bool``
     :return: Dict of results.
     :rtype: dict
 
@@ -437,19 +483,19 @@ def unblock_profile_raw(meobj, phone_number: int, unblock_contact=True, me_full_
         }
     """
     body = {"block_contact": not unblock_contact, "me_full_block": not me_full_unblock, "phone_number": phone_number}
-    return meobj._make_request('post', '/main/users/profile/block/', body)
+    return client._make_request('post', '/main/users/profile/block/', body)
 
 
-def block_numbers_raw(meobj, numbers: List[int]) -> dict:
+def block_numbers_raw(client, numbers: List[int]) -> dict:
     """
     Block numbers.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param numbers: Single or list of phone numbers in international format.
-    :type numbers: List[int]
+    :type numbers: List[``int``]
     :return: list of dicts with the blocked numbers.
-    :rtype: List[dict]
+    :rtype: List[``dict``]
 
     Example::
 
@@ -461,15 +507,15 @@ def block_numbers_raw(meobj, numbers: List[int]) -> dict:
             }
         ]
     """
-    return meobj._make_request('post', '/main/users/profile/bulk-block/', {"phone_numbers": numbers})
+    return client._make_request('post', '/main/users/profile/bulk-block/', {"phone_numbers": numbers})
 
 
-def unblock_numbers_raw(meobj, numbers: List[int]) -> dict:
+def unblock_numbers_raw(client, numbers: List[int]) -> dict:
     """
     Unblock phone numbers.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :param numbers: Single or list of phone numbers in international format.
     :type numbers: List[int]
     :return: dict with unblock success details.
@@ -482,15 +528,15 @@ def unblock_numbers_raw(meobj, numbers: List[int]) -> dict:
             'message': 'Phone numbers successfully unblocked'
         }
     """
-    return meobj._make_request('post', '/main/users/profile/bulk-unblock/', {"phone_numbers": numbers})
+    return client._make_request('post', '/main/users/profile/bulk-unblock/', {"phone_numbers": numbers})
 
 
-def get_blocked_numbers_raw(meobj) -> List[dict]:
+def get_blocked_numbers_raw(client) -> List[dict]:
     """
     Get your blocked numbers.
 
-    :param meobj: :py:obj:`~meapi.Me` client object.
-    :type meobj: :py:obj:`~meapi.Me`
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
     :return: list of dicts.
     :rtype: List[dict]
 
@@ -504,5 +550,5 @@ def get_blocked_numbers_raw(meobj) -> List[dict]:
             }
         ]
     """
-    return meobj._make_request('get', '/main/settings/blocked-phone-numbers/')
+    return client._make_request('get', '/main/settings/blocked-phone-numbers/')
 

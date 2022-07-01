@@ -75,8 +75,6 @@ class Settings(MeModel):
 
         spammers_count (``int``):
             Number of spammers.
-
-
     """
     def __init__(self,
                  _meobj,
@@ -133,7 +131,7 @@ class Settings(MeModel):
                     raise MeException(f"{str(key)} value must be a bool type!")
             else:
                 raise MeException("You can't change this setting!")
-            if self.__meobj.change_settings(**{key: value})[key] != value:
-                raise MeException("not updated")
-
+            res = self.__meobj.change_settings(**{key: value})
+            if res[0] and getattr(res[1], key, None) != value:
+                raise MeException(f"{key} not updated!")
         return super().__setattr__(key, value)

@@ -1,6 +1,7 @@
 from typing import Tuple
 from meapi.utils.exceptions import MeException
 from meapi.models import settings
+from meapi.api.raw.settings import *
 
 
 class Settings:
@@ -8,33 +9,10 @@ class Settings:
         """
         Get current settings.
 
-        :return: Dict with settings.
-        :rtype: dict
-
-        Example::
-
-            {
-                "birthday_notification_enabled": True,
-                "comments_enabled": True,
-                "comments_notification_enabled": True,
-                "contact_suspended": False,
-                "distance_notification_enabled": True,
-                "language": "iw",
-                "last_backup_at": None,
-                "last_restore_at": None,
-                "location_enabled": True,
-                "mutual_contacts_available": True,
-                "names_notification_enabled": True,
-                "notifications_enabled": True,
-                "spammers_count": 24615,
-                "system_notification_enabled": True,
-                "who_deleted_enabled": True,
-                "who_deleted_notification_enabled": True,
-                "who_watched_enabled": True,
-                "who_watched_notification_enabled": True,
-            }
+        :return: :py:class:`meapi.models.settings.Settings` object.
+        :rtype: :py:class:`meapi.models.settings.Settings`
         """
-        return settings.Settings.new_from_json_dict(self._make_request('get', '/main/settings/'), _meobj=self)
+        return settings.Settings.new_from_json_dict(get_settings_raw(self), _meobj=self)
 
     def change_settings(self,
                         mutual_contacts_available: bool = None,
@@ -51,53 +29,54 @@ class Settings:
                         comments_notification_enabled: bool = None,
                         names_notification_enabled: bool = None,
                         notifications_enabled: bool = None,
-                        ) -> dict:
+                        ) -> Tuple[bool, settings.Settings]:
         """
         Change social, app and notification settings.
 
-        :param mutual_contacts_available: Show common contacts between users. Default: ``None``.
-        :type mutual_contacts_available: bool
-        :param who_watched_enabled: Users will be notified that you have viewed their profile. Default: ``None``.
+        :param mutual_contacts_available: Show common contacts between users. *Default:* ``None``.
+        :type mutual_contacts_available: ``bool``
+        :param who_watched_enabled: Users will be notified that you have viewed their profile. *Default:* ``None``.
             - They will only be able to get information about you if they are premium users (``is_premium`` = True in :py:func:`get_profile`) or, by using this libary....
             - This setting must be True if you want to use :py:func:`who_watched` method.
-        :type who_watched_enabled: bool
-        :param who_deleted_enabled: Users will be notified that you have deleted them from your contact book. Default: ``None``.
+        :type who_watched_enabled: ``bool``
+        :param who_deleted_enabled: Users will be notified that you have deleted them from your contact book. *Default:* ``None``.
             - They will only be able to get information about you if they are premium users (``is_premium`` = True in :py:func:`get_profile`) or, by using this libary....
             - This setting must be True if you want to use :py:func:`who_deleted` method.
-        :type who_deleted_enabled: bool
-        :param comments_enabled: Allow users to publish comment (:py:func:`publish_comment`) in your profile. Default: ``None``.
+        :type who_deleted_enabled: ``bool``
+        :param comments_enabled: Allow users to publish comment (:py:func:`publish_comment`) in your profile. *Default:* ``None``.
             - Comments will not be posted until you approve them with :py:func:`approve_comment`.
-        :type comments_enabled: bool
-        :param location_enabled: Allow shared locations. Default: ``None``.
-        :type location_enabled: bool
-        :param language: lang code, iw, en, etc. (For notifications). Default: ``None``.
-        :type language: bool
-        :param who_deleted_notification_enabled: Default: ``None``.
-        :type who_deleted_notification_enabled: bool
-        :param who_watched_notification_enabled: Default: ``None``.
-        :type who_watched_notification_enabled: bool
-        :param distance_notification_enabled: Default: ``None``.
-        :type distance_notification_enabled: bool
-        :param system_notification_enabled: Default: ``None``.
-        :type system_notification_enabled: bool
-        :param birthday_notification_enabled: Default: ``None``.
-        :type birthday_notification_enabled: bool
-        :param comments_notification_enabled: Default: ``None``.
-        :type comments_notification_enabled: bool
-        :param names_notification_enabled: Default: ``None``.
-        :type names_notification_enabled: bool
-        :param notifications_enabled: Default: ``None``.
-        :type notifications_enabled: bool
-        :return: Tuple: is success, list of failed
-        :rtype: Tuple[bool, list]
+        :type comments_enabled: ``bool``
+        :param location_enabled: Allow shared locations. *Default:* ``None``.
+        :type location_enabled: ``bool``
+        :param language: lang code: ``iw``, ``en``, etc. (For notifications text). *Default:* ``None``.
+        :type language: ``str``
+        :param who_deleted_notification_enabled: *Default:* ``None``.
+        :type who_deleted_notification_enabled: ``bool``
+        :param who_watched_notification_enabled: *Default:* ``None``.
+        :type who_watched_notification_enabled: ``bool``
+        :param distance_notification_enabled: *Default:* ``None``.
+        :type distance_notification_enabled: ``bool``
+        :param system_notification_enabled: *Default:* ``None``.
+        :type system_notification_enabled: ``bool``
+        :param birthday_notification_enabled: *Default:* ``None``.
+        :type birthday_notification_enabled: ``bool``
+        :param comments_notification_enabled: *Default:* ``None``.
+        :type comments_notification_enabled: ``bool``
+        :param names_notification_enabled: *Default:* ``None``.
+        :type names_notification_enabled: ``bool``
+        :param notifications_enabled: *Default:* ``None``.
+        :type notifications_enabled: ``bool``
+        :return: Tuple: is success, :py:class:`meapi.models.settings.Settings` object.
+        :rtype: Tuple[``bool``, :py:class:`meapi.models.settings.Settings`]
         """
         args = locals()
         del args['self']
-        body = {}
-        for setting, value in args.items():
-            if value is not None:
-                body[setting] = value
+        body = {setting: value for setting, value in args.items() if value is not None}
         if not body:
             raise MeException("You need to change at least one setting!")
-
-        return self._make_request('patch', '/main/settings/', body)
+        results = change_settings_raw(self, **body)
+        success = True
+        for key, value in body.items():
+            if results[key] != value:
+                success = False
+        return success, settings.Settings.new_from_json_dict(results, _meobj=self)

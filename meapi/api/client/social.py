@@ -1,10 +1,10 @@
 from re import match, sub
-from typing import List, Union, Tuple
+from typing import Union
 from meapi.models.contact import Contact
 from meapi.models.profile import Profile
 from meapi.models.user import User
 from meapi.utils.exceptions import MeException, MeApiException
-from datetime import datetime, date
+from datetime import date
 from meapi.utils.validations import validate_phone_number
 from meapi.models import deleter, watcher, group, social, user, comment, friendship
 from meapi.api.raw.social import *
@@ -682,7 +682,7 @@ class Social:
             raise MeException("You can't share location with yourself!")
         return share_location_raw(self, uuid)['success']
 
-    def stop_sharing_location(self, uuids: Union[str, Profile, User, Contact, List[str, Profile, User, Contact]]) -> bool:
+    def stop_sharing_location(self, uuids: Union[str, Profile, User, Contact, List[Union[str, Profile, User, Contact]]]) -> bool:
         """
         Stop sharing your :py:func:`update_location` with users.
 
@@ -705,7 +705,7 @@ class Social:
 
         return stop_sharing_location_raw(self, uuids)['success']
 
-    def stop_shared_location(self, uuids: Union[str, Profile, User, Contact, List[str, Profile, User, Contact]]) -> bool:
+    def stop_shared_location(self, uuids: Union[str, Profile, User, Contact, List[Union[str, Profile, User, Contact]]]) -> bool:
         """
         Stop locations that shared with you.
 
@@ -730,51 +730,19 @@ class Social:
 
     def locations_shared_by_me(self) -> List[user.User]:
         """
-        Get list of users that you shared your location with them. See also :py:func:`locations_shared_with_me`.
+        Get list of users that you shared your location with them.
 
-        :return: list of dicts with contacts details.
-        :rtype: List[dict]
-
-        Example::
-
-            [
-                {
-                    "first_name": "Rachel Green",
-                    "last_name": "",
-                    "phone_number": 1234567890,
-                    "profile_picture": "https://d18zaexen4dp1s.cloudfront.net/59XXXXXXXXXfa67.jpg",
-                    "uuid": "XXXXX-XXXXX-XXXX-XXXX-XXXXXX"
-                }
-            ]
+        :return: List of :py:obj:`~meapi.models.user.User` objects.
+        :rtype: List[:py:obj:`~meapi.models.user.User`]
         """
-        return [user.User.new_from_json_dict(usr, _meobj=self) for usr in self._make_request('get', '/main/users/profile/share-location/')]
+        return [user.User.new_from_json_dict(usr, _meobj=self) for usr in locations_shared_by_me_raw(self)]
 
-    def locations_shared_with_me(self) -> dict:
+    def locations_shared_with_me(self) -> List[user.User]:
         """
-        Get users who have shared a location with you. See also :py:func:`locations_shared_by_me`.
+        Get users who have shared their location with you.
 
-        :return: dict with list of uuids and list with users.
-        :rtype: dict
-
-        Example::
-
-            {
-                "shared_location_user_uuids": [
-                    "3850XXX-XXX-XXX-XXX-XXXXX"
-                ],
-                "shared_location_users": [
-                    {
-                        "author": {
-                            "first_name": "Gunther",
-                            "last_name": "",
-                            "phone_number": 3647632874324,
-                            "profile_picture": "https://d18zaexen4dp1s.cloudfront.net/dXXXXXXXXXXXXXXXXXXb.jpg",
-                            "uuid": "3850XXX-XXX-XXX-XXX-XXXXX"
-                        },
-                        "distance": 1.4099551982832228,
-                        "i_shared": False
-                    }
-                ]
-            }
+        :return: List of :py:obj:`~meapi.models.user.User` objects (with ``distance`` attribute).
+        :rtype: List[:py:obj:`~meapi.models.user.User`]
         """
-        return self._make_request('get', '/main/users/profile/share-location/for-me/')
+        users = locations_shared_with_me_raw(self)['shared_location_users']
+        return [user.User.new_from_json_dict(usr['author'], _meobj=self, distance=usr['distance']) for usr in users]

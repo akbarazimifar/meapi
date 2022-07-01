@@ -131,11 +131,14 @@ class Me(Auth, Account, Social, Settings, Notifications):
                 continue
 
             if response.status_code >= 400:
-                if isinstance(response_text, dict):
-                    msg = response_text.get('detail') or response_text.get('phone_number') or list(response_text.values())[0][0]
-                elif isinstance(response_text, list):
-                    msg = response_text[0]
-                else:
+                try:
+                    if isinstance(response_text, dict):
+                        msg = response_text.get('detail') or response_text.get('phone_number') or list(response_text.values())[0][0]
+                    elif isinstance(response_text, list):
+                        msg = response_text[0]
+                    else:
+                        msg = response_text
+                except:
                     msg = response_text
                 raise MeApiException(http_status=response.status_code, msg=str(msg), reason=response.reason)
             return response_text

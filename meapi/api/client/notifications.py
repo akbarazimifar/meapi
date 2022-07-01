@@ -1,10 +1,9 @@
-from typing import Union, List
-
+from typing import Union, Tuple
+from meapi.api.raw.notifications import *
 from meapi.models.notification import Notification
 
 notification_categories = {
-    'names': ['JOINED_ME', 'CONTACT_ADD', 'UPDATED_CONTACT', 'DELETED_CONTACT', 'NEW_NAME_REQUEST',
-              'NEW_NAME_REQUEST_APPROVED'],
+    'names': ['JOINED_ME', 'CONTACT_ADD', 'UPDATED_CONTACT', 'DELETED_CONTACT', 'NEW_NAME_REQUEST', 'NEW_NAME_REQUEST_APPROVED'],
     'system': ['NAME_SUGGESTION_UPDATED', 'SPAM_SUGGESTION_APPROVED', 'TURN_ON_MUTUAL', 'NONE'],
     'comments': ['NEW_COMMENT', 'PUBLISHED_COMMENT', 'TURN_ON_COMMENTS'],
     'who_watch': ['WEEKLY_VISITS'],
@@ -19,10 +18,10 @@ class Notifications:
         """
         Get count of unread notifications.
 
-        :return: count of notifications.
-        :rtype: int
+        :return: count of unread notifications.
+        :rtype: ``int``
         """
-        return self._make_request('get', '/notification/notification/count/')['count']
+        return unread_notifications_count_raw(self)['count']
 
     def get_notifications(self,
                           page_number: int = 1,
@@ -34,119 +33,38 @@ class Notifications:
                           who_deleted_filter: bool = False,
                           birthday_filter: bool = False,
                           location_filter: bool = False
-                          ) -> List[Notification]:
+                          ) -> Tuple[int, list[Notification]]:
         """
         Get app notifications: new names, birthdays, comments, watches, deletes, location shares and system notifications.
 
-        :param page_number: :py:func:`get_notifications_uuid` [``'count'``] / ``page_size`` = ``pages``. Default: ``1``.
+        :param page_number: :py:func:`get_notifications`.``count`` / ``page_size``. *Default:* ``1``.
         :type page_number: int
-        :param results_limit: Limit of notifications in each page. Default: ``20``.
-        :type results_limit: int
-        :param names_filter: New names, deletes, joined, renames, rename requests. Default: ``False``.
-        :type names_filter: bool
-        :param system_filter: System notifications: spam reports, your name requests, suggestions to turn on mutual contacts. Default: ``False``.
-        :type system_filter: bool
-        :param comments_filter: Comments notifications: new comments, published comments and suggestions to turn on comments (See :py:func:`get_comments`). Default: ``False``.
-        :type comments_filter: bool
-        :param who_watch_filter: Who watched your profile (See :py:func:`who_watched`). Default: ``False``.
-        :type who_watch_filter: bool
-        :param who_deleted_filter: Who deleted you from his contacts (See :py:func:`who_deleted`). Default: ``False``.
-        :type who_deleted_filter: bool
-        :param birthday_filter: Contacts birthdays (See :py:func:`get_age`). Default: ``False``.
-        :type birthday_filter: bool
-        :param location_filter: Shared locations: suggestions to turn on location, locations that shared with you. Default: ``False``.
-        :type location_filter: bool
-        :return: Dict with notifications
-        :rtype: dict
-
-        Example::
-
-            {
-                "count": 94,
-                "next": "https://app.mobile.me.app/notification/notification/items/?page=2&page_size=30&status=distributed",
-                "previous": None,
-                "results": [
-                    {
-                        "id": 103466332,
-                        "created_at": "2022-03-18T11:17:09Z",
-                        "modified_at": "2022-03-18T11:17:09Z",
-                        "is_read": False,
-                        "sender": "2e7XXX-84XXXX-4ec7-b6cb-d4XXXXXX",
-                        "status": "distributed",
-                        "delivery_method": "push",
-                        "distribution_date": "2022-03-18T11:17:09Z",
-                        "message_subject": None,
-                        "message_category": "BIRTHDAY",
-                        "message_body": None,
-                        "message_lang": "iw",
-                        "context": {
-                            "name": "Ross geller",
-                            "uuid": "2e7XXXX-XXXX-XXXX-b6cXb-d46XXXXX1",
-                            "category": "BIRTHDAY",
-                            "phone_number": 97849743536,
-                            "notification_id": None,
-                            "profile_picture": None,
-                        },
-                    },
-                    {
-                        "id": 18987495325,
-                        "created_at": "2022-04-06T11:18:03Z",
-                        "modified_at": "2022-04-06T11:18:03Z",
-                        "is_read": False,
-                        "sender": "5XXXXX0e-XXXX-XXXX-XXXX-XXXXXXX",
-                        "status": "distributed",
-                        "delivery_method": "push",
-                        "distribution_date": "2022-04-06T11:18:03Z",
-                        "message_subject": None,
-                        "message_category": "UPDATED_CONTACT",
-                        "message_body": None,
-                        "message_lang": "iw",
-                        "context": {
-                            "name": "Chandler",
-                            "uuid": "XXXXXX-XXXX-XXXXX-XXX-XXXXX",
-                            "category": "UPDATED_CONTACT",
-                            "new_name": "Your new name",
-                            "phone_number": 8479843759435,
-                            "notification_id": None,
-                            "profile_picture": None,
-                        },
-                    },
-                    {
-                        "id": 17983743351,
-                        "created_at": "2022-04-11T06:45:27Z",
-                        "modified_at": "2022-04-11T06:45:27Z",
-                        "is_read": False,
-                        "sender": "XXXXXX-XXXX-XXXXX-XXX-XXXXX",
-                        "status": "distributed",
-                        "delivery_method": "push",
-                        "distribution_date": "2022-04-11T06:45:27Z",
-                        "message_subject": None,
-                        "message_category": "CONTACT_ADD",
-                        "message_body": None,
-                        "message_lang": "iw",
-                        "context": {
-                            "name": "Monica",
-                            "uuid": "XXXXXX-XXXX-XXXXX-XXX-XXXXX",
-                            "category": "CONTACT_ADD",
-                            "new_name": "Ross",
-                            "phone_number": 878634535436,
-                            "notification_id": None,
-                            "profile_picture": None,
-                        },
-                    },
-                ],
-            }
+        :param results_limit: Limit of notifications in each page. *Default:* ``20``.
+        :type results_limit: ``int``
+        :param names_filter: New names, deletes, joined, renames, rename requests. *Default:* ``False``.
+        :type names_filter: ``bool``
+        :param system_filter: System notifications: spam reports, your name requests, suggestions to turn on mutual contacts. *Default:* ``False``.
+        :type system_filter: ``bool``
+        :param comments_filter: Comments notifications: new comments, published comments and suggestions to turn on comments (See :py:func:`get_comments`). *Default:* ``False``.
+        :type comments_filter: ``bool``
+        :param who_watch_filter: Who watched your profile (See :py:func:`who_watched`). *Default:* ``False``.
+        :type who_watch_filter: ``bool``
+        :param who_deleted_filter: Who deleted you from his contacts (See :py:func:`who_deleted`). *Default:* ``False``.
+        :type who_deleted_filter: ``bool``
+        :param birthday_filter: Contacts birthdays. *Default:* ``False``.
+        :type birthday_filter: ``bool``
+        :param location_filter: Shared locations: suggestions to turn on location, locations that shared with you. *Default:* ``False``.
+        :type location_filter: ``bool``
+        :return: Tuple of count of notifications and list of :py:obj:`~meapi.models.notification.Notification` objects.
+        :rtype: Tuple[``int``, List[:py:obj:`~meapi.models.notification.Notification`]]
         """
         args = locals()
-        del args['self']
         filters = []
         for fil, val in args.items():
             if val and fil.endswith('filter'):
                 filters = [*filters, *notification_categories[fil.replace("_filter", "")]]
-        params = f"?page={page_number}&page_size={results_limit}&status=distributed"
-        if filters:
-            params += f"&categories=%5B{'%2C%20'.join(filters)}%5D"
-        return [Notification.new_from_json_dict(notification, _meobj=self) for notification in self._make_request('get', '/notification/notification/items/' + params)['results']]
+        results = get_notifications_raw(self, page_number, results_limit, filters)
+        return results['count'], [Notification.new_from_json_dict(notification, _meobj=self) for notification in results['results']]
 
     def read_notification(self, notification_id: Union[int, str]) -> bool:
         """
@@ -157,6 +75,4 @@ class Notifications:
         :return: Is read success.
         :rtype: bool
         """
-        body = {"notification_id": int(notification_id)}
-        return self._make_request('post', '/notification/notification/read/', body)['is_read']
-
+        return read_notification_raw(self, int(notification_id))['is_read']

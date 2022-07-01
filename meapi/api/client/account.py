@@ -1,10 +1,10 @@
-from re import match
-from typing import Union, Tuple, List
+from re import match, M
+from typing import Union, Tuple, List, Any
 from meapi.api.raw.account import *
 from meapi.utils.validations import validate_contacts, validate_calls, validate_phone_number
 from meapi.utils.exceptions import MeApiException, MeException
-from meapi.utils.helpers import get_random_data
-from meapi.models import contact, profile, call, blocked_number
+from meapi.utils.helpers import get_random_data, register_new_account
+from meapi.models import contact, profile, call, blocked_number, user
 
 
 class Account:
@@ -14,10 +14,10 @@ class Account:
         Get information on any phone number.
 
         :param phone_number: International phone number format.
-        :type phone_number: Union[str, int])
-        :raises MeApiException: msg: ``api_search_passed_limit`` if you passed the limit (About 350 per day in the unofficial auth method).
-        :return: Contact object.
-        :rtype: Contact
+        :type phone_number: ``str`` | ``int``
+        :raises MeApiException: msg: ``api_search_passed_limit`` if you passed the limit (About ``350`` per day in the unofficial auth method).
+        :return: :py:obj:`~meapi.models.contact.Contact` object or ``None`` if no user exists on the provided phone number.
+        :rtype: :py:obj:`~meapi.models.contact.Contact` | ``None``
         """
         try:
             response = phone_search_raw(self, validate_phone_number(phone_number))
@@ -28,20 +28,25 @@ class Account:
                 raise err
         return contact.Contact.new_from_json_dict(response['contact'])
 
-    def get_profile(self, uuid: Union[str, None]) -> profile.Profile:
+    def get_profile(self, uuid: Union[str, contact.Contact, user.User]) -> profile.Profile:
         """
-        Get user profile info.
+        Get user's profile.
 
         For Me users (those who have registered in the app) there is an account UUID obtained when receiving
         information about the phone number :py:func:`phone_search`. With it, you can get social information
         and perform social actions.
 
-        :param uuid: uuid of the Me user.
-        :type uuid: str
-        :raises MeApiException: msg: ``api_profile_view_passed_limit`` if you passed the limit (About 500 per day in the unofficial auth method).
-        :return: Profile object.
-        :rtype: Profile
+        :param uuid: The user's UUID as ``str`` or :py:obj:`~meapi.models.contact.Contact` or :py:obj:`~meapi.models.user.User` objects.
+        :type uuid: ``str`` | :py:obj:`~meapi.models.contact.Contact` | :py:obj:`~meapi.models.user.User`
+        :raises MeApiException: msg: ``api_profile_view_passed_limit`` if you passed the limit (About ``500`` per day in the unofficial auth method).
+        :return: :py:obj:`~meapi.models.profile.Profile` object.
+        :rtype: :py:obj:`~meapi.models.profile.Profile`
         """
+        if isinstance(uuid, contact.Contact):
+            if getattr(uuid, 'user', None):
+                uuid = uuid.user.uuid
+        if isinstance(uuid, user.User):
+            uuid = uuid.uuid
         res = get_profile_raw(self, str(uuid))
         if uuid == self.uuid:
             res['_my_profile'] = True
@@ -52,8 +57,8 @@ class Account:
         """
         Get your profile information.
 
-        :return: Profile object.
-        :rtype: Profile
+        :return: :py:obj:`~meapi.models.profile.Profile` object.
+        :rtype: :py:obj:`~meapi.models.profile.Profile`
         """
         if self.uuid:
             res = get_profile_raw(self, self.uuid)
@@ -65,68 +70,14 @@ class Account:
             extra = {}
         return profile.Profile.new_from_json_dict(_meobj=self, data=res, _my_profile=True, **extra)
 
-    def _register(self) -> str:
-        """
-        Register new account.
-        """
-        print("** This is a new account and you need to register first.")
-        if self.account_details:
-            account_details: dict = self.account_details
-        else:
-            account_details = {}
-        first_name = None
-        last_name = None
-        email = None
-        upload_random_data = None
-
-        if account_details.get('first_name'):
-            first_name = account_details['first_name']
-        else:
-            while not first_name:
-                first_name = input("* Enter your first name (Required): ")
-
-        if account_details.get('last_name'):
-            last_name = account_details['last_name']
-        elif not account_details:
-            last_name = input("* Enter your last name (Optional): ")
-
-        if account_details.get('email'):
-            email = account_details['email']
-        elif not account_details:
-            email = input("* Enter your email (Optional): ") or None
-
-        if account_details.get('upload_random_data'):
-            upload_random_data = account_details['upload_random_data']
-        elif not account_details:
-            answer = "X"
-            while answer.upper() not in ['Y', 'N', '']:
-                answer = input("* Do you want to upload some random data (contacts, calls, location) in order "
-                               "to initialize the account? (Enter is Y) [Y/N]: ")
-            if answer.upper() in ["Y", ""]:
-                upload_random_data = True
-            else:
-                upload_random_data = False
-
-        results = self.update_profile_info(first_name=first_name, last_name=last_name, email=email, login_type='email')
-        if results[0]:
-            msg = "** Your profile successfully created!"
-            if upload_random_data:
-                self.upload_random_data()
-                msg += "\n* But you may not be able to perform searches for a few hours. It my help to " \
-                       "upload some data. You can use in me.upload_random_data() or other account methods to " \
-                       "activate your account."
-            print(msg)
-            return self.get_uuid()
-        raise MeException("Can't update the following details: " + ", ".join(results[1]))
-
     def get_uuid(self, phone_number: Union[int, str] = None) -> Union[str, None]:
         """
         Get user's uuid (To use in :py:func:`get_profile`, :py:func:`get_comments` and more).
 
         :param phone_number: International phone number format. Default: None (Return self uuid).
-        :type phone_number: Union[str, int, None]
+        :type phone_number: ``str`` | ``int`` | ``None``
         :return: String of uuid, or None if no user exists on the provided phone number.
-        :rtype: Union[str, None]
+        :rtype: ``str`` | ``None``
         """
         if phone_number:  # others uuid
             res = self.phone_search(phone_number)
@@ -137,109 +88,121 @@ class Account:
             return get_my_profile_raw(self)['uuid']
         except MeApiException as err:
             if err.http_status == 401:  # on login, if no active account on this number you need to register
-                return self._register()
+                return register_new_account(self)
             else:
                 raise err
 
-    def update_profile_info(self, country_code: str = None,
-                            date_of_birth: str = None,
-                            device_type: str = None,
-                            login_type: str = None,
-                            email: str = None,
-                            facebook_url: str = None,
-                            first_name: str = None,
-                            last_name: str = None,
-                            gender: str = None,
-                            profile_picture_url: str = None,
-                            slogan: str = None) -> Tuple[bool, list]:
+    def update_profile_details(self, country_code: str = None,
+                               date_of_birth: str = None,
+                               device_type: str = None,
+                               login_type: str = None,
+                               email: str = None,
+                               facebook_url: str = None,
+                               first_name: str = None,
+                               last_name: str = None,
+                               gender: str = None,
+                               profile_picture_url: str = None,
+                               slogan: str = None) -> Tuple[bool, profile.Profile]:
         """
-        Update profile information.
+        Update your profile details.
+            - The default of the parameters is ``None``. if you leave it ``None``, the parameter will not be updated.
 
-        :param login_type: ``email``. Default: ``None``
-        :type login_type: str
-        :param country_code: Your phone number country_code (``972`` = ``IL`` etc.) // `Country codes <https://countrycode.org/>`_. Default: ``None``
-        :type country_code: str
-        :param date_of_birth: ``YYYY-MM-DD`` format. for example: ``1997-05-15``. Default: ``None``
-        :type date_of_birth: str
-        :param device_type: ``android`` / ``ios``. Default: ``None``
-        :type device_type: str
-        :param email: For example: ``name@domian.com``. Default: ``None``
-        :type email: str
-        :param facebook_url: facebook id, for example: ``24898745174639``. Default: ``None``
-        :type facebook_url: Union[str, int]
-        :param first_name: First name. Default: ``None``
-        :type first_name: str
-        :param last_name: Last name. Default: ``None``
-        :type last_name: str
-        :param gender: ``M`` for male, ``F`` for and ``N`` for None. Default: ``None``
-        :type gender: str
-        :param profile_picture_url: Direct image url. for example: ``https://example.com/image.png``. Default: ``None``
-        :type profile_picture_url: str
-        :param slogan: Your bio. Default: ``None``
-        :type slogan: str
-        :return: Tuple of: is update success, list of failed.
-        :rtype: Tuple[bool, list]
+        :param login_type: ``email`` or ``apple``. *Default:* ``None``.
+        :type login_type: ``str``
+        :param country_code: Your phone number country code (``972`` = ``IL`` etc.) // `Country codes <https://countrycode.org/>`_. *Default:* ``None``.
+        :type country_code: ``str``
+        :param date_of_birth: ``YYYY-MM-DD`` format. for example: ``1997-05-15``. *Default:* ``None``.
+        :type date_of_birth: ``str``
+        :param device_type: ``android`` or ``ios``. *Default:* ``None``.
+        :type device_type: ``str``
+        :param email: For example: ``name@domian.com``. *Default:* ``None``.
+        :type email: ``str``
+        :param facebook_url: facebook id, for example: ``24898745174639``. *Default:* ``None``.
+        :type facebook_url: ``str`` | ``int``
+        :param first_name: First name. *Default:* ``None``.
+        :type first_name: ``str``
+        :param last_name: Last name. *Default:* ``None``.
+        :type last_name: ``str``
+        :param gender: ``M`` for male, ``F`` for and ``N`` for ``None``. *Default:* ``None``.
+        :type gender: ``str``
+        :param profile_picture_url: Direct image url. for example: ``https://example.com/image.png``. *Default:* ``None``.
+        :type profile_picture_url: ``str``
+        :param slogan: Your bio. *Default:* ``None``.
+        :type slogan: ``str``
+        :return: Tuple of: Is update success, new :py:obj:`meapi.models.profile.Profile` object.
+        :rtype: Tuple[``bool``, :py:obj:`meapi.models.profile.Profile`]
         """
-        device_types = ['android', 'ios']
-        genders = {'M': 'M', 'F': 'F', 'N': None}
-        body = {}
-        if country_code is not None:
-            body['country_code'] = str(country_code).upper()[:2]
-        if date_of_birth is not None:
-            if not match(r"^\d{4}(\-)([0-2][0-9]|(3)[0-1])(\-)(((0)[0-9])|((1)[0-2]))$", str(date_of_birth)):
-                raise MeException("Date of birthday must be in YYYY-MM-DD format!")
-            body['date_of_birth'] = str(date_of_birth)
-        if str(device_type) in device_types:
-            body['device_type'] = str(device_type)
-        if login_type is not None:
-            body['login_type'] = str(login_type)
-        if match(r"^\S+@\S+\.\S+$", str(email)):
-            body['email'] = str(email)
-        if match(r"^\d+$", str(facebook_url)):
-            body['facebook_url'] = str(facebook_url)
-        if first_name is not None:
-            body['first_name'] = str(first_name)
-        if last_name is not None:
-            body['last_name'] = str(last_name)
-        if gender is not None:
-            if str(gender).upper() in genders.keys():
-                body['gender'] = genders.get(str(gender.upper()))
-            else:
-                raise MeException("Gender must be: 'F' for female, 'M' for Male, and 'N' for null.")
-        if match(r"(https?:\/\/.*\.(?:png|jpg))", str(profile_picture_url)):
-            body['profile_picture'] = profile_picture_url
-        if slogan is not None:
-            body['slogan'] = str(slogan)
-
-        if not body:
-            raise MeException("You must change at least one detail!")
-
-        res = self._make_request('patch', '/main/users/profile/', body)
-        return res
-        failed = []
+        args = locals()
+        del args['self']
+        for key, value in args.items():
+            if value is not None:
+                if key == 'country_code':
+                    args[key] = str(value).upper()[:2]
+                elif key == 'date_of_birth':
+                    if not match(r'^\d{4}(\-)(((0)\d)|((1)[0-2]))(\-)([0-2]\d|(3)[0-1])$', flags=M, string=str(value)):
+                        raise MeException("Birthday must be in YYYY-MM-DD format!")
+                elif key == 'device_type':
+                    device_types = ['android', 'ios']
+                    if value not in device_types:
+                        raise MeException(f"Device type not in the available device types ({', '.join(device_types)})!")
+                elif key == 'login_type':
+                    login_types = ['email', 'apple']
+                    if value not in login_types:
+                        raise MeException(f"Login type not in the available login types ({', '.join(login_types)})!")
+                elif key == 'email':
+                    if not match(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$', str(value)):
+                        raise MeException("Email must be in user@domain.com format!")
+                elif key in ['first_name', 'last_name', 'slogan']:
+                    if not isinstance(value, str):
+                        raise MeException(f"{key.replace('_', '').capitalize()} must be a string!")
+                elif key == 'gender':
+                    genders = {'M': 'M', 'F': 'F', 'N': None, None: None}
+                    if str(value).upper() not in genders.keys():
+                        raise MeException("Gender must be: 'F' for Female, 'M' for Male, and 'None' for null.")
+                    args[key] = str(value).upper()
+                elif key == 'profile_picture_url':
+                    if not match(r'(https?:\/\/.*\.(?:png|jpg))', str(value)):
+                        raise MeException("Profile picture url must be a image link!")
+                elif key == 'facebook_url':
+                    if not match(r'^\d+$', str(value)):
+                        raise MeException("Facebook url must be numbers!")
+        body = {key: val for key, val in args.items() if val is not None}
+        res = update_profile_details_raw(self, **body)
+        successes = 0
         for key in body.keys():
-            if results[key] != body[key] and key != 'profile_picture':
+            if res[key] == body[key] or key == 'profile_picture':
                 # Can't check if profile picture updated because Me convert's it to their own url.
-                # you can check before and after.. get_settings()
-                failed.append(key)
-        return not bool(failed), failed
+                successes += 1
+        return bool(successes == len(body.keys())), profile.Profile.new_from_json_dict(res, _meobj=self, _my_profile=True)
 
-    def delete_account(self) -> bool:
+    def delete_account(self, yes_im_sure: bool = False) -> bool:
         """
         Delete your account and it's data (!!!)
 
+        :param yes_im_sure: ``True`` to delete your account and ignore prompt. *Default:* ``False``.
+        :type yes_im_sure: ``bool``
         :return: Is deleted.
-        :rtype: bool
+        :rtype: ``bool``
         """
+        if not yes_im_sure:
+            print("Are you sure you want to delete your account? (y/n)")
+            if input().lower() != 'y':
+                return False
         return True if not delete_account_raw(self) else False
 
-    def suspend_account(self) -> bool:
+    def suspend_account(self, yes_im_sure: bool = False) -> bool:
         """
         Suspend your account until your next login.
 
+        :param yes_im_sure: ``True`` to suspend your account and ignore prompt. *Default:* ``False``.
+        :type yes_im_sure: ``bool``
         :return: is suspended.
         :rtype: bool
         """
+        if not yes_im_sure:
+            print("Are you sure you want to suspend your account? (y/n)")
+            if input().lower() != 'y':
+                return False
         return suspend_account_raw(self)['contact_suspended']
 
     def add_contacts(self, contacts: List[dict]) -> dict:
@@ -298,9 +261,9 @@ class Account:
         Add call to your calls log. See :py:func:`upload_random_data`.
 
         :param calls: List of dicts with calls data.
-        :type calls: List[dict]
+        :type calls: List[``dict``]
         :return: dict with upload result.
-        :rtype: dict
+        :rtype: ``dict``
 
         Example of list of calls to add::
 
@@ -312,23 +275,7 @@ class Account:
                     "phone_number": 43437535,
                     "tag": None,
                     "type": "missed",
-                },
-                {
-                    "called_at": "2021-08-08T19:42:59Z",
-                    "duration": 0,
-                    "name": "Chandler",
-                    "phone_number": 334324324,
-                    "tag": None,
-                    "type": "outgoing",
-                },
-                {
-                    "called_at": "2022-01-03T16:50:24Z",
-                    "duration": 15,
-                    "name": "Joey",
-                    "phone_number": 51495043537,
-                    "tag": None,
-                    "type": "incoming",
-                },
+                }
             ]
         """
         body = {"add": validate_calls(calls), "remove": []}
@@ -340,9 +287,9 @@ class Account:
         Remove calls from your calls log.
 
         :param calls: List of dicts with calls data.
-        :type calls: List[dict]
+        :type calls: List[``dict``]
         :return: dict with upload result.
-        :rtype: dict
+        :rtype: ``dict``
 
         Example of list of calls to remove::
 
@@ -354,23 +301,7 @@ class Account:
                     "phone_number": 43437535,
                     "tag": None,
                     "type": "missed",
-                },
-                {
-                    "called_at": "2021-08-08T19:42:59Z",
-                    "duration": 0,
-                    "name": "Chandler",
-                    "phone_number": 334324324,
-                    "tag": None,
-                    "type": "outgoing",
-                },
-                {
-                    "called_at": "2022-01-03T16:50:24Z",
-                    "duration": 15,
-                    "name": "Joey",
-                    "phone_number": 51495043537,
-                    "tag": None,
-                    "type": "incoming",
-                },
+                }
             ]
         """
         body = {"add": [], "remove": validate_calls(calls)}
@@ -381,18 +312,18 @@ class Account:
         Block user profile.
 
         :param phone_number: User phone number in international format.
-        :type phone_number: Union[str, int]
-        :param block_contact: To block for calls. Default: ``True``.
-        :type block_contact: bool
-        :param me_full_block: To block for social. Default: ``True``.
-        :type me_full_block: bool
+        :type phone_number: ``str`` | ``int``
+        :param block_contact: To block for calls. *Default:* ``True``.
+        :type block_contact: ``bool``
+        :param me_full_block: To block for social. *Default:* ``True``.
+        :type me_full_block: ``bool``
         :return: Is successfully blocked.
-        :rtype: bool
+        :rtype: ``bool``
         """
         body = {'phone_number': int(validate_phone_number(phone_number)),
                 'block_contact': block_contact,
                 'me_full_block': me_full_block}
-        res = block_profile_raw(meobj=self, **body)
+        res = block_profile_raw(client=self, **body)
         if res['success']:
             return blocked_number.BlockedNumber.new_from_json_dict(**body)
 
@@ -401,18 +332,18 @@ class Account:
         Unblock user profile.
 
         :param phone_number: User phone number in international format.
-        :type phone_number: Union[str, int]
-        :param unblock_contact: To unblock for calls. Default: ``True``.
-        :type unblock_contact: bool
-        :param me_full_unblock: To unblock for social. Default: ``True``.
-        :type me_full_unblock: bool
+        :type phone_number: ``str`` | ``int``
+        :param unblock_contact: To unblock for calls. *Default:* ``True``.
+        :type unblock_contact: ``bool``
+        :param me_full_unblock: To unblock for social. *Default:* ``True``.
+        :type me_full_unblock: ``bool``
         :return: Is successfully unblocked.
-        :rtype: bool
+        :rtype: ``bool``
         """
         body = {'phone_number': int(validate_phone_number(phone_number)),
                 'unblock_contact': unblock_contact,
                 'me_full_unblock': me_full_unblock}
-        res = unblock_profile_raw(meobj=self, **body)
+        res = unblock_profile_raw(client=self, **body)
         if res['success']:
             return True
         return False
@@ -422,9 +353,9 @@ class Account:
         Block phone numbers.
 
         :param numbers: Single or list of phone numbers in international format.
-        :type numbers: Union[int, List[int]])
+        :type numbers: ``int`` | List[``int``]
         :return: Is blocked success.
-        :rtype: bool
+        :rtype: ``bool``
         """
         if not isinstance(numbers, list) and isinstance(numbers, int):
             numbers = [numbers]
@@ -435,9 +366,9 @@ class Account:
         Unblock numbers.
 
         :param numbers: Single or list of phone numbers in international format. See :py:func:`get_blocked_numbers`.
-        :type numbers: Union[int, List[int]])
+        :type numbers: ``int`` | List[``int``]
         :return: Is unblocking success.
-        :rtype: bool
+        :rtype: ``bool``
         """
         if not isinstance(numbers, list):
             numbers = [numbers]
@@ -447,23 +378,23 @@ class Account:
         """
         Get list of your blocked numbers. See :py:func:`unblock_numbers`.
 
-        :return: list of BlockedNumber objects.
-        :rtype: List[BlockedNumber]
+        :return: List of :py:class:`blocked_number.BlockedNumber` objects.
+        :rtype: List[:py:obj:`~meapi.models.blocked_number.BlockedNumber`]
         """
         return [blocked_number.BlockedNumber.new_from_json_dict(blocked) for blocked in get_blocked_numbers_raw(self)]
 
-    def upload_random_data(self, contacts=True, calls=True, location=True):
+    def upload_random_data(self, contacts=True, calls=True, location=True) -> bool:
         """
         Upload random data to your account.
 
         :param contacts: To upload random contacts data. Default: ``True``.
-        :type contacts: bool
+        :type contacts: ``bool``
         :param calls: To upload random calls data. Default: ``True``.
-        :type calls: bool
+        :type calls: ``bool``
         :param location: To upload random location data. Default: ``True``.
-        :type location: bool
+        :type location: ``bool``
         :return: Is uploading success.
-        :rtype: bool
+        :rtype: ``bool``
         """
         random_data = get_random_data(contacts, calls, location)
         if contacts:
@@ -472,3 +403,4 @@ class Account:
             self.add_calls_to_log(random_data['calls'])
         if location:
             self.update_location(random_data['location']['lat'], random_data['location']['lon'])
+        return True

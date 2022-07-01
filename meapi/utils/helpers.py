@@ -111,3 +111,59 @@ def get_random_data(contacts=True, calls=True, location=True) -> dict:
         random_data['location']['lon'] = round(uniform(30, 60), 5)
 
     return random_data
+
+
+def register_new_account(client) -> str:
+    """
+    Register new account.
+        - Internal function to register new account.
+    """
+    print("** This is a new account and you need to register first.")
+    if client.account_details:
+        account_details: dict = client.account_details
+    else:
+        account_details = {}
+    first_name = None
+    last_name = None
+    email = None
+    upload_random_data = None
+
+    if account_details.get('first_name'):
+        first_name = account_details['first_name']
+    else:
+        while not first_name:
+            first_name = input("* Enter your first name (Required): ")
+
+    if account_details.get('last_name'):
+        last_name = account_details['last_name']
+    elif not account_details:
+        last_name = input("* Enter your last name (Optional): ")
+
+    if account_details.get('email'):
+        email = account_details['email']
+    elif not account_details:
+        email = input("* Enter your email (Optional): ") or None
+
+    if account_details.get('upload_random_data'):
+        upload_random_data = account_details['upload_random_data']
+    elif not account_details:
+        answer = "X"
+        while answer.upper() not in ['Y', 'N', '']:
+            answer = input("* Do you want to upload some random data (contacts, calls, location) in order "
+                           "to initialize the account? (Enter is Y) [Y/N]: ")
+        if answer.upper() in ["Y", ""]:
+            upload_random_data = True
+        else:
+            upload_random_data = False
+
+    results = client.update_profile_details(first_name=first_name, last_name=last_name, email=email, login_type='email')
+    if results[0]:
+        msg = "** Your profile successfully created! **\n\n* You may not be able to perform searches for a few hours."
+        if upload_random_data:
+            client.upload_random_data()
+        else:
+            msg += "It my help to upload some data to your account. You can use in me.upload_random_data() or " \
+                   "other account methods to activate your account."
+        print(msg)
+        return results[1].uuid
+    raise MeException("Can't update the profile. Please check your input again.")
