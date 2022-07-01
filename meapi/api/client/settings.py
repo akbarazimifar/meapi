@@ -12,7 +12,7 @@ class Settings:
         :return: :py:class:`meapi.models.settings.Settings` object.
         :rtype: :py:class:`meapi.models.settings.Settings`
         """
-        return settings.Settings.new_from_json_dict(get_settings_raw(self), _meobj=self)
+        return settings.Settings.new_from_json_dict(get_settings_raw(self), _client=self)
 
     def change_settings(self,
                         mutual_contacts_available: bool = None,
@@ -79,4 +79,4 @@ class Settings:
         for key, value in body.items():
             if results[key] != value:
                 success = False
-        return success, settings.Settings.new_from_json_dict(results, _meobj=self)
+        return success, settings.Settings.new_from_json_dict(results, _client=self)

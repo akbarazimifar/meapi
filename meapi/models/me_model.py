@@ -81,15 +81,15 @@ class MeModel(metaclass=_ParameterReader):
         return data
 
     @classmethod
-    def new_from_json_dict(cls, data: dict, _meobj=None, **kwargs):
+    def new_from_json_dict(cls, data: dict, _client=None, **kwargs):
         """
         Create new instance from json_dict
         """
         if not data or data is None:
             return None
         cls_attrs = cls._init_parameters.keys()
-        if '_meobj' in cls_attrs:
-            data['_meobj'] = _meobj
+        if '_client' in cls_attrs:
+            data['_client'] = _client
         json_data = data.copy()
         if kwargs:
             for key, val in kwargs.items():

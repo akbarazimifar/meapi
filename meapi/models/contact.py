@@ -8,7 +8,7 @@ from meapi.models.user import User
 
 class Contact(MeModel, _CommonMethodsForUserContactProfile):
     def __init__(self,
-                 _meobj,
+                 _client,
                  name: Union[str, None] = None,
                  id: Union[int, None] = None,
                  picture: Union[None, None] = None,
@@ -25,7 +25,7 @@ class Contact(MeModel, _CommonMethodsForUserContactProfile):
                  in_contact_list: Union[bool, None] = None,
                  is_my_contact: Union[bool, None] = None
                  ):
-        self.__meobj = _meobj
+        self.__client = _client
         self.name = name
         self.id = id
         self.picture = picture

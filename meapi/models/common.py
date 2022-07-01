@@ -21,7 +21,7 @@ class _CommonMethodsForUserContactProfile:
         """
         if getattr(self, f'_{self.__class__.__name__}__my_profile', None):
             raise MeException("you can't block yourself!")
-        return getattr(self, f'_{self.__class__.__name__}__meobj').block_profile(phone_number=self.phone_number, block_contact=block_contact, me_full_block=me_full_block)
+        return getattr(self, f'_{self.__class__.__name__}__client').block_profile(phone_number=self.phone_number, block_contact=block_contact, me_full_block=me_full_block)
 
     def unblock(self, unblock_contact=True, me_full_unblock=True) -> bool:
         """
@@ -38,7 +38,7 @@ class _CommonMethodsForUserContactProfile:
         """
         if getattr(self, f'_{self.__class__.__name__}__my_profile', None):
             raise MeException("you can't unblock yourself!")
-        return getattr(self, f'_{self.__class__.__name__}__meobj').unblock_profile(phone_number=self.phone_number, unblock_contact=unblock_contact, me_full_unblock=me_full_unblock)
+        return getattr(self, f'_{self.__class__.__name__}__client').unblock_profile(phone_number=self.phone_number, unblock_contact=unblock_contact, me_full_unblock=me_full_unblock)
 
     def get_vcard(self, prefix_name: str = "", profile_picture: bool = True, **kwargs) -> str:
         """

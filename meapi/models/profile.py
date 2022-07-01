@@ -161,7 +161,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
     .. automethod:: unblock
     """
     def __init__(self,
-                 _meobj,
+                 _client,
                  comments_blocked: Union[bool, None] = None,
                  is_he_blocked_me: Union[bool, None] = None,
                  is_permanent: Union[bool, None] = None,
@@ -206,17 +206,17 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
                  friends_distance: Union[dict, None] = None,
                  _my_profile: bool = False
                  ):
-        self.__meobj = _meobj
+        self.__client = _client
         self.comments_blocked = comments_blocked
         self.is_he_blocked_me = is_he_blocked_me
         self.is_permanent = is_permanent
         self.is_shared_location = is_shared_location
-        self.last_comment = Comment.new_from_json_dict(last_comment, _meobj=_meobj, profile_uuid=uuid)
+        self.last_comment = Comment.new_from_json_dict(last_comment, _client=_client, profile_uuid=uuid)
         self.mutual_contacts_available = mutual_contacts_available
         self.mutual_contacts: List[MutualContact] = [MutualContact.new_from_json_dict(mutual_contact) for mutual_contact in
                                                      mutual_contacts] if mutual_contacts_available else mutual_contacts
         self.share_location = share_location
-        self.social: Social = Social.new_from_json_dict(social, _meobj=_meobj, _my_social=_my_profile) if social else social
+        self.social: Social = Social.new_from_json_dict(social, _client=_client, _my_social=_my_profile) if social else social
         self.carrier = carrier
         self.comments_enabled = comments_enabled
         self.country_code = country_code
@@ -274,7 +274,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
                 if key not in ['country_code', 'date_of_birth', 'device_type', 'login_type', 'email', 'first_name',
                                'last_name', 'slogan', 'gender', 'profile_picture_url', 'facebook_url']:
                     raise MeException("You cannot change this field!")
-                res = self.__meobj.update_profile_details(**{key: value})
+                res = self.__client.update_profile_details(**{key: value})
                 if (res[0] and str(getattr(res[1], key, None)) == str(value)) or key == 'profile_picture':
                     # Can't check if profile picture updated because Me convert's it to their own url.
                     if key == 'date_of_birth':

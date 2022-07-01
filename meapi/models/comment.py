@@ -39,7 +39,7 @@ class Comment(MeModel):
     .. automethod:: unlike
     """
     def __init__(self,
-                 _meobj,
+                 _client,
                  like_count: Union[int, None] = None,
                  status: Union[str, None] = None,
                  message: Union[str, None] = None,
@@ -63,7 +63,7 @@ class Comment(MeModel):
         self.created_at: Union[datetime, None] = parse_date(created_at)
         self.comment_likes = [User.new_from_json_dict(user['author']) for user in
                               comment_likes] if comment_likes else None
-        self.__meobj = _meobj
+        self.__client = _client
         self.__my_comment = _my_comment
         self.__init_done = True
 
@@ -81,7 +81,7 @@ class Comment(MeModel):
         if self.status == 'approved':
             return True
         if self.id:
-            if self.__meobj.approve_comment(self.id):
+            if self.__client.approve_comment(self.id):
                 self.status = 'approved'
                 return True
         return False
@@ -99,8 +99,8 @@ class Comment(MeModel):
         Returns:
             ``bool``: Is edit success.
         """
-        if self.author.uuid == self.__meobj.uuid:
-            if self.__meobj.publish_comment(self.profile_uuid, new_msg):
+        if self.author.uuid == self.__client.uuid:
+            if self.__client.publish_comment(self.profile_uuid, new_msg):
                 self.message = new_msg
                 self.status = 'waiting'
                 return True
@@ -122,7 +122,7 @@ class Comment(MeModel):
         if self.status == 'ignored':
             return True
         if self.id:
-            if self.__meobj.delete_comment(self.id):
+            if self.__client.delete_comment(self.id):
                 self.status = 'ignored'
                 return True
         return False
@@ -137,7 +137,7 @@ class Comment(MeModel):
         """
         if self.status != 'approved':
             raise MeException("You can only like approved comments!")
-        if self.__meobj.like_comment(self.id):
+        if self.__client.like_comment(self.id):
             self.like_count += 1
             return True
         return False
@@ -152,7 +152,7 @@ class Comment(MeModel):
         """
         if self.status != 'approved':
             raise MeException("You can only unlike approved comments!")
-        if self.__meobj.unlike_comment(self.id):
+        if self.__client.unlike_comment(self.id):
             self.like_count -= 1
             return True
         return False

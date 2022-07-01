@@ -77,7 +77,7 @@ class Settings(MeModel):
             Number of spammers.
     """
     def __init__(self,
-                 _meobj,
+                 _client,
                  birthday_notification_enabled: Union[bool, None] = None,
                  comments_enabled: Union[bool, None] = None,
                  comments_notification_enabled: Union[bool, None] = None,
@@ -115,7 +115,7 @@ class Settings(MeModel):
         self.who_deleted_notification_enabled = who_deleted_notification_enabled
         self.who_watched_enabled = who_watched_enabled
         self.who_watched_notification_enabled = who_watched_notification_enabled
-        self.__meobj = _meobj
+        self.__client = _client
         self.__init_done = True
 
     def __repr__(self):
@@ -131,7 +131,7 @@ class Settings(MeModel):
                     raise MeException(f"{str(key)} value must be a bool type!")
             else:
                 raise MeException("You can't change this setting!")
-            res = self.__meobj.change_settings(**{key: value})
+            res = self.__client.change_settings(**{key: value})
             if res[0] and getattr(res[1], key, None) != value:
                 raise MeException(f"{key} not updated!")
         return super().__setattr__(key, value)

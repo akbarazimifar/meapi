@@ -51,7 +51,7 @@ class Account:
         if uuid == self.uuid:
             res['_my_profile'] = True
         extra_profile = res.pop('profile')
-        return profile.Profile.new_from_json_dict(res, _meobj=self, **extra_profile)
+        return profile.Profile.new_from_json_dict(res, _client=self, **extra_profile)
 
     def get_my_profile(self) -> profile.Profile:
         """
@@ -68,7 +68,7 @@ class Account:
             extra = res.pop('profile')
         except KeyError:
             extra = {}
-        return profile.Profile.new_from_json_dict(_meobj=self, data=res, _my_profile=True, **extra)
+        return profile.Profile.new_from_json_dict(_client=self, data=res, _my_profile=True, **extra)
 
     def get_uuid(self, phone_number: Union[int, str] = None) -> Union[str, None]:
         """
@@ -173,7 +173,7 @@ class Account:
             if res[key] == body[key] or key == 'profile_picture':
                 # Can't check if profile picture updated because Me convert's it to their own url.
                 successes += 1
-        return bool(successes == len(body.keys())), profile.Profile.new_from_json_dict(res, _meobj=self, _my_profile=True)
+        return bool(successes == len(body.keys())), profile.Profile.new_from_json_dict(res, _client=self, _my_profile=True)
 
     def delete_account(self, yes_im_sure: bool = False) -> bool:
         """

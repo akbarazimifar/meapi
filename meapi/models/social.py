@@ -38,16 +38,16 @@ class Social(MeModel):
                  tiktok: Union[dict, None] = None,
                  twitter: Union[dict, None] = None,
                  _my_social: bool = False,
-                 _meobj = None
+                 _client = None
                  ):
-        self.facebook: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(facebook, _meobj=_meobj, _my_social=_my_social, name='facebook')
-        self.fakebook: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(fakebook, _meobj=_meobj, _my_social=_my_social, name='fakebook')
-        self.instagram: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(instagram, _meobj=_meobj, _my_social=_my_social, name='instagram')
-        self.linkedin: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(linkedin, _meobj=_meobj, _my_social=_my_social, name='linkedin')
-        self.pinterest: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(pinterest, _meobj=_meobj, _my_social=_my_social, name='pinterest')
-        self.spotify: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(spotify, _meobj=_meobj, _my_social=_my_social, name='spotify')
-        self.tiktok: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(tiktok, _meobj=_meobj, _my_social=_my_social, name='tiktok')
-        self.twitter: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(twitter, _meobj=_meobj, _my_social=_my_social, name='twitter')
+        self.facebook: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(facebook, _client=_client, _my_social=_my_social, name='facebook')
+        self.fakebook: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(fakebook, _client=_client, _my_social=_my_social, name='fakebook')
+        self.instagram: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(instagram, _client=_client, _my_social=_my_social, name='instagram')
+        self.linkedin: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(linkedin, _client=_client, _my_social=_my_social, name='linkedin')
+        self.pinterest: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(pinterest, _client=_client, _my_social=_my_social, name='pinterest')
+        self.spotify: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(spotify, _client=_client, _my_social=_my_social, name='spotify')
+        self.tiktok: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(tiktok, _client=_client, _my_social=_my_social, name='tiktok')
+        self.twitter: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(twitter, _client=_client, _my_social=_my_social, name='twitter')
         super().__init__()
 
 
@@ -77,7 +77,7 @@ class SocialMediaAccount(MeModel):
     def __init__(self,
                  name: str,
                  _my_social: bool,
-                 _meobj = None,
+                 _client = None,
                  posts: Union[List[dict], None] = None,
                  profile_id: Union[str, None] = None,
                  is_active: Union[bool, None] = None,
@@ -89,7 +89,7 @@ class SocialMediaAccount(MeModel):
         self.is_active = is_active
         self.is_hidden = is_hidden
         self.__my_social = _my_social
-        self.__meobj = _meobj
+        self.__client = _client
         self.__init_done = True
 
     def __setattr__(self, key, value):
@@ -121,8 +121,8 @@ class SocialMediaAccount(MeModel):
         if self.is_active:
             raise MeException("This social is already active, No need to add it again!")
         key = f'{self.name}_url' if self.name in ['linkedin', 'pinterest'] else f'{self.name}_token'
-        if self.__meobj.add_social(**{key: token_or_url}):
-            self.__dict__ = copy.deepcopy(getattr(self.__meobj.get_socials(), self.name).__dict__)
+        if self.__client.add_social(**{key: token_or_url}):
+            self.__dict__ = copy.deepcopy(getattr(self.__client.get_socials(), self.name).__dict__)
             return True
         return False
 
@@ -137,7 +137,7 @@ class SocialMediaAccount(MeModel):
             raise MeException("You cannot remove social from another user!")
         if not self.is_active:
             raise MeException("This social is already not active!")
-        if self.__meobj.remove_social(**{self.name: True}):
+        if self.__client.remove_social(**{self.name: True}):
             self.profile_id = None
             self.is_active = False
             self.is_hidden = True
@@ -158,7 +158,7 @@ class SocialMediaAccount(MeModel):
             raise MeException("This social is not active!")
         if self.is_hidden:
             raise MeException("This social is already hidden!")
-        if self.__meobj.switch_social_status(**{self.name: False}):
+        if self.__client.switch_social_status(**{self.name: False}):
             self.is_hidden = True
             return True
         return False
@@ -176,7 +176,7 @@ class SocialMediaAccount(MeModel):
             raise MeException("This social is not active!")
         if not self.is_hidden:
             raise MeException("This social is already unhidden!")
-        if self.__meobj.switch_social_status(**{self.name: True}):
+        if self.__client.switch_social_status(**{self.name: True}):
             self.is_hidden = False
             return True
         return False

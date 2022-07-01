@@ -32,7 +32,7 @@ class Group(MeModel):
     .. automethod:: ask_to_rename
     """
     def __init__(self,
-                 _meobj,
+                 _client,
                  name: Union[str, None] = None,
                  count: Union[int, None] = None,
                  last_contact_at: Union[str, None] = None,
@@ -46,7 +46,7 @@ class Group(MeModel):
         self.contacts = [User.new_from_json_dict(contact['user']) for contact in contacts] if contacts else contacts
         self.contact_ids = contact_ids
         self.status = status
-        self.__meobj = _meobj
+        self.__client = _client
         self.__init_done = True
 
     def __setattr__(self, key, value):
@@ -71,7 +71,7 @@ class Group(MeModel):
         """
         if self.status != 'active':
             raise MeException(f"The name '{self.name}' is already hidden!")
-        if self.__meobj.delete_name(self.contact_ids):
+        if self.__client.delete_name(self.contact_ids):
             self.status = 'hidden'
             return True
         return False
@@ -86,7 +86,7 @@ class Group(MeModel):
         """
         if self.status != 'hidden':
             raise MeException(f"The name '{self.name}' is already activated!")
-        if self.__meobj.restore_name(self.contact_ids):
+        if self.__client.restore_name(self.contact_ids):
             self.status = 'active'
             return True
         return False
@@ -105,6 +105,6 @@ class Group(MeModel):
         """
         if self.status != 'active':
             raise MeException("You can't ask to rename if the name is hidden. restore and then ask again!")
-        if self.__meobj.ask_group_rename(self.contact_ids, new_name):
+        if self.__client.ask_group_rename(self.contact_ids, new_name):
             return True
         return False

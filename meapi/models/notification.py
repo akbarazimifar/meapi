@@ -10,7 +10,7 @@ class Notification(MeModel):
     - `For more information about Notification <https://me.app/notifications/>`_
     """
     def __init__(self,
-                 _meobj,
+                 _client,
                  id: Union[int, None] = None,
                  created_at: Union[str, None] = None,
                  modified_at: Union[str, None] = None,
@@ -25,7 +25,7 @@ class Notification(MeModel):
                  message_lang: Union[str, None] = None,
                  context: Union[dict, None] = None,
                  ):
-        self.__meobj = _meobj
+        self.__client = _client
         self.id = id
         self.created_at = parse_date(created_at)
         self.modified_at = parse_date(modified_at)
@@ -57,7 +57,7 @@ class Notification(MeModel):
     def read(self) -> bool:
         if self.is_read:
             raise MeException("This notifications already mark as read!")
-        if self.__meobj.read_notification(self.id):
+        if self.__client.read_notification(self.id):
             self.is_read = True
             return True
         return False

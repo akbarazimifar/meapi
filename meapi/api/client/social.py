@@ -126,7 +126,7 @@ class Social:
         else:
             _my_comment = False
         comments = get_comments_raw(self, str(uuid))['comments']
-        return sorted([comment.Comment.new_from_json_dict(com, _meobj=self, _my_comment=_my_comment, profile_uuid=uuid)
+        return sorted([comment.Comment.new_from_json_dict(com, _client=self, _my_comment=_my_comment, profile_uuid=uuid)
                        for com in comments], key=lambda x: x.like_count, reverse=True)
 
     def get_comment(self, comment_id: Union[int, str]) -> dict:
@@ -141,7 +141,7 @@ class Social:
         """
         if isinstance(comment_id, comment.Comment):
             comment_id = comment_id.id
-        return comment.Comment.new_from_json_dict(get_comment_raw(self, int(comment_id)), _meobj=self, id=int(comment_id))
+        return comment.Comment.new_from_json_dict(get_comment_raw(self, int(comment_id)), _client=self, id=int(comment_id))
 
     def publish_comment(self, uuid: Union[str, Profile, User, Contact], your_comment: str) -> comment.Comment:
         """
@@ -166,7 +166,7 @@ class Social:
             else:
                 raise MeException("Contact has no user.")
         return comment.Comment.new_from_json_dict(publish_comment_raw(self, str(uuid), your_comment),
-                                                  _meobj=self, profile_uuid=uuid, _my_comment=True if self.uuid == uuid else False)
+                                                  _client=self, profile_uuid=uuid, _my_comment=True if self.uuid == uuid else False)
 
     def approve_comment(self, comment_id: Union[str, int, comment.Comment]) -> bool:
         """
@@ -277,7 +277,7 @@ class Social:
         """
         if sorted_by not in ['count', 'last_contact_at']:
             raise MeException("sorted_by must be one of 'count' or 'last_contact_at'.")
-        return sorted([group.Group.new_from_json_dict(grp, _meobj=self, status='active') for grp in
+        return sorted([group.Group.new_from_json_dict(grp, _client=self, status='active') for grp in
                        get_groups_raw(self)['groups']],
                       key=attrgetter(sorted_by), reverse=True)
 
@@ -302,7 +302,7 @@ class Social:
                 groups[name['name']]['contact_ids'].append(name.pop('contact_id'))
                 groups[name['name']]['contacts'].append({'user': name.pop('user')})
 
-        return sorted([group.Group.new_from_json_dict(grp, _meobj=self, status='hidden', count=len(grp['contact_ids']))
+        return sorted([group.Group.new_from_json_dict(grp, _client=self, status='hidden', count=len(grp['contact_ids']))
                        for grp in groups.values()], key=lambda x: x.count, reverse=True)
 
     def delete_group(self, contacts_ids: Union[group.Group, int, str, List[Union[int, str]]]) -> bool:
@@ -378,7 +378,7 @@ class Social:
             else:
                 raise MeException("Contact has no user.")
         if not uuid:
-            return social.Social.new_from_json_dict(get_my_social_raw(self), _meobj=self, _my_social=True)
+            return social.Social.new_from_json_dict(get_my_social_raw(self), _client=self, _my_social=True)
         return self.get_profile(uuid).social
 
     def add_social(self,
@@ -735,7 +735,7 @@ class Social:
         :return: List of :py:obj:`~meapi.models.user.User` objects.
         :rtype: List[:py:obj:`~meapi.models.user.User`]
         """
-        return [user.User.new_from_json_dict(usr, _meobj=self) for usr in locations_shared_by_me_raw(self)]
+        return [user.User.new_from_json_dict(usr, _client=self) for usr in locations_shared_by_me_raw(self)]
 
     def locations_shared_with_me(self) -> List[user.User]:
         """
@@ -745,4 +745,4 @@ class Social:
         :rtype: List[:py:obj:`~meapi.models.user.User`]
         """
         users = locations_shared_with_me_raw(self)['shared_location_users']
-        return [user.User.new_from_json_dict(usr['author'], _meobj=self, distance=usr['distance']) for usr in users]
+        return [user.User.new_from_json_dict(usr['author'], _client=self, distance=usr['distance']) for usr in users]

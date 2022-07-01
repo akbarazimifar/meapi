@@ -5,7 +5,7 @@ from meapi.models.me_model import MeModel
 
 class User(MeModel, _CommonMethodsForUserContactProfile):
     def __init__(self,
-                 _meobj,
+                 _client,
                  email: Union[str, None] = None,
                  profile_picture: Union[str, None] = None,
                  first_name: Union[str, None] = None,
@@ -22,7 +22,7 @@ class User(MeModel, _CommonMethodsForUserContactProfile):
                  location_enabled: Union[bool, None] = None,
                  distance: Union[float, None] = None
                  ):
-        self.__meobj = _meobj
+        self.__client = _client
         self.email = email
         self.profile_picture = profile_picture
         self.first_name = first_name
