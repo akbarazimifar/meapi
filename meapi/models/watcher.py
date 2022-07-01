@@ -7,12 +7,25 @@ from meapi.models.user import User
 
 class Watcher(MeModel):
     """
-        - For more information about Watcher <https://me.app/who-viewed-my-profile/>
+    Represents a Watcher, user who watch your profile.
+        - `For more information about Watcher <https://me.app/who-viewed-my-profile/>`_
+
+    Parameters:
+        last_view (``datetime``):
+            Date of last view.
+        user (:py:obj:`~meapi.models.user.User`):
+            The user who watch your profile.
+        count (``int``):
+            The number of views.
+        is_search (``bool``):
+            Whether the user is searching your profile.
     """
-    def __init__(self, last_view: Union[str, None] = None,
-                 user: Union[dict, None] = None,
-                 count: Union[int, None] = None,
-                 is_search: Union[bool, None] = None) -> None:
+    def __init__(self,
+                 last_view: str,
+                 user: dict,
+                 count: int,
+                 is_search: bool
+                 ) -> None:
         self.last_view: datetime = parse_date(last_view)
         self.user: User = User.new_from_json_dict(user)
         self.count = count
@@ -20,8 +33,8 @@ class Watcher(MeModel):
         super().__init__()
 
     def __repr__(self):
-        return f"<Watcher name={self.user.first_name} {self.user.last_name or ''} count={self.count}>"
+        return f"<Watcher name={self.user.name} count={self.count}>"
 
     def __str__(self):
-        return f"{self.user.first_name} {self.user.last_name or ''}"
+        return self.user.name
 

@@ -1,3 +1,4 @@
+import copy
 from datetime import date
 from typing import List, Union
 from meapi.utils.exceptions import MeException
@@ -149,7 +150,12 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
             Whether you are in the user's contacts.
 
         user_type (``str`` *optional*):
-            The user's type: the color of the user in the app.
+            The user's type: the color of the user in the app:
+                - ``BLUE``: Verified Caller ID from ME users (100% ID).
+                - ``GREEN``: Identified call with a very reliable result.
+                - ``YELLOW``: Uncertain Identification (Unverified).
+                - ``ORANGE``: No identification (can be reported).
+                - ``RED``: Spam calls.
 
         verify_subscription (``bool`` *optional*):
             Whether the user has verified their subscription.
@@ -159,6 +165,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
     .. automethod:: get_vcard
     .. automethod:: block
     .. automethod:: unblock
+    .. automethod:: refresh
     """
     def __init__(self,
                  _client,
@@ -262,15 +269,28 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
     @property
     def age(self) -> int:
         """
-        Calculates the age of the user.
+        Calculates the age of the user from ``date_of_birth``.
         """
         if not self.date_of_birth or self.date_of_birth > date.today():
             return 0
         return (date.today() - self.date_of_birth).days // 365
 
+    def refresh(self) -> bool:
+        """
+        Refresh the profile's data if changes have been made from outside the object.
+            - You don't need to call this method if you change the profile by assigning a new value to the attrs (If i'ts your profile).
+        """
+        self.__my_profile = None  # __setattr__ relies on it to prevent changes
+        self.__dict__ = copy.deepcopy(self.__client.get_profile(self.uuid).__dict__)
+        if self.__my_profile:
+            return True
+        return False
+
     def __setattr__(self, key, value):
         if getattr(self, '_Profile__my_profile', None) is not None:
             if self.__my_profile:
+                if key == '_Profile__my_profile':
+                    return super().__setattr__(key, value)
                 if key not in ['country_code', 'date_of_birth', 'device_type', 'login_type', 'email', 'first_name',
                                'last_name', 'slogan', 'gender', 'profile_picture_url', 'facebook_url']:
                     raise MeException("You cannot change this field!")
@@ -287,7 +307,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         super().__setattr__(key, value)
 
     def __repr__(self):
-        return f"<Profile name={self.first_name} {self.last_name or ''} uuid={self.uuid}>"
+        return f"<Profile name={self.name} uuid={self.uuid}>"
 
     def __str__(self):
         return self.name

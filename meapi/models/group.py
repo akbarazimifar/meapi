@@ -9,7 +9,7 @@ from meapi.models.me_model import MeModel
 class Group(MeModel):
     """
     Represents a group of users that save you in their contact list in the same name
-        - For more information about this feature, see: <https://me.app/who-saved-my-number/>
+        - `For more information about this feature: <https://me.app/who-saved-my-number/>`_
 
     Parameters:
         name (``str``):

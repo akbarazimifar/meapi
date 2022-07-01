@@ -45,7 +45,7 @@ class MeModel(metaclass=_ParameterReader):
         Prevent attr changes after the init in protected data classes
         """
         if getattr(self, '_MeModel__init_done', None):
-            raise MeException(f"You cannot change the protected attr '{key}' of '{self.__class__.__name__}'!")
+            raise MeException(f"You cannot change protected attr '{key}' of '{self.__class__.__name__}'!")
         return super().__setattr__(key, value)
 
     def as_json_string(self, ensure_ascii=True) -> str:

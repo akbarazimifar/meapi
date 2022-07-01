@@ -64,7 +64,9 @@ class Notifications:
             if val and fil.endswith('filter'):
                 filters = [*filters, *notification_categories[fil.replace("_filter", "")]]
         results = get_notifications_raw(self, page_number, results_limit, filters)
-        return results['count'], [Notification.new_from_json_dict(notification, _client=self) for notification in results['results']]
+
+        return results['count'], [Notification.new_from_json_dict(notification, _client=self,
+                                  **notification.pop('context')) for notification in results['results']]
 
     def read_notification(self, notification_id: Union[int, str]) -> bool:
         """
