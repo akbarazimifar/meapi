@@ -1,6 +1,6 @@
 .. image:: https://user-images.githubusercontent.com/42866208/164977163-2837836d-15bd-4a75-88fd-4e3fe2fd5dae.png
   :width: 95
-  :alt: Alternative text
+  :alt: Me Logo
 .. end-logo
 
 `meapi <https://github.com/david-lev/meapi>`_: Unofficial api for 'Me - Caller ID & Spam Blocker'
@@ -24,7 +24,7 @@
 
 ________________________
 
-☎️ meapi is a Python3 library to identify, discover and get information about phone numbers, indicate and report spam, get and manage socials, profile management and much more.
+☎️ **meapi** is a Python3 library to identify, discover and get information about phone numbers, indicate and report spam, get and manage socials, profile management and much more.
 
 🔐 To **get started**, read the `Authentication guide <https://meapi.readthedocs.io/en/latest/setup.html>`_.
 
@@ -91,17 +91,47 @@ ________________________
 
     from meapi import Me
 
+    # Initialize the Client:
     me = Me(phone_number=972123456789)
     # If you have official access token:
     # me = Me(access_token='XXXXXXXX')
 
+    # ☎ Get information about phone number:
     search_res = me.phone_search('+865-456-234-12'))
     if search_res:
-        print(search_res['contact']['name'])
+        print(search_res.name)
 
-    if search_res['contact'].get('user'):
-        uuid = search_res['contact']['user']['uuid']
-        print(me.get_profile_info(uuid))
+    # 😎 Get user full profile:
+    if search_res.user:
+        profile = search_res.get_profile()
+        print(profile.email, profile.date_of_birth, profile.slogan)
+
+        # 📱 Get social media accounts:
+        if profile.social.twitter.is_active:
+            print(profile.social.twitter.profile_id)
+            print(profile.social.twitter.posts)
+
+    # 💬 Watch and manage comments:
+    comments = me.get_comments()
+    for comment in comments:
+        print(comment.message)
+        if comment.status == 'waiting':
+            comment.approve()
+            comment.like()
+
+    # ✍️ Change your profile details:
+    my_profile = me.get_my_profile()
+    my_profile.first_name = 'David'
+
+    # 👁 who watched your profile:
+    for watcher in my_profile.who_watched(incognito=True, sorted_by='last_view'):
+        print(watcher.user.name, watcher.count)
+
+    # 👥 See how people call you:
+    for group in me.get_groups():
+        print(group.name, group.count)
+
+    # ➕ And much much more...
 
 📚 For more usage examples, read the `Examples <https://meapi.readthedocs.io/en/latest/examples.html>`_ page.
 

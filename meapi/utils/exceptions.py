@@ -4,19 +4,19 @@ class MeApiException(Exception):
 
     :param http_status: status code of the http request. ``400=>``.
     :type http_status: int
-    :param msg: ``api error msg``. for example: ``api_incorrect_activation_code``..
+    :param msg: ``api error msg``. for example: ``api_incorrect_activation_code``.
     :type msg: str
     :param reason: Human reason to the error.
     :type reason: str
 
     **Expected msg's:**
 
-    - ``api_incorrect_pwd_token`` in :py:func:`~meapi.Me.generate_access_token`.
-    - ``api_phone_number_doesnt_exists`` in :py:func:`~meapi.Me.activate_account`.
-    - ``api_incorrect_activation_code`` in :py:func:`~meapi.Me.activate_account`.
-    - ``api_activation_code_expired`` in :py:func:`~meapi.Me.activate_account`.
+    - ``api_incorrect_pwd_token``.
+    - ``api_phone_number_doesnt_exists``.
+    - ``api_incorrect_activation_code``.
+    - ``api_activation_code_expired``.
     - ``api_search_passed_limit`` in :py:func:`~meapi.Me.phone_search`.
-    - ``api_profile_view_passed_limit`` in :py:func:`~meapi.Me.get_profile_info`.
+    - ``api_profile_view_passed_limit`` in :py:func:`~meapi.Me.get_profile`.
     """
     def __init__(self, http_status: int, msg: str, reason: str = None):
         self.http_status = http_status

@@ -38,7 +38,9 @@ extensions = [
     "sphinx_copybutton",
     "sphinx.ext.doctest",
     "sphinx.ext.intersphinx",
-    "sphinxext.opengraph"
+    "sphinxext.opengraph",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.autosummary"
 ]
 
 # The suffix of source filenames.
@@ -58,6 +60,8 @@ exclude_patterns = []
 pygments_style = "friendly"
 
 html_theme = "furo"
+copybutton_prompt_text = "$ "
+suppress_warnings = ["image.not_readable"]
 html_favicon = "../images/favicon.ico"
 
 
