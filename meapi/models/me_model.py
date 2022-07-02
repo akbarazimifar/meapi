@@ -3,8 +3,10 @@ import json
 from abc import ABCMeta
 from datetime import datetime, date
 from meapi.utils.exceptions import MeException
+from logging import getLogger
 
 IGNORED_KEYS = []
+_logger = getLogger(__name__)
 
 
 class _ParameterReader(ABCMeta):
@@ -23,36 +25,10 @@ class _ParameterReader(ABCMeta):
 
 class MeModel(metaclass=_ParameterReader):
     def __init__(self):
+        """
+        Add the ``init_done`` flag to the class to prevent attr changes after the init.
+        """
         self.__init_done = True
-
-    def __str__(self) -> str:
-        return self.as_json_string()
-
-    def __eq__(self, other) -> bool:
-        return other and self.as_dict() == other.as_dict()
-
-    def __ne__(self, other) -> bool:
-        return not self.__eq__(other)
-
-    def __hash__(self) -> int:
-        if hasattr(self, 'id'):
-            return hash(self.id)
-        else:
-            raise TypeError('unhashable type: {} (no id attribute)'.format(type(self)))
-
-    def __setattr__(self, key, value):
-        """
-        Prevent attr changes after the init in protected data classes
-        """
-        if getattr(self, '_MeModel__init_done', None):
-            raise MeException(f"You cannot change protected attr '{key}' of '{self.__class__.__name__}'!")
-        return super().__setattr__(key, value)
-
-    def as_json_string(self, ensure_ascii=True) -> str:
-        """
-        Return class data in json format
-        """
-        return json.dumps(self.as_dict(), ensure_ascii=ensure_ascii, sort_keys=True)
 
     def as_dict(self) -> dict:
         """
@@ -80,10 +56,16 @@ class MeModel(metaclass=_ParameterReader):
                 data[key] = getattr(self, key, None)
         return data
 
-    @classmethod
-    def new_from_json_dict(cls, data: dict, _client=None, **kwargs):
+    def as_json_string(self, ensure_ascii=True) -> str:
         """
-        Create new instance from json_dict
+        Return class data in json format
+        """
+        return json.dumps(self.as_dict(), ensure_ascii=ensure_ascii, sort_keys=True)
+
+    @classmethod
+    def new_from_dict(cls, data: dict, _client=None, **kwargs):
+        """
+        Create new instance from dict.
         """
         if not data or data is None:
             return None
@@ -94,13 +76,56 @@ class MeModel(metaclass=_ParameterReader):
         if kwargs:
             for key, val in kwargs.items():
                 json_data[key] = val
+        global IGNORED_KEYS
         for key in json_data.copy():
             if key not in cls_attrs:
                 if key not in IGNORED_KEYS and not key.startswith('_'):
-                    print(f"- {cls.__name__}: The key '{key}' with the value of '{json_data[key]}' just skipped. "
-                          f"Try to update meapi to the latest version (pip3 install -U meapi) "
-                          f"If it's still skipping, open issue in github: <https://github.com/david-lev/meapi/issues>")
+                    IGNORED_KEYS.append(key)
+                    msg = f"- {cls.__name__}: The key '{key}' with the value of '{json_data[key]}' just skipped. " \
+                          f"Try to update meapi to the latest version (pip3 install -U meapi) " \
+                          f"If it's still skipping, open issue in github: <https://github.com/david-lev/meapi/issues>"
+                    _logger.info(msg)
                 del json_data[key]
         c = cls(**json_data)
         return c
 
+    def __getitem__(self, item):
+        """
+        Return the value of the attribute with the given name.
+        """
+        return getattr(self, item)
+
+    def __setattr__(self, key, value):
+        """
+        Prevent attr changes after the init in protected data classes
+        """
+        if getattr(self, '_MeModel__init_done', None):
+            raise MeException(f"You cannot change protected attr '{key}' of '{self.__class__.__name__}'!")
+        return super().__setattr__(key, value)
+
+    def __str__(self) -> str:
+        """
+        Return class data in json format
+        """
+        return self.as_json_string()
+
+    def __eq__(self, other) -> bool:
+        """
+        Return True if the two objects are equal.
+        """
+        return other and self.as_dict() == other.as_dict()
+
+    def __ne__(self, other) -> bool:
+        """
+        Return True if the two objects are not equal.
+        """
+        return not self.__eq__(other)
+
+    def __hash__(self) -> int:
+        """
+        Return the id of the object, if exists.
+        """
+        if hasattr(self, 'id'):
+            return hash(self.id)
+        else:
+            raise TypeError('unhashable type: {} (no id attribute)'.format(type(self)))

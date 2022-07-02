@@ -9,9 +9,19 @@ from meapi.utils.validations import validate_phone_number
 from meapi.models import deleter, watcher, group, social, user, comment, friendship
 from meapi.api.raw.social import *
 from operator import attrgetter
+from logging import getLogger
+
+_logger = getLogger(__name__)
 
 
 class Social:
+    """
+    This class is not intended to create an instance's but only to be inherited by ``Me``.
+    The separation is for order purposes only.
+    """
+
+    def __init__(self):
+        raise MeException("Social class is not intended to create an instance's but only to be inherited by Me class.")
 
     def friendship(self, phone_number: Union[int, str]) -> friendship.Friendship:
         """
@@ -23,7 +33,7 @@ class Social:
         :return: Friendship object.
         :rtype: :py:obj:`~meapi.models.friendship.Friendship`
         """
-        return friendship.Friendship.new_from_json_dict(friendship_raw(self, validate_phone_number(phone_number)))
+        return friendship.Friendship.new_from_dict(friendship_raw(self, validate_phone_number(phone_number)))
 
     def report_spam(self, country_code: str, spam_name: str, phone_number: Union[str, int]) -> bool:
         """
@@ -62,7 +72,7 @@ class Social:
         res = who_deleted_raw(self)
         if incognito:
             self.change_settings(who_deleted=False)
-        deleters = [deleter.Deleter.new_from_json_dict(dlt) for dlt in res]
+        deleters = [deleter.Deleter.new_from_dict(dlt) for dlt in res]
         return sorted(deleters, key=attrgetter(sorted_by), reverse=True) if sorted_by else deleters
 
     def who_watched(self, incognito: bool = False, sorted_by: str = 'count') -> List[watcher.Watcher]:
@@ -86,7 +96,7 @@ class Social:
         res = who_watched_raw(self)
         if incognito:
             self.change_settings(who_watched=False)
-        return sorted([watcher.Watcher.new_from_json_dict(watch) for watch in
+        return sorted([watcher.Watcher.new_from_dict(watch) for watch in
                        res], key=attrgetter(sorted_by), reverse=True)
 
     def get_comments(self, uuid: Union[str, Profile, User, Contact] = None) -> List[comment.Comment]:
@@ -126,7 +136,7 @@ class Social:
         else:
             _my_comment = False
         comments = get_comments_raw(self, str(uuid))['comments']
-        return sorted([comment.Comment.new_from_json_dict(com, _client=self, _my_comment=_my_comment, profile_uuid=uuid)
+        return sorted([comment.Comment.new_from_dict(com, _client=self, _my_comment=_my_comment, profile_uuid=uuid)
                        for com in comments], key=lambda x: x.like_count, reverse=True)
 
     def get_comment(self, comment_id: Union[int, str]) -> dict:
@@ -141,7 +151,7 @@ class Social:
         """
         if isinstance(comment_id, comment.Comment):
             comment_id = comment_id.id
-        return comment.Comment.new_from_json_dict(get_comment_raw(self, int(comment_id)), _client=self, id=int(comment_id))
+        return comment.Comment.new_from_dict(get_comment_raw(self, int(comment_id)), _client=self, id=int(comment_id))
 
     def publish_comment(self, uuid: Union[str, Profile, User, Contact], your_comment: str) -> comment.Comment:
         """
@@ -165,8 +175,8 @@ class Social:
                 uuid = uuid.user.uuid
             else:
                 raise MeException("Contact has no user.")
-        return comment.Comment.new_from_json_dict(publish_comment_raw(self, str(uuid), your_comment),
-                                                  _client=self, profile_uuid=uuid, _my_comment=True if self.uuid == uuid else False)
+        return comment.Comment.new_from_dict(publish_comment_raw(self, str(uuid), your_comment),
+                                             _client=self, profile_uuid=uuid, _my_comment=True if self.uuid == uuid else False)
 
     def approve_comment(self, comment_id: Union[str, int, comment.Comment]) -> bool:
         """
@@ -277,7 +287,7 @@ class Social:
         """
         if sorted_by not in ['count', 'last_contact_at']:
             raise MeException("sorted_by must be one of 'count' or 'last_contact_at'.")
-        return sorted([group.Group.new_from_json_dict(grp, _client=self, status='active') for grp in
+        return sorted([group.Group.new_from_dict(grp, _client=self, status='active') for grp in
                        get_groups_raw(self)['groups']],
                       key=attrgetter(sorted_by), reverse=True)
 
@@ -302,7 +312,7 @@ class Social:
                 groups[name['name']]['contact_ids'].append(name.pop('contact_id'))
                 groups[name['name']]['contacts'].append({'user': name.pop('user')})
 
-        return sorted([group.Group.new_from_json_dict(grp, _client=self, status='hidden', count=len(grp['contact_ids']))
+        return sorted([group.Group.new_from_dict(grp, _client=self, status='hidden', count=len(grp['contact_ids']))
                        for grp in groups.values()], key=lambda x: x.count, reverse=True)
 
     def delete_group(self, contacts_ids: Union[group.Group, int, str, List[Union[int, str]]]) -> bool:
@@ -378,7 +388,7 @@ class Social:
             else:
                 raise MeException("Contact has no user.")
         if not uuid:
-            return social.Social.new_from_json_dict(get_my_social_raw(self), _client=self, _my_social=True)
+            return social.Social.new_from_dict(get_my_social_raw(self), _client=self, _my_social=True)
         return self.get_profile(uuid).social
 
     def add_social(self,
@@ -701,7 +711,7 @@ class Social:
                     if uuid.user:
                         uuids[index] = uuid.user.uuid
                     else:
-                        print(f"Skip contact {uuid.name} with no user.")
+                        _logger.warning(f"Skip contact {uuid.name} with no user.")
 
         return stop_sharing_location_raw(self, uuids)['success']
 
@@ -724,7 +734,7 @@ class Social:
                     if uuid.user:
                         uuids[index] = uuid.user.uuid
                     else:
-                        print(f"Skip contact {uuid.name} with no user.")
+                        _logger.warning(f"Skip contact {uuid.name} with no user.")
 
         return stop_shared_locations_raw(self, uuids)['success']
 
@@ -735,7 +745,7 @@ class Social:
         :return: List of :py:obj:`~meapi.models.user.User` objects.
         :rtype: List[:py:obj:`~meapi.models.user.User`]
         """
-        return [user.User.new_from_json_dict(usr, _client=self) for usr in locations_shared_by_me_raw(self)]
+        return [user.User.new_from_dict(usr, _client=self) for usr in locations_shared_by_me_raw(self)]
 
     def locations_shared_with_me(self) -> List[user.User]:
         """
@@ -745,4 +755,4 @@ class Social:
         :rtype: List[:py:obj:`~meapi.models.user.User`]
         """
         users = locations_shared_with_me_raw(self)['shared_location_users']
-        return [user.User.new_from_json_dict(usr['author'], _client=self, distance=usr['distance']) for usr in users]
+        return [user.User.new_from_dict(usr['author'], _client=self, distance=usr['distance']) for usr in users]

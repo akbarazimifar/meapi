@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Union
 from meapi.models.me_model import MeModel
 from meapi.utils.exceptions import MeException
@@ -27,30 +28,27 @@ class Notification(MeModel):
             Delivery method of the notification. Most likely ``push``.
         distribution_date (``datetime``):
             Date of distribution.
-        message_subject (``str`` *optional*):
-            Subject of the notification.
         message_category (``str``):
             Category of the notification.
-        message_body (``str`` *optional*):
-            Body of the notification.
         message_lang (``str``):
             Language of the notification, ``en``, ``he`` etc.
-        category (``str``):
-            Same as ``message_category``.
+        message_subject (``str`` *optional*):
+            Subject of the notification.
+        message_body (``str`` *optional*):
+            Body of the notification.
+        - CONTEXT -
         phone_number (``int`` *optional*):
-            Phone number of the subject.
+            Phone number of the message context.
         name (``str`` *optional*):
             Name of the subject.
         uuid (``str`` *optional*):
-            UUID of the subject.
+            UUID of the message context.
         new_name (``str`` *optional*):
-            New name that sender named you.
-        notification_id (``int`` *optional*):
-            Same as ``id``.
+            New name of the message context.
         profile_picture (``str`` *optional*):
-            Profile picture of the subject.
+            Profile picture of the message context.
         tag (``str`` *optional*):
-            Tag of the notification.
+            Tag of the message context.
 
     Methods:
 
@@ -81,13 +79,13 @@ class Notification(MeModel):
                  ):
         self.__client = _client
         self.id = id
-        self.created_at = parse_date(created_at)
-        self.modified_at = parse_date(modified_at)
+        self.created_at: datetime = parse_date(created_at)
+        self.modified_at: datetime = parse_date(modified_at)
         self.is_read = is_read
         self.sender = sender
         self.status = status
         self.delivery_method = delivery_method
-        self.distribution_date = parse_date(distribution_date)
+        self.distribution_date: datetime = parse_date(distribution_date)
         self.message_subject = message_subject
         self.message_category = message_category
         self.message_body = message_body
@@ -95,10 +93,8 @@ class Notification(MeModel):
         # context:
         self.name = name
         self.uuid = uuid
-        self.category = category
         self.new_name = new_name
         self.phone_number = phone_number
-        self.notification_id = notification_id
         self.profile_picture = profile_picture
         self.tag = tag
         self.__init_done = True

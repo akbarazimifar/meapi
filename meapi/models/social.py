@@ -40,14 +40,14 @@ class Social(MeModel):
                  _my_social: bool = False,
                  _client = None
                  ):
-        self.facebook: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(facebook, _client=_client, _my_social=_my_social, name='facebook')
-        self.fakebook: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(fakebook, _client=_client, _my_social=_my_social, name='fakebook')
-        self.instagram: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(instagram, _client=_client, _my_social=_my_social, name='instagram')
-        self.linkedin: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(linkedin, _client=_client, _my_social=_my_social, name='linkedin')
-        self.pinterest: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(pinterest, _client=_client, _my_social=_my_social, name='pinterest')
-        self.spotify: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(spotify, _client=_client, _my_social=_my_social, name='spotify')
-        self.tiktok: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(tiktok, _client=_client, _my_social=_my_social, name='tiktok')
-        self.twitter: SocialMediaAccount = SocialMediaAccount.new_from_json_dict(twitter, _client=_client, _my_social=_my_social, name='twitter')
+        self.facebook: SocialMediaAccount = SocialMediaAccount.new_from_dict(facebook, _client=_client, _my_social=_my_social, name='facebook')
+        self.fakebook: SocialMediaAccount = SocialMediaAccount.new_from_dict(fakebook, _client=_client, _my_social=_my_social, name='fakebook')
+        self.instagram: SocialMediaAccount = SocialMediaAccount.new_from_dict(instagram, _client=_client, _my_social=_my_social, name='instagram')
+        self.linkedin: SocialMediaAccount = SocialMediaAccount.new_from_dict(linkedin, _client=_client, _my_social=_my_social, name='linkedin')
+        self.pinterest: SocialMediaAccount = SocialMediaAccount.new_from_dict(pinterest, _client=_client, _my_social=_my_social, name='pinterest')
+        self.spotify: SocialMediaAccount = SocialMediaAccount.new_from_dict(spotify, _client=_client, _my_social=_my_social, name='spotify')
+        self.tiktok: SocialMediaAccount = SocialMediaAccount.new_from_dict(tiktok, _client=_client, _my_social=_my_social, name='tiktok')
+        self.twitter: SocialMediaAccount = SocialMediaAccount.new_from_dict(twitter, _client=_client, _my_social=_my_social, name='twitter')
         super().__init__()
 
 
@@ -84,7 +84,7 @@ class SocialMediaAccount(MeModel):
                  is_hidden: Union[bool, None] = None,
                  ):
         self.name = name
-        self.posts: Union[List[Post], None] = [Post.new_from_json_dict(post) for post in posts] if posts else posts
+        self.posts: Union[List[Post], None] = [Post.new_from_dict(post) for post in posts] if posts else posts
         self.profile_id = profile_id
         self.is_active = is_active
         self.is_hidden = is_hidden

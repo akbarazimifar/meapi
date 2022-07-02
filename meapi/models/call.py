@@ -18,7 +18,7 @@ class Call(MeModel):
         self.duration = duration
         self.name = name
         self.phone_number = phone_number
-        self.referenced_user = User.new_from_json_dict(referenced_user) if referenced_user else referenced_user
+        self.referenced_user = User.new_from_dict(referenced_user) if referenced_user else referenced_user
         self.tag = tag
         self.type = type
         super().__init__()

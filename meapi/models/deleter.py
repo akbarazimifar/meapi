@@ -23,7 +23,7 @@ class Deleter(MeModel):
                  user: dict
                  ):
         self.created_at: datetime = parse_date(created_at)
-        self.user = User.new_from_json_dict(user)
+        self.user = User.new_from_dict(user)
         super().__init__()
 
     def __repr__(self):

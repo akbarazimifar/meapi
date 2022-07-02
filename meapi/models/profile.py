@@ -218,19 +218,19 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         self.is_he_blocked_me = is_he_blocked_me
         self.is_permanent = is_permanent
         self.is_shared_location = is_shared_location
-        self.last_comment = Comment.new_from_json_dict(last_comment, _client=_client, profile_uuid=uuid)
+        self.last_comment = Comment.new_from_dict(last_comment, _client=_client, profile_uuid=uuid)
         self.mutual_contacts_available = mutual_contacts_available
-        self.mutual_contacts: List[MutualContact] = [MutualContact.new_from_json_dict(mutual_contact) for mutual_contact in
+        self.mutual_contacts: List[MutualContact] = [MutualContact.new_from_dict(mutual_contact) for mutual_contact in
                                                      mutual_contacts] if mutual_contacts_available else mutual_contacts
         self.share_location = share_location
-        self.social: Social = Social.new_from_json_dict(social, _client=_client, _my_social=_my_profile) if social else social
+        self.social: Social = Social.new_from_dict(social, _client=_client, _my_social=_my_profile) if social else social
         self.carrier = carrier
         self.comments_enabled = comments_enabled
         self.country_code = country_code
         self.date_of_birth: Union[date, None] = parse_date(date_of_birth, date_only=True)
         self.device_type = device_type
         self.distance = distance
-        self.friends_distance = [User.new_from_json_dict(user.get('author')) for user in friends_distance.get('friends')] if friends_distance else None
+        self.friends_distance = [User.new_from_dict(user.get('author')) for user in friends_distance.get('friends')] if friends_distance else None
         self.email = email
         self.facebook_url = facebook_url
         self.first_name = first_name
@@ -254,9 +254,9 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         self.uuid = uuid
         self.verify_subscription = verify_subscription
         self.who_deleted_enabled = who_deleted_enabled
-        self.who_deleted = [Deleter.new_from_json_dict(deleter) for deleter in who_deleted] if who_deleted else None
+        self.who_deleted = [Deleter.new_from_dict(deleter) for deleter in who_deleted] if who_deleted else None
         self.who_watched_enabled = who_watched_enabled
-        self.who_watched = [Watcher.new_from_json_dict(watcher) for watcher in who_watched] if who_watched else None
+        self.who_watched = [Watcher.new_from_dict(watcher) for watcher in who_watched] if who_watched else None
         self.__my_profile = _my_profile
 
     @property

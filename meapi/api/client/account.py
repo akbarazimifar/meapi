@@ -8,6 +8,12 @@ from meapi.models import contact, profile, call, blocked_number, user
 
 
 class Account:
+    """
+    This class is not intended to create an instance's but only to be inherited by ``Me``.
+    The separation is for order purposes only.
+    """
+    def __init__(self):
+        raise MeException("Account class is not intended to create an instance's but only to be inherited by Me class.")
 
     def phone_search(self, phone_number: Union[str, int]) -> Union[contact.Contact, None]:
         """
@@ -26,7 +32,7 @@ class Account:
                 return None
             else:
                 raise err
-        return contact.Contact.new_from_json_dict(response['contact'])
+        return contact.Contact.new_from_dict(response['contact'])
 
     def get_profile(self, uuid: Union[str, contact.Contact, user.User]) -> profile.Profile:
         """
@@ -51,7 +57,7 @@ class Account:
         if uuid == self.uuid:
             res['_my_profile'] = True
         extra_profile = res.pop('profile')
-        return profile.Profile.new_from_json_dict(res, _client=self, **extra_profile)
+        return profile.Profile.new_from_dict(res, _client=self, **extra_profile)
 
     def get_my_profile(self) -> profile.Profile:
         """
@@ -68,7 +74,7 @@ class Account:
             extra = res.pop('profile')
         except KeyError:
             extra = {}
-        return profile.Profile.new_from_json_dict(_client=self, data=res, _my_profile=True, **extra)
+        return profile.Profile.new_from_dict(_client=self, data=res, _my_profile=True, **extra)
 
     def get_uuid(self, phone_number: Union[int, str] = None) -> Union[str, None]:
         """
@@ -173,7 +179,7 @@ class Account:
             if res[key] == body[key] or key == 'profile_picture':
                 # Can't check if profile picture updated because Me convert's it to their own url.
                 successes += 1
-        return bool(successes == len(body.keys())), profile.Profile.new_from_json_dict(res, _client=self, _my_profile=True)
+        return bool(successes == len(body.keys())), profile.Profile.new_from_dict(res, _client=self, _my_profile=True)
 
     def delete_account(self, yes_im_sure: bool = False) -> bool:
         """
@@ -280,7 +286,7 @@ class Account:
         """
         body = {"add": validate_calls(calls), "remove": []}
         r = self._make_request('post', '/main/call-log/change-sync/', body)
-        return [call.Call.new_from_json_dict(cal) for cal in r['added_list']]
+        return [call.Call.new_from_dict(cal) for cal in r['added_list']]
 
     def remove_calls_from_log(self, calls: List[dict]) -> List[call.Call]:
         """
@@ -305,7 +311,7 @@ class Account:
             ]
         """
         body = {"add": [], "remove": validate_calls(calls)}
-        return [call.Call.new_from_json_dict(cal) for cal in self._make_request('post', '/main/call-log/change-sync/', body)]
+        return [call.Call.new_from_dict(cal) for cal in self._make_request('post', '/main/call-log/change-sync/', body)]
 
     def block_profile(self, phone_number: Union[str, int], block_contact=True, me_full_block=True) -> bool:
         """
@@ -325,7 +331,7 @@ class Account:
                 'me_full_block': me_full_block}
         res = block_profile_raw(client=self, **body)
         if res['success']:
-            return blocked_number.BlockedNumber.new_from_json_dict(**body)
+            return blocked_number.BlockedNumber.new_from_dict(**body)
 
     def unblock_profile(self, phone_number: int, unblock_contact=True, me_full_unblock=True) -> bool:
         """
@@ -381,7 +387,7 @@ class Account:
         :return: List of :py:class:`blocked_number.BlockedNumber` objects.
         :rtype: List[:py:obj:`~meapi.models.blocked_number.BlockedNumber`]
         """
-        return [blocked_number.BlockedNumber.new_from_json_dict(blocked) for blocked in get_blocked_numbers_raw(self)]
+        return [blocked_number.BlockedNumber.new_from_dict(blocked) for blocked in get_blocked_numbers_raw(self)]
 
     def upload_random_data(self, contacts=True, calls=True, location=True) -> bool:
         """

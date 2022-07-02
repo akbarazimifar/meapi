@@ -1,7 +1,7 @@
 from json import loads, JSONDecodeError
 from re import match
 from typing import Union
-import requests
+from requests import Session
 from meapi.api.client.account import Account
 from meapi.api.client.notifications import Notifications
 from meapi.api.client.settings import Settings
@@ -9,7 +9,9 @@ from meapi.api.client.social import Social
 from meapi.utils.auth import Auth
 from meapi.utils.exceptions import MeException, MeApiException
 from meapi.utils.validations import validate_phone_number
+from logging import getLogger
 
+_logger = getLogger(__name__)
 ME_BASE_API = 'https://app.mobile.me.app'
 
 
@@ -25,6 +27,8 @@ class Me(Auth, Account, Social, Settings, Notifications):
     :type access_token: Union[str, None]
     :param config_file: Path to credentials json file. Default: ``config.json``.
     :type config_file: Union[str, None]
+    :param session: Requests session object. Default: ``None``.
+    :type session: Union[``requests.Session``, None]
     :param proxies: Dict with proxy configuration. Default: ``None``.
     :type proxies: dict
     :param account_details: You can provide all login details can be provided in dict format, designed for cases of new account registration without the need for a prompt. Default: ``None``
@@ -47,12 +51,13 @@ class Me(Auth, Account, Social, Settings, Notifications):
                  access_token: Union[str, None] = None,
                  account_details: dict = None,
                  config_file: Union[str, None] = 'config.json',
+                 session: Session = None,
                  proxies: dict = None):
         if config_file.endswith(".json"):
-            self.config_file = config_file
+            self.config_file: str = config_file
         else:
-            print("Not a valid config json file. Using default 'config.json' file.")
-            self.config_file = 'config.json'
+            _logger.warning(f"The config file {config_file} is not a json file. Defaulting to config.json")
+            self.config_file: str = 'config.json'
 
         if not access_token and not phone_number and not account_details:
             raise MeException("You need to provide phone number, account details or access token!")
@@ -72,22 +77,17 @@ class Me(Auth, Account, Social, Settings, Notifications):
                     raise MeException("Not a valid 6-digits activation code!")
 
         self.phone_number = validate_phone_number(phone_number) if phone_number else phone_number
-        self.activation_code = activation_code
-        self.access_token = access_token
+        self._activation_code = activation_code
+        self._access_token = access_token
         self.account_details = account_details
         self.uuid = None
-        self.proxies = proxies
+        self._proxies = proxies if proxies else {}
+        self._session: Session = session or Session()  # create new session if not provided
 
-        if not self.access_token:
+        if not self._access_token:
             auth_data = self.credentials_manager()
             if auth_data:
-                self.access_token = auth_data['access']
-
-    def __repr__(self):
-        return f"<Me phone={self.phone_number} uuid={self.uuid}>"
-
-    def __str__(self):
-        return str(self.phone_number)
+                self._access_token = auth_data['access']
 
     def _make_request(self,
                       req_type: str,
@@ -96,7 +96,7 @@ class Me(Auth, Account, Social, Settings, Notifications):
                       headers: dict = None,
                       ) -> Union[dict, list]:
         """
-        Make request to Me api and return the response.
+        Internal method to make requests to Me api and return the response.
 
         :param req_type: HTTP request type: ``post``, ``get``, ``put``, ``patch``, ``delete``.
         :type req_type: str
@@ -120,8 +120,8 @@ class Me(Auth, Account, Social, Settings, Notifications):
         max_rounds = 3
         while max_rounds != 0:
             max_rounds -= 1
-            headers['authorization'] = self.access_token
-            response = getattr(requests, req_type)(url=url, json=body, headers=headers, proxies=self.proxies)
+            headers['authorization'] = self._access_token
+            response = getattr(self._session, req_type)(url=url, json=body, headers=headers, proxies=self._proxies)
             try:
                 response_text = loads(response.text)
             except JSONDecodeError:
@@ -144,3 +144,9 @@ class Me(Auth, Account, Social, Settings, Notifications):
             return response_text
         else:
             raise MeException(f"Error when trying to send a {req_type} request to {url}, with body:\n{body} and with headers:\n{headers}.")
+
+    def __repr__(self):
+        return f"<Me phone={self.phone_number} uuid={self.uuid}>"
+
+    def __str__(self):
+        return str(self.phone_number)

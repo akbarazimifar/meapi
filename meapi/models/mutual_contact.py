@@ -15,7 +15,7 @@ class MutualContact(MeModel):
                  ):
         self.phone_number = phone_number
         self.name = name
-        self.referenced_user: User = User.new_from_json_dict(referenced_user)
+        self.referenced_user: User = User.new_from_dict(referenced_user)
         self.date_of_birth = date_of_birth
         super().__init__()
 

@@ -9,6 +9,13 @@ tg_auth_url = "http://t.me/Meofficialbot?start=__iw__{}"
 
 
 class Auth:
+    """
+    This class is not intended to create an instance's but only to be inherited by ``Me``.
+    The separation is for order purposes only.
+    """
+    def __init__(self):
+        raise MeException("Auth class is not intended to create an instance's but only to be inherited by Me class.")
+
     def activate_account(self, activation_code: Union[int, str, None] = None) -> bool:
         """
         Activate new phone number account.
@@ -23,8 +30,8 @@ class Auth:
         :return: Is success.
         :rtype: bool
         """
-        if not activation_code and self.activation_code:
-            activation_code = self.activation_code
+        if not activation_code and self._activation_code:
+            activation_code = self._activation_code
 
         if activation_code and not match(r'^\d{6}$', str(activation_code)):
             raise MeException("Not a valid 6-digits activation code!")
@@ -41,7 +48,6 @@ class Auth:
             "phone_number": int(self.phone_number)
         }
         try:
-            print("** Trying to verify...")
             results = self._make_request(req_type='post', endpoint='/auth/authorization/activate/', body=data)
             if results.get('access'):
                 access_token = results['access']
@@ -53,8 +59,7 @@ class Auth:
             raise err
 
         if access_token:
-            print("Verification completed.")
-            self.access_token = access_token
+            self._access_token = access_token
             self.credentials_manager(results)
             return True
         else:
@@ -74,7 +79,6 @@ class Auth:
                 return True
         body = {"phone_number": str(self.phone_number),
                 "pwd_token": auth_data['pwd_token']}
-        print("Generating new access token...")
         try:
             auth_data = self._make_request(req_type='post', endpoint='/auth/authorization/login/', body=body)
         except MeApiException as err:
@@ -83,8 +87,7 @@ class Auth:
             raise err
         access_token = auth_data['access']
         if access_token:
-            print("Success to generate new token.")
-            self.access_token = access_token
+            self._access_token = access_token
             self.credentials_manager(auth_data)
             return True
         return False

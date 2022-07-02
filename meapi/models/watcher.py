@@ -27,7 +27,7 @@ class Watcher(MeModel):
                  is_search: bool
                  ) -> None:
         self.last_view: datetime = parse_date(last_view)
-        self.user: User = User.new_from_json_dict(user)
+        self.user: User = User.new_from_dict(user)
         self.count = count
         self.is_search = is_search
         super().__init__()

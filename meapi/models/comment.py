@@ -55,13 +55,13 @@ class Comment(MeModel):
         self.like_count = like_count
         self.status = status
         self.message = message
-        self.author = User.new_from_json_dict(author)
+        self.author = User.new_from_dict(author)
         self.is_liked = is_liked
         self.id = id
         self.profile_uuid = profile_uuid
         self.comments_blocked = comments_blocked
         self.created_at: Union[datetime, None] = parse_date(created_at)
-        self.comment_likes = [User.new_from_json_dict(user['author']) for user in
+        self.comment_likes = [User.new_from_dict(user['author']) for user in
                               comment_likes] if comment_likes else None
         self.__client = _client
         self.__my_comment = _my_comment

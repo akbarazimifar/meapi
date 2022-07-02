@@ -5,6 +5,13 @@ from meapi.api.raw.settings import *
 
 
 class Settings:
+    """
+    This class is not intended to create an instance's but only to be inherited by ``Me``.
+    The separation is for order purposes only.
+    """
+    def __init__(self):
+        raise MeException("Settings class is not intended to create an instance's but only to be inherited by Me class.")
+
     def get_settings(self) -> settings.Settings:
         """
         Get current settings.
@@ -12,7 +19,7 @@ class Settings:
         :return: :py:class:`meapi.models.settings.Settings` object.
         :rtype: :py:class:`meapi.models.settings.Settings`
         """
-        return settings.Settings.new_from_json_dict(get_settings_raw(self), _client=self)
+        return settings.Settings.new_from_dict(get_settings_raw(self), _client=self)
 
     def change_settings(self,
                         mutual_contacts_available: bool = None,
@@ -79,4 +86,4 @@ class Settings:
         for key, value in body.items():
             if results[key] != value:
                 success = False
-        return success, settings.Settings.new_from_json_dict(results, _client=self)
+        return success, settings.Settings.new_from_dict(results, _client=self)
