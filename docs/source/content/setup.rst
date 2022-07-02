@@ -79,8 +79,8 @@
     from meapi import Me
     me = Me(phone_number=123456789, config_file="/home/david/credentials/config.json")
 
-Official method
-^^^^^^^^^^^^^^^
+🔓 Official method
+^^^^^^^^^^^^^^^^^^^
 
 - You can also use the official verification and verify directly with an access token.
     Me has an official API which can be accessed by submitting a formal request at `this <https://meapp.co.il/api/>`_ link (Probably paid).
