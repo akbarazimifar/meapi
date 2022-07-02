@@ -16,6 +16,6 @@
 
 .. toctree::
 
-   setup
-   reference
-   examples
+   content/setup
+   content/reference
+   content/examples

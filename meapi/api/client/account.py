@@ -1,5 +1,5 @@
 from re import match, M
-from typing import Union, Tuple, List, Any
+from typing import Tuple, List
 from meapi.api.raw.account import *
 from meapi.utils.validations import validate_contacts, validate_calls, validate_phone_number
 from meapi.utils.exceptions import MeApiException, MeException
@@ -313,7 +313,7 @@ class Account:
         body = {"add": [], "remove": validate_calls(calls)}
         return [call.Call.new_from_dict(cal) for cal in self._make_request('post', '/main/call-log/change-sync/', body)]
 
-    def block_profile(self, phone_number: Union[str, int], block_contact=True, me_full_block=True) -> bool:
+    def block_profile(self, phone_number: Union[str, int], block_contact=True, me_full_block=True) -> blocked_number.BlockedNumber:
         """
         Block user profile.
 
@@ -323,15 +323,12 @@ class Account:
         :type block_contact: ``bool``
         :param me_full_block: To block for social. *Default:* ``True``.
         :type me_full_block: ``bool``
-        :return: Is successfully blocked.
-        :rtype: ``bool``
+        :return: :py:obj:`meapi.models.blocked_number.BlockedNumber` object.
+        :rtype: :py:obj:`meapi.models.blocked_number.BlockedNumber`
         """
-        body = {'phone_number': int(validate_phone_number(phone_number)),
-                'block_contact': block_contact,
-                'me_full_block': me_full_block}
-        res = block_profile_raw(client=self, **body)
+        res = block_profile_raw(client=self, phone_number=validate_phone_number(phone_number), me_full_block=me_full_block, block_contact=block_contact)
         if res['success']:
-            return blocked_number.BlockedNumber.new_from_dict(**body)
+            return blocked_number.BlockedNumber.new_from_dict(**body, _client=self)
 
     def unblock_profile(self, phone_number: int, unblock_contact=True, me_full_unblock=True) -> bool:
         """
@@ -346,10 +343,7 @@ class Account:
         :return: Is successfully unblocked.
         :rtype: ``bool``
         """
-        body = {'phone_number': int(validate_phone_number(phone_number)),
-                'unblock_contact': unblock_contact,
-                'me_full_unblock': me_full_unblock}
-        res = unblock_profile_raw(client=self, **body)
+        res = unblock_profile_raw(client=self, phone_number=validate_phone_number(phone_number), me_full_unblock=me_full_unblock, unblock_contact=unblock_contact)
         if res['success']:
             return True
         return False

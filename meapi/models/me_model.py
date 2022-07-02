@@ -24,6 +24,15 @@ class _ParameterReader(ABCMeta):
 
 
 class MeModel(metaclass=_ParameterReader):
+    """
+    Base class for all models.
+        - Allow instances to be compared, subscriptable, hashable, unchangable (In some cases), and json serializable.
+
+    Methods:
+
+    .. automethod:: as_dict
+    .. automethod:: as_json_string
+    """
     def __init__(self):
         """
         Add the ``init_done`` flag to the class to prevent attr changes after the init.
@@ -32,7 +41,7 @@ class MeModel(metaclass=_ParameterReader):
 
     def as_dict(self) -> dict:
         """
-        Return class data as dict
+        Return class data as ``dict``.
         """
         data = {}
         for (key, value) in self.__dict__.items():
@@ -58,7 +67,7 @@ class MeModel(metaclass=_ParameterReader):
 
     def as_json_string(self, ensure_ascii=True) -> str:
         """
-        Return class data in json format
+        Return class data in ``json`` format.
         """
         return json.dumps(self.as_dict(), ensure_ascii=ensure_ascii, sort_keys=True)
 
@@ -84,7 +93,7 @@ class MeModel(metaclass=_ParameterReader):
                     msg = f"- {cls.__name__}: The key '{key}' with the value of '{json_data[key]}' just skipped. " \
                           f"Try to update meapi to the latest version (pip3 install -U meapi) " \
                           f"If it's still skipping, open issue in github: <https://github.com/david-lev/meapi/issues>"
-                    _logger.info(msg)
+                    _logger.warning(msg)
                 del json_data[key]
         c = cls(**json_data)
         return c

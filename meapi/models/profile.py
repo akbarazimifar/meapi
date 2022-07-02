@@ -7,7 +7,6 @@ from meapi.models.comment import Comment
 from meapi.models.common import _CommonMethodsForUserContactProfile
 from meapi.models.deleter import Deleter
 from meapi.models.me_model import MeModel
-from meapi.models.mutual_contact import MutualContact
 from meapi.models.social import Social
 from meapi.models.user import User
 from meapi.models.watcher import Watcher
@@ -15,7 +14,7 @@ from meapi.models.watcher import Watcher
 
 class Profile(MeModel, _CommonMethodsForUserContactProfile):
     """
-    **Represents the user's profile. can also be used to update you profile details.**
+    Represents the user's profile. can also be used to update you profile details.
 
     Example:
         .. code-block:: python
@@ -72,13 +71,13 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
             The user's login type: ``email`` or ``apple``.
 
         who_deleted_enabled (``bool``):
-            Whether the user can see who deleted him (Only if ``is_premium``, Or if he uses meapi ;).
+            Whether the user can see who deleted him (Only if ``is_premium``, Or if he uses ``meapi`` ;).
 
         who_deleted (List[:py:obj:`~meapi.models.deleter.Deleter`] *optional*):
             The users who deleted him.
 
         who_watched_enabled (``bool``):
-            Whether the user can see who watched his profile (Only if ``is_premium``, Or if he uses meapi ;).
+            Whether the user can see who watched his profile (Only if ``is_premium``, Or if he uses ``meapi`` ;).
 
         who_watched (List[:py:obj:`~meapi.models.watcher.Watcher`] *optional*):
             The users who watched him.
@@ -128,8 +127,9 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         mutual_contacts_available (``bool``):
             Whether the user has mutual contacts available.
 
-        mutual_contacts (List[:py:obj:`~meapi.models.mutual_contact.MutualContact`] *optional*):
+        mutual_contacts (List[:py:obj:`~meapi.models.user.User`] *optional*):
             The user's mutual contacts.
+                - `For more information about MutualContact <https://me.app/mutual-contacts/>`_.
 
         is_premium (``bool`` *optional*):
             Whether the user is a premium user.
@@ -220,7 +220,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         self.is_shared_location = is_shared_location
         self.last_comment = Comment.new_from_dict(last_comment, _client=_client, profile_uuid=uuid)
         self.mutual_contacts_available = mutual_contacts_available
-        self.mutual_contacts: List[MutualContact] = [MutualContact.new_from_dict(mutual_contact) for mutual_contact in
+        self.mutual_contacts: List[User] = [User.new_from_dict(mutual_contact['referenced_user']) for mutual_contact in
                                                      mutual_contacts] if mutual_contacts_available else mutual_contacts
         self.share_location = share_location
         self.social: Social = Social.new_from_dict(social, _client=_client, _my_social=_my_profile) if social else social

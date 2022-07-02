@@ -17,22 +17,23 @@ ME_BASE_API = 'https://app.mobile.me.app'
 
 class Me(Auth, Account, Social, Settings, Notifications):
     """
-    Create a new instance to interact with MeAPI. **See** `Authentication <https://meapi.readthedocs.io/en/latest/setup.html#authentication>`_ **for more information.**
+    Create a new instance to interact with MeAPI.
+        - **See** `Authentication <https://meapi.readthedocs.io/en/latest/setup.html#authentication>`_ **for more information.**
 
     :param phone_number: International phone number format. Required on the `Unofficial method <https://meapi.readthedocs.io/en/latest/setup.html#unofficial-method>`_. Default: ``None``.
-    :type phone_number: Union[str, int, None]
+    :type phone_number: ``str`` | ``int`` | ``None``
     :param activation_code: You can provide the ``activation_code`` from Me in advance, without the need for a prompt. Default = ``None``.
-    :type activation_code: Union[int, str, None]
-    :param access_token: Official access token, Required on the `Official method <https://meapi.readthedocs.io/en/latest/setup.html#official-method>`_. Default: ``None``.
-    :type access_token: Union[str, None]
-    :param config_file: Path to credentials json file. Default: ``config.json``.
-    :type config_file: Union[str, None]
-    :param session: Requests session object. Default: ``None``.
-    :type session: Union[``requests.Session``, None]
+    :type activation_code: ``int`` | ``str`` | ``None``
+    :param access_token: Official access token, Required on the `Official method <https://meapi.readthedocs.io/en/latest/setup.html#official-method>`_. *Default:* ``None``.
+    :type access_token: ``str`` | ``None``
+    :param config_file: Path to credentials json file. *Default:* ``config.json``.
+    :type config_file: ``str`` | ``None``
+    :param session: requests Session object. Default: ``None``.
+    :type session: ``requests.Session`` | ``None``
     :param proxies: Dict with proxy configuration. Default: ``None``.
-    :type proxies: dict
+    :type proxies: ``dict`` | ``None``
     :param account_details: You can provide all login details can be provided in dict format, designed for cases of new account registration without the need for a prompt. Default: ``None``
-    :type account_details: dict
+    :type account_details: ``dict`` | ``None``
 
     Example for ``account_details``::
 

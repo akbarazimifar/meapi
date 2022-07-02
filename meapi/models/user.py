@@ -6,7 +6,7 @@ from meapi.models.me_model import MeModel
 class User(MeModel, _CommonMethodsForUserContactProfile):
     """
     Represents a user.
-        - A user is a person who can log in to the app. if you search a phone number with :py:func:`phone_search`, you will get a contact, but if this contact registered on the app, you get a user attribute.
+        - A user is a person who can log in to the app. if you search a phone number with :py:func:`~meapi.Me.phone_search`, you will get a contact, but if this contact registered on the app, you get a user attribute.
 
     Parameters:
          name (``str``):
@@ -41,7 +41,7 @@ class User(MeModel, _CommonMethodsForUserContactProfile):
          comment_count (``int`` *optional*):
             The number of comments the user have in his profile.
          distance (``float`` *optional*):
-            The distance between you and the user (Only if the user shared his location with you. See :py:func:`suggest_turn_on_location`).
+            The distance between you and the user (Only if the user shared his location with you. See :py:func:`~meapi.Me.suggest_turn_on_location`).
 
     Methods:
 

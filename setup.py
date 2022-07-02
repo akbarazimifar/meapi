@@ -19,8 +19,13 @@ setup(
     long_description=(open('README.rst', encoding='utf-8').read()),
     long_description_content_type="text/x-rst",
     author_email='davidlev@telegmail.com',
-    url='https://meapi.readthedocs.io',
-    author='David lev',
+    project_urls={
+        "Documentation": "https://meapi.readthedocs.io",
+        "Issue Tracker": "https://github.com/david-lev/meapi/issues",
+        "Source Code": "https://github.com/david-lev/meapi",
+    },
+    download_url="https://pypi.org/project/meapi/",
+    author='David Lev',
     license='MIT',
     install_requires=['requests'],
 )

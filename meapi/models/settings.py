@@ -6,7 +6,8 @@ from meapi.utils.helpers import parse_date
 
 class Settings(MeModel):
     """
-    * **Manage your social, notification and app settings.**
+    Manage your social, notification and app settings.
+        - You can edit your settings by simply assigning a new value to the attribute.
 
     Example:
         .. code-block:: python
@@ -22,11 +23,11 @@ class Settings(MeModel):
     Parameters:
         who_deleted_enabled (``bool``):
             If `True`, other users can see if you deleted them from your contact book.
-                - Must be enabled in order to use :py:func:`~meapi.who_deleted`.
+                - Must be enabled in order to use :py:func:`~meapi.Me.who_deleted`.
 
         who_watched_enabled (``bool``):
             If `True`, other users can see if you watch their profile.
-                - Must be enabled in order to use :py:func:`~meapi.who_watched`.
+                - Must be enabled in order to use :py:func:`~meapi.Me.who_watched`.
 
         comments_enabled (``bool``):
             Allow other users to publish comments on your profile (You always need to approve them before they are published).

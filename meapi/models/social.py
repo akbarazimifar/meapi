@@ -111,7 +111,8 @@ class SocialMediaAccount(MeModel):
 
         Parameters:
             token_or_url (``str``):
-                Token or URL of social media account. See :py:func:`~meapi.Me.add_social` for more information.
+                Token or URL of social media account.
+                    - See :py:func:`~meapi.Me.add_social` for more information.
 
         Returns:
             ``bool``: ``True`` if successfully added, ``False`` otherwise.
@@ -184,7 +185,8 @@ class SocialMediaAccount(MeModel):
 
 class Post(MeModel):
     """
-    **Represents Social Media post.**
+    Represents Social Media post.
+        - Not every social media account has posts.
 
     Parameters:
         author (``str`` *optional*):

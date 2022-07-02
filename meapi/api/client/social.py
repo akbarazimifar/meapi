@@ -278,7 +278,7 @@ class Social:
     def get_groups(self, sorted_by: str = 'count') -> List[group.Group]:
         """
         Get groups of names and see how people named you.
-            - For more information about Group: <https://me.app/who-saved-my-number/>
+            - `For more information about Group: <https://me.app/who-saved-my-number/>`_
 
         :param sorted_by: Sort by ``count`` or ``last_contact_at``. *Default:* ``count``.
         :type sorted_by: ``str``
@@ -401,7 +401,7 @@ class Social:
                    linkedin_url: str = None, ) -> bool:
         """
         Connect social network to your me account.
-            - if you have at least 2 socials, you get** ``is_verified`` = ``True`` **in your profile (Blue check).
+            - If you have at least 2 socials, you get** ``is_verified`` = ``True`` **in your profile (Blue check).**
 
         :param twitter_token: `Twitter Token <https://gist.github.com/david-lev/b158f1cc0cc783dbb13ff4b54416ceec#file-twitter_token-md>`_. Default = ``None``.
         :type twitter_token: str

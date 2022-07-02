@@ -81,7 +81,7 @@ class Notifications:
         Mark notification as read.
 
         :param notification_id: Notification id from :py:func:`get_notifications`.
-        :type notification_id: Union[int, str]
+        :type notification_id: ``int`` | ``str``
         :return: Is read success.
         :rtype: bool
         """

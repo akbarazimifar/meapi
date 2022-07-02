@@ -72,11 +72,12 @@ class _CommonMethodsForUserContactProfile:
 
         Parameters:
             prefix_name: (``str``):
-                If you want to add prefix to the name of the contact, like "Mr.", "Mrs.", "Imported" etc. *Default: ""*
+                If you want to add prefix to the name of the contact, like ``Mr.``, ``Mrs.``, ``Imported`` etc. *Default:* ``""``.
             profile_picture: (``bool``):
                 If you want to download and add profile picture to the vcard (if available). *Default:* ``True``.
-            kwargs: (``dict``):
-                Add any other data to the ``notes`` field of the vcard. The key must be, of course, exists in the object.
+            kwargs:
+                Add any other data to the ``notes`` field of the vcard. The key must be, of course, exists in the object (No error will be raised if it doesn't).
+                    - For example, if you want to add a birthday to notes of the vcard, you can use ``birthday="Birthday: "``.
 
         Returns:
             ``str``: String data in vcard format.

@@ -49,18 +49,6 @@ class Group(MeModel):
         self.__client = _client
         self.__init_done = True
 
-    def __setattr__(self, key, value):
-        if getattr(self, '_Group__init_done', None):
-            if key != 'status':
-                raise MeException("You can't change this attr!")
-        return super().__setattr__(key, value)
-
-    def __repr__(self):
-        return f"<Group name={self.name} count={self.count}>"
-
-    def __str__(self):
-        return self.name
-
     def delete(self) -> bool:
         """
         Deletes the group.
@@ -108,3 +96,15 @@ class Group(MeModel):
         if self.__client.ask_group_rename(self.contact_ids, new_name):
             return True
         return False
+
+    def __setattr__(self, key, value):
+        if getattr(self, '_Group__init_done', None):
+            if key != 'status':
+                raise MeException("You can't change this attr!")
+        return super().__setattr__(key, value)
+
+    def __repr__(self):
+        return f"<Group name={self.name} count={self.count}>"
+
+    def __str__(self):
+        return self.name

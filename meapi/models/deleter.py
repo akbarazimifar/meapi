@@ -15,8 +15,6 @@ class Deleter(MeModel):
             Date of delete.
         user (:py:obj:`~meapi.models.user.User`):
             User who delete you.
-
-
     """
     def __init__(self,
                  created_at: str,
