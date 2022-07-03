@@ -32,7 +32,7 @@ class Account:
                 return None
             else:
                 raise err
-        return contact.Contact.new_from_dict(response['contact'])
+        return contact.Contact.new_from_dict(response['contact'], _client=self)
 
     def get_profile(self, uuid: Union[str, contact.Contact, user.User]) -> profile.Profile:
         """
