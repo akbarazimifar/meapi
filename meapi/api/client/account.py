@@ -156,7 +156,7 @@ class Account:
                     if value not in login_types:
                         raise MeException(f"Login type not in the available login types ({', '.join(login_types)})!")
                 elif key == 'email':
-                    if not match(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$', str(value)):
+                    if not match(r'^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$', str(value)):
                         raise MeException("Email must be in user@domain.com format!")
                 elif key in ['first_name', 'last_name', 'slogan']:
                     if not isinstance(value, str):
@@ -173,7 +173,11 @@ class Account:
                     if not match(r'^\d+$', str(value)):
                         raise MeException("Facebook url must be numbers!")
         body = {key: val for key, val in args.items() if val is not None}
-        res = update_profile_details_raw(self, **body)
+        try:
+            res = update_profile_details_raw(self, **body)
+        except MeApiException as err:
+            if err.http_status == 401 and err.msg == 'User is blocked for patch':
+                raise MeException("Locks like your account is blocked!")
         successes = 0
         for key in body.keys():
             if res[key] == body[key] or key == 'profile_picture':

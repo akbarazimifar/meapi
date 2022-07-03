@@ -56,7 +56,10 @@ class Auth:
         except MeApiException as err:
             if err.http_status == 400 and err.msg == 'api_incorrect_activation_code':
                 err.reason = "Wrong activation code!"
-            raise err
+            elif err.http_status == 400 and err.msg == 'api_phone_number_doesnt_exists':
+                raise MeException("Not a valid phone number!")
+            else:
+                raise err
 
         if access_token:
             self._access_token = access_token
