@@ -852,7 +852,7 @@ def share_location_raw(client, uuid: str):
     return client._make_request('post', f'/main/users/profile/share-location/{uuid}/')
 
 
-def stop_sharing_location_raw(client, uuids: list[str]) -> dict:
+def stop_sharing_location_raw(client, uuids: List[str]) -> dict:
     """
     Stop sharing your location with user.
 

@@ -41,7 +41,7 @@ class Notifications:
                           who_deleted_filter: bool = False,
                           birthday_filter: bool = False,
                           location_filter: bool = False
-                          ) -> Tuple[int, list[Notification]]:
+                          ) -> Tuple[int, List[Notification]]:
         """
         Get app notifications: new names, birthdays, comments, watches, deletes, location shares and system notifications.
 
