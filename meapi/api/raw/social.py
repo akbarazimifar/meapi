@@ -306,7 +306,7 @@ def approve_comment_raw(client, comment_id: int) -> dict:
             'comments_blocked': False
         }
     """
-    return client._make_request('post', f'/main/comments/approve/{comment_id}')
+    return client._make_request('post', f'/main/comments/approve/{comment_id}/')
 
 
 def delete_comment_raw(client, comment_id: int) -> dict:

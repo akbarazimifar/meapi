@@ -68,10 +68,10 @@ class Social:
         if sorted_by not in ['created_at', None]:
             raise MeException("sorted_by must be 'created_at' or None.")
         if incognito:
-            self.change_settings(who_deleted=True)
+            self.change_settings(who_deleted_enabled=True)
         res = who_deleted_raw(self)
         if incognito:
-            self.change_settings(who_deleted=False)
+            self.change_settings(who_deleted_enabled=False)
         deleters = [deleter.Deleter.new_from_dict(dlt) for dlt in res]
         return sorted(deleters, key=attrgetter(sorted_by), reverse=True) if sorted_by else deleters
 
@@ -92,10 +92,10 @@ class Social:
         if sorted_by not in ['count', 'last_view']:
             raise MeException("sorted_by must be 'count' or 'last_view'.")
         if incognito:
-            self.change_settings(who_watched=True)
+            self.change_settings(who_watched_enabled=True)
         res = who_watched_raw(self)
         if incognito:
-            self.change_settings(who_watched=False)
+            self.change_settings(who_watched_enabled=False)
         return sorted([watcher.Watcher.new_from_dict(watch) for watch in
                        res], key=attrgetter(sorted_by), reverse=True)
 

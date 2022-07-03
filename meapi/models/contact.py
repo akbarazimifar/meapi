@@ -77,7 +77,7 @@ class Contact(MeModel, _CommonMethodsForUserContactProfile):
         self.name = name
         self.id = id
         self.picture = picture
-        self.user: User = User.new_from_dict(user)
+        self.user: User = User.new_from_dict(user, _client=self.__client) if user else None
         self.suggested_as_spam = suggested_as_spam
         self.is_permanent = is_permanent
         self.is_pending_name_change = is_pending_name_change

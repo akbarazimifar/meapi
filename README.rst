@@ -97,13 +97,13 @@ ________________________
     # me = Me(access_token='XXXXXXXX')
 
     # ☎ Get information about phone number:
-    search_res = me.phone_search('+865-456-234-12'))
+    search_res = me.phone_search('+865-456-234-12')
     if search_res:
         print(search_res.name)
 
     # 😎 Get user full profile:
     if search_res.user:
-        profile = search_res.get_profile()
+        profile = me.get_profile(search_res.user.uuid)
         print(profile.email, profile.date_of_birth, profile.slogan)
 
         # 📱 Get social media accounts:
@@ -124,7 +124,7 @@ ________________________
     my_profile.first_name = 'David'
 
     # 👁 who watched your profile:
-    for watcher in my_profile.who_watched(incognito=True, sorted_by='last_view'):
+    for watcher in me.who_watched(incognito=True, sorted_by='last_view'):
         print(watcher.user.name, watcher.count)
 
     # 👥 See how people call you:
