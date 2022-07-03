@@ -10,6 +10,10 @@
     :alt: PyPI Downloads
     :target: https://pypi.org/project/meapi/
 
+.. image:: https://badge.fury.io/py/meapi.svg
+    :alt: PyPI Version
+    :target: https://badge.fury.io/py/meapi
+
 .. image:: https://www.codefactor.io/repository/github/david-lev/meapi/badge/main
    :target: https://www.codefactor.io/repository/github/david-lev/meapi/overview/main
    :alt: CodeFactor
@@ -96,14 +100,14 @@ ________________________
     # If you have official access token:
     # me = Me(access_token='XXXXXXXX')
 
-    # ☎ Get information about phone number:
+    # ☎ Get information about any phone number:
     search_res = me.phone_search('+865-456-234-12')
     if search_res:
         print(search_res.name)
 
     # 😎 Get user full profile:
     if search_res.user:
-        profile = me.get_profile(search_res.user.uuid)
+        profile = search_res.get_profile()
         print(profile.email, profile.date_of_birth, profile.slogan)
 
         # 📱 Get social media accounts:
@@ -111,9 +115,8 @@ ________________________
             print(profile.social.twitter.profile_id)
             print(profile.social.twitter.posts)
 
-    # 💬 Watch and manage comments:
-    comments = me.get_comments()
-    for comment in comments:
+    # 💬 Watch and manage your comments:
+    for comment in me.get_comments():
         print(comment.message)
         if comment.status == 'waiting':
             comment.approve()
