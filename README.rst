@@ -26,9 +26,9 @@ ________________________
 
 ☎️ **meapi** is a Python3 library to identify, discover and get information about phone numbers, indicate and report spam, get and manage socials, profile management and much more.
 
-🔐 To **get started**, read the `Authentication guide <https://meapi.readthedocs.io/en/latest/setup.html>`_.
+🔐 To **get started**, read the `Authentication guide <https://meapi.readthedocs.io/en/latest/content/setup.html>`_.
 
-📖 For a **complete documentation** of available functions, see the `Reference <https://meapi.readthedocs.io/en/latest/reference.html>`_.
+📖 For a **complete documentation** of available functions, see the `Reference <https://meapi.readthedocs.io/en/latest/content/reference.html>`_.
 
 >>️ *For more information about Me® -* `Click here <https://meapp.co.il/>`_.
 
@@ -133,7 +133,7 @@ ________________________
 
     # ➕ And much much more...
 
-📚 For more usage examples, read the `Examples <https://meapi.readthedocs.io/en/latest/examples.html>`_ page.
+📚 For more usage examples, read the `Examples <https://meapi.readthedocs.io/en/latest/content/examples.html>`_ page.
 
 💾 **Requirements**
 --------------------

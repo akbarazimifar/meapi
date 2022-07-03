@@ -18,13 +18,13 @@ ME_BASE_API = 'https://app.mobile.me.app'
 class Me(Auth, Account, Social, Settings, Notifications):
     """
     Create a new instance to interact with MeAPI.
-        - **See** `Authentication <https://meapi.readthedocs.io/en/latest/setup.html#authentication>`_ **for more information.**
+        - **See** `Authentication <https://meapi.readthedocs.io/en/latest/content/setup.html#authentication>`_ **for more information.**
 
-    :param phone_number: International phone number format. Required on the `Unofficial method <https://meapi.readthedocs.io/en/latest/setup.html#unofficial-method>`_. Default: ``None``.
+    :param phone_number: International phone number format. Required on the `Unofficial method <https://meapi.readthedocs.io/en/latest/content/setup.html#unofficial-method>`_. Default: ``None``.
     :type phone_number: ``str`` | ``int`` | ``None``
     :param activation_code: You can provide the ``activation_code`` from Me in advance, without the need for a prompt. Default = ``None``.
     :type activation_code: ``int`` | ``str`` | ``None``
-    :param access_token: Official access token, Required on the `Official method <https://meapi.readthedocs.io/en/latest/setup.html#official-method>`_. *Default:* ``None``.
+    :param access_token: Official access token, Required on the `Official method <https://meapi.readthedocs.io/en/latest/content/setup.html#official-method>`_. *Default:* ``None``.
     :type access_token: ``str`` | ``None``
     :param config_file: Path to credentials json file. *Default:* ``config.json``.
     :type config_file: ``str`` | ``None``
