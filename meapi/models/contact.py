@@ -90,15 +90,6 @@ class Contact(MeModel, _CommonMethodsForUserContactProfile):
         self.in_contact_list = in_contact_list or is_my_contact
         super().__init__()
 
-    def get_profile(self):
-        """
-        Returns the profile of the contact.
-
-        Returns:
-            :py:obj:`~meapi.models.profile.Profile` | ``None``: The profile of the contact or ``None`` if the contact has no user.
-        """
-        return self.user.get_profile() if self.user else self.user
-
     def __repr__(self):
         return f"<Contact name={self.name} phone={self.phone_number} id={self.id}>"
 

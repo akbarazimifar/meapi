@@ -153,7 +153,7 @@ class Social:
             comment_id = comment_id.id
         return comment.Comment.new_from_dict(get_comment_raw(self, int(comment_id)), _client=self, id=int(comment_id))
 
-    def publish_comment(self, uuid: Union[str, Profile, User, Contact], your_comment: str) -> comment.Comment:
+    def publish_comment(self, uuid: Union[str, Profile, User, Contact], your_comment: str, remove_credit: bool = False) -> comment.Comment:
         """
         Publish comment in user's profile.
             - You can publish comment on your own profile or on someone else's profile.
@@ -165,6 +165,8 @@ class Social:
         :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
         :param your_comment: Your comment.
         :type your_comment: str
+        :param remove_credit: If ``True``, this will remove your credit from the comment. *Default:* ``False``.
+        :type remove_credit: bool
         :return: :py:obj:`~meapi.models.comment.Comment` object.
         :rtype: :py:obj:`~meapi.models.comment.Comment`
         """
@@ -175,7 +177,10 @@ class Social:
                 uuid = uuid.user.uuid
             else:
                 raise MeException("Contact has no user.")
-        return comment.Comment.new_from_dict(publish_comment_raw(self, str(uuid), your_comment),
+        if not remove_credit:
+            your_comment += ' • Commented with meapi <https://github.com/david-lev/meapi>'
+
+        return comment.Comment.new_from_dict(publish_comment_raw(self, str(uuid), str(your_comment)),
                                              _client=self, profile_uuid=uuid, _my_comment=True if self.uuid == uuid else False)
 
     def approve_comment(self, comment_id: Union[str, int, comment.Comment]) -> bool:

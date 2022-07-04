@@ -264,7 +264,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         """
         Returns the full name of the user. ``first_name`` + ``last_name``.
         """
-        return str(self.first_name or '' + ((' ' if self.first_name else '') + self.last_name or ''))
+        return (self.first_name or '') + (' ' if self.first_name and self.last_name else '') + (self.last_name or '')
 
     @property
     def age(self) -> int:

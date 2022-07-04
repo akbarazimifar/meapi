@@ -88,14 +88,11 @@ class User(MeModel, _CommonMethodsForUserContactProfile):
         super().__init__()
 
     @property
-    def name(self):
-        return str(self.first_name or '' + ((' ' if self.first_name else '') + self.last_name or ''))
-
-    def get_profile(self):
+    def name(self) -> str:
         """
-        Returns the profile of the user.
+        Returns the full name of the user. ``first_name`` + ``last_name``.
         """
-        return self.__client.get_profile(self.uuid)
+        return (self.first_name or '') + (' ' if self.first_name and self.last_name else '') + (self.last_name or '')
 
     def __repr__(self):
         return f"<User name={self.first_name} {self.last_name or ''}>"

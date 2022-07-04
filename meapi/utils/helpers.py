@@ -52,7 +52,7 @@ def get_vcard(data: dict, prefix_name: str = "", profile_picture: bool = True, *
     if data.get('date_of_birth'):
         vcard_data['birthday'] = f"BDAY:{data['date_of_birth']}"
 
-    notes = 'Extracted by meapi https://github.com/david-lev/meapi'
+    notes = 'Extracted with meapi <https://github.com/david-lev/meapi>'
     for key, value in kwargs.items():
         if data.get(key):
             notes += f" | {value}: {data[key]}"
@@ -64,11 +64,14 @@ def get_vcard(data: dict, prefix_name: str = "", profile_picture: bool = True, *
 
 
 def random_date():
-    date_format = '%Y-%m-%dT%H:%M:%S%z'
-    stime = time.mktime(time.strptime('2020-05-12T00:00:11Z', date_format))
-    etime = time.mktime(time.strptime('2022-06-24T00:00:11Z', date_format))
-    ptime = stime + random() * (etime - stime)
-    return datetime.strptime(time.strftime(date_format, time.localtime(ptime)), date_format).strftime(date_format)
+    start, end, date_format = '2020-05-12T00:00:11Z', '2022-06-24T00:00:11Z', '%Y-%m-%dT%H:%M:%S%z'
+    try:
+        stime = time.mktime(time.strptime(start, date_format))
+        etime = time.mktime(time.strptime(end, date_format))
+        ptime = stime + random() * (etime - stime)
+        return datetime.strptime(time.strftime(date_format, time.localtime(ptime)), date_format).strftime(date_format)
+    except ValueError:
+        return choice([start, end])
 
 
 def get_random_data(contacts=True, calls=True, location=True) -> dict:

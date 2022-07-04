@@ -6,6 +6,22 @@ class _CommonMethodsForUserContactProfile:
     """
     Common methods for user, profile and contact.
     """
+    def get_profile(self):
+        """
+        Returns the profile of the contact.
+
+        Returns:
+            :py:obj:`~meapi.models.profile.Profile` | ``None``: The profile of the contact or ``None`` if the contact has no user.
+        """
+        if hasattr(self, 'user'):
+            if getattr(self, 'user', None):
+                uuid = self.user.uuid
+            else:
+                return None
+        else:
+            uuid = self.uuid
+        return getattr(self, f'_{self.__class__.__name__}__client').get_profile(uuid)
+
     def block(self, block_contact=True, me_full_block=True) -> bool:
         """
         Block a contact.
