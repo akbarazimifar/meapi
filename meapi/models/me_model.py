@@ -54,14 +54,12 @@ class MeModel(metaclass=_ParameterReader):
                         data[key].append(subobj.as_dict())
                     else:
                         data[key].append(subobj)
-
             elif getattr(getattr(self, key, None), 'as_dict', None):
                 data[key] = getattr(self, key).as_dict()
 
             elif isinstance(value, (date, datetime)):
                 data[key] = str(getattr(self, key, None))
-
-            elif getattr(self, key, None):
+            else:
                 data[key] = getattr(self, key, None)
         return data
 
