@@ -43,7 +43,8 @@ class Group(MeModel):
         self.name = name
         self.count = count
         self.last_contact_at: Union[datetime, None] = parse_date(last_contact_at)
-        self.contacts = [User.new_from_dict(contact['user']) for contact in contacts] if contacts else contacts
+        self.contacts = [User.new_from_dict(contact['user'], id=contact.pop('id'), in_contact_list=contact.pop('in_contact_list'))
+                         for contact in contacts] if contacts else contacts
         self.contact_ids = contact_ids
         self.status = status
         self.__client = _client

@@ -1,6 +1,7 @@
 import time
 from base64 import b64encode
 from datetime import datetime, date
+from functools import reduce
 from quopri import encodestring
 from random import randint, choice, uniform, random
 from re import sub
@@ -31,31 +32,45 @@ def encode_string(string: str) -> str:
     return encodestring(string.encode('utf-8')).decode("utf-8")
 
 
-def get_vcard(data: dict, prefix_name: str = "", profile_picture: bool = True, **kwargs) -> str:
+def as_vcard(data, prefix_name: str = "", dl_profile_picture: bool = True, **kwargs) -> str:
     """
-    Get vcard format based on data provided
+    Get vcard format based on data provided.
+
+    :param data: Profile, Contact or User objects.
+    :type data: :py:obj:`~meapi.models.contact.Contact` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.profile.Profile`
+    :param prefix_name: Prefix name for the name of the contact.
+    :type prefix_name: str
+    :param dl_profile_picture: Download profile picture of the user and save it in the vcard. *Default:* ``True``.
+    :type dl_profile_picture: bool
+    :param kwargs: Add any other data to the ``notes`` field of the vcard. The key must be, of course, exists in the object as attr eith value of ``str`` or ``int``.
+        - The key uses as the title in the notes (you name it as you like), and the value is the attribute name of the object.
+        - You can go even deeper: if Profile object provided, you may want to do something like ``twitter='social.twitter.profile_id'``.
+        - No exception will be raised if the key doesn't exist.
+    :return: Vcard format as string.
+        - See `Wikipedia <https://en.wikipedia.org/wiki/VCard#Properties>`_ for more information.
+    :rtype: str
     """
     vcard_data = {'start': "BEGIN:VCARD", 'version': "VERSION:3.0"}
-
-    if prefix_name:
-        prefix_name += " - "
-    full_name = (prefix_name + (data.get('first_name') or data.get('name')))
-    if data.get('last_name'):
-        full_name += (" " + data['last_name'])
-
+    full_name = prefix_name + (data.name or f'Unknown - {data.phone_number}')
     vcard_data['name'] = f"FN;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:{encode_string(full_name)}"
-    vcard_data['phone'] = f"TEL;CELL:{data['phone_number']}"
-    if profile_picture and data.get('profile_picture'):
-        vcard_data['photo'] = f"PHOTO;ENCODING=BASE64;JPEG:{get_img_binary_content(data['profile_picture'])}"
-    if data.get('email'):
-        vcard_data['email'] = f"EMAIL:{data['email']}"
-    if data.get('date_of_birth'):
-        vcard_data['birthday'] = f"BDAY:{data['date_of_birth']}"
+    vcard_data['phone'] = f"TEL;CELL:{data.phone_number}"
+    if dl_profile_picture and getattr(data, 'profile_picture', None):
+        binary = get_img_binary_content(data.profile_picture)
+        if binary:
+            vcard_data['photo'] = f"PHOTO;ENCODING=BASE64;JPEG:{binary}"
+    if getattr(data, 'email', None):
+        vcard_data['email'] = f"EMAIL:{data.email}"
+    if getattr(data, 'date_of_birth', None):
+        vcard_data['birthday'] = f"BDAY:{data.date_of_birth}"
 
     notes = 'Extracted with meapi <https://github.com/david-lev/meapi>'
     for key, value in kwargs.items():
-        if data.get(key):
-            notes += f" | {value}: {data[key]}"
+        try:
+            attr_value = reduce(getattr, value.split('.'), data)
+            if attr_value and isinstance(attr_value, (str, int)):
+                notes += f" | {str(key).replace('_', ' ').title()}: {attr_value}"
+        except AttributeError:
+            continue
 
     vcard_data['note'] = f"NOTE;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:{encode_string(notes)}"
     vcard_data['end'] = "END:VCARD"

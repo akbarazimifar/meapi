@@ -32,6 +32,8 @@ class User(MeModel, _CommonMethodsForUserContactProfile):
          is_premium (``bool`` *optional*):
             Whether the user is paying for premium features (Like the ability to use who watch his profile,
             who deleted him from his contacts, no ads, and more).
+        in_contact_list (``bool`` *optional*):
+            Whether the contact is in your contacts book.
          location_enabled (``bool`` *optional*):
             Whether the user has enabled location sharing.
          verify_subscription (``bool`` *optional*):
@@ -45,7 +47,7 @@ class User(MeModel, _CommonMethodsForUserContactProfile):
 
     Methods:
 
-    .. automethod:: get_vcard
+    .. automethod:: as_vcard
     .. automethod:: report_spam
     .. automethod:: get_profile
     .. automethod:: block
@@ -67,7 +69,8 @@ class User(MeModel, _CommonMethodsForUserContactProfile):
                  verify_subscription: Union[bool, None] = None,
                  id: Union[int, None] = None,
                  comment_count: Union[int, None] = None,
-                 distance: Union[float, None] = None
+                 distance: Union[float, None] = None,
+                 in_contact_list: Union[bool, None] = None
                  ):
         self.__client = _client
         self.email = email
@@ -85,6 +88,7 @@ class User(MeModel, _CommonMethodsForUserContactProfile):
         self.comment_count = comment_count
         self.location_enabled = location_enabled
         self.distance = distance
+        self.in_contact_list = in_contact_list
         super().__init__()
 
     @property

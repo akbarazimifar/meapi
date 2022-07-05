@@ -26,7 +26,7 @@ class _ParameterReader(ABCMeta):
 class MeModel(metaclass=_ParameterReader):
     """
     Base class for all models.
-        - Allow instances to be compared, subscriptable, hashable, unchangable (In some cases), and json serializable.
+        - Allow instances to be comparable, subscript, hashable, immutable (In some cases), and json serializable.
 
     Methods:
 

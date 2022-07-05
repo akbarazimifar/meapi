@@ -162,7 +162,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
 
     Methods:
 
-    .. automethod:: get_vcard
+    .. automethod:: as_vcard
     .. automethod:: block
     .. automethod:: unblock
     .. automethod:: refresh

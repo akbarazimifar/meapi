@@ -1,5 +1,5 @@
 from meapi.utils.exceptions import MeException
-from meapi.utils.helpers import get_vcard
+from meapi.utils.helpers import as_vcard
 
 
 class _CommonMethodsForUserContactProfile:
@@ -72,7 +72,7 @@ class _CommonMethodsForUserContactProfile:
         """
         return getattr(self, f'_{self.__class__.__name__}__client').report_spam(phone_number=self.phone_number, spam_name=spam_name, country_code=country_code)
 
-    def get_vcard(self, prefix_name: str = "", profile_picture: bool = True, **kwargs) -> str:
+    def as_vcard(self, prefix_name: str = "", dl_profile_picture: bool = True, **kwargs) -> str:
         """
         Get contact data in vcard format in order to add it to your contacts book.
 
@@ -80,23 +80,26 @@ class _CommonMethodsForUserContactProfile:
             .. code-block:: python
 
                 uuids = ['xx-xx-xx-xx', 'yy-yy-yy-yy', 'zz-zz-zz-zz']
-                profiles = [me.get_profile(uuid) for uuid in uuids]
-                vcards = [profile.get_vcard(prefix_name="Imported", profile_picture=False,
-                    birthday='Birthday: ', gender='Gender: ') for profile in profiles]
+                profiles = [me.get_profile(uuid) for uuid in uuids] # can raise rate limit exception.
+                vcards = [profile.as_vcard(prefix_name="Imported - ", dl_profile_picture=False,
+                    twitter='social.twitter.profile_id', gender='gender') for profile in profiles]
                 with open('contacts.vcf', 'w') as contacts:
                     contacts.write('\\n'.join(vcards))
 
         Parameters:
             prefix_name: (``str``):
-                If you want to add prefix to the name of the contact, like ``Mr.``, ``Mrs.``, ``Imported`` etc. *Default:* ``""``.
-            profile_picture: (``bool``):
+                If you want to add prefix to the name of the contact, like ``Mr.``, ``Mrs.``, ``Imported`` etc. *Default:* empty string ``""``.
+            dl_profile_picture: (``bool``):
                 If you want to download and add profile picture to the vcard (if available). *Default:* ``True``.
             kwargs:
-                Add any other data to the ``notes`` field of the vcard. The key must be, of course, exists in the object (No error will be raised if it doesn't).
-                    - For example, if you want to add a birthday to notes of the vcard, you can use ``birthday="Birthday: "``.
+                Add any other data to the ``notes`` field of the vcard. The key must be, of course, exists in the object as attr eith value of ``str`` or ``int``.
+                    - For example, if you want to add a gender information to the contact, you can pass the parameter ``gender='gender'``
+                    - The key uses as the title in the notes (you name it as you like), and the value is the attribute name of the object.
+                    - You can go even deeper: if Profile object provided, you may want to do something like ``twitter='social.twitter.profile_id'``.
+                    - No exception will be raised if the key doesn't exist.
 
         Returns:
-            ``str``: String data in vcard format.
+            ``str``: Vcard format as string. See `Wikipedia <https://en.wikipedia.org/wiki/VCard#Properties>`_ for more information.
         """
-        return get_vcard(self.__dict__, prefix_name, profile_picture, **kwargs)
+        return as_vcard(self, prefix_name, dl_profile_picture, **kwargs)
 

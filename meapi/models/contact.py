@@ -50,7 +50,7 @@ class Contact(MeModel, _CommonMethodsForUserContactProfile):
     Methods:
 
     .. automethod:: get_profile
-    .. automethod:: get_vcard
+    .. automethod:: as_vcard
     .. automethod:: block
     .. automethod:: unblock
     .. automethod:: report_spam

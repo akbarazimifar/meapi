@@ -99,8 +99,6 @@ def who_watched_raw(client) -> List[dict]:
 
     Example of results::
 
-    Example::
-
         [
             {
                 "last_view": "2022-04-16T17:13:24Z",
@@ -360,6 +358,23 @@ def like_comment_raw(client, comment_id: int) -> dict:
 
     Example::
 
+        {
+            'id': 12345,
+            'created_at': '2022-07-04T21:58:23Z',
+            'author': {
+                'email': 'user@domain.com',
+                'profile_picture': 'https://ehdiued.cloudfront.net/hfidsfds.jpg',
+                'first_name': 'Ross',
+                'last_name': 'Geller',
+                'gender': None,
+                'uuid': 'dhius-fdsfs3f7e-fefs-dihoids-odhfods',
+                'is_verified': True,
+                'phone_number': 9723743824244,
+                'slogan': 'Pivot.',
+                'is_premium': False,
+                'verify_subscription': True
+            }
+        }
     """
     return client._make_request('post', f'/main/comments/like/{comment_id}/')
 
@@ -377,6 +392,27 @@ def unlike_comment_raw(client, comment_id: int) -> dict:
 
     Example::
 
+        {
+            'like_count': 0,
+            'status': 'approved',
+            'message': 'Test',
+            'author': {
+                'email': 'user@domain.com',
+                'profile_picture': 'https://hiiu.cloudfront.net/hdiufds.jpg',
+                'first_name': 'Monica',
+                'last_name': '',
+                'gender': None,
+                'uuid': 'djhids-oiehda-huds-dhcuds-dhfidsdsf',
+                'is_verified': True,
+                'phone_number': 973437824255,
+                'slogan': 'I know!',
+                'is_premium': False,
+                'verify_subscription': True
+            },
+            'is_liked': False,
+            'id': 123456,
+            'comments_blocked': False
+        }
     """
     return client._make_request('delete', f'/main/comments/like/{comment_id}/')
 
