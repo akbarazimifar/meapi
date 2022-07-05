@@ -63,7 +63,7 @@ def as_vcard(data, prefix_name: str = "", dl_profile_picture: bool = True, **kwa
     if getattr(data, 'date_of_birth', None):
         vcard_data['birthday'] = f"BDAY:{data.date_of_birth}"
 
-    notes = 'Extracted with meapi <https://github.com/david-lev/meapi>'
+    notes = 'Extracted with meapi <https://github.com/david-lev/meapi>' if not kwargs.get('remove_credit', False) else ''
     for key, value in kwargs.items():
         try:
             attr_value = reduce(getattr, value.split('.'), data)
