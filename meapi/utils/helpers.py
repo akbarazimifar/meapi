@@ -1,4 +1,4 @@
-import time
+from time import time, localtime, strftime, mktime, strptime
 from base64 import b64encode
 from datetime import datetime, date
 from functools import reduce
@@ -8,8 +8,13 @@ from re import sub
 from typing import Union
 from requests import get
 from meapi.utils.exceptions import MeException
+from string import ascii_letters, digits
+from hashlib import sha256
+from os import urandom
+
 
 RANDOM_API = "https://random-data-api.com/api"
+HEADERS = {'accept-encoding': 'gzip', 'user-agent': 'okhttp/4.9.1', 'content-type': 'application/json; charset=UTF-8'}
 
 
 def parse_date(date_str: Union[str, None], date_only=False) -> Union[datetime, date, None]:
@@ -81,10 +86,10 @@ def as_vcard(data, prefix_name: str = "", dl_profile_picture: bool = True, **kwa
 def random_date():
     start, end, date_format = '2020-05-12T00:00:11Z', '2022-06-24T00:00:11Z', '%Y-%m-%dT%H:%M:%S%z'
     try:
-        stime = time.mktime(time.strptime(start, date_format))
-        etime = time.mktime(time.strptime(end, date_format))
+        stime = mktime(strptime(start, date_format))
+        etime = mktime(strptime(end, date_format))
         ptime = stime + random() * (etime - stime)
-        return datetime.strptime(time.strftime(date_format, time.localtime(ptime)), date_format).strftime(date_format)
+        return datetime.strptime(strftime(date_format, localtime(ptime)), date_format).strftime(date_format)
     except ValueError:
         return choice([start, end])
 
@@ -185,3 +190,40 @@ def register_new_account(client) -> str:
         print(msg)
         return results[1].uuid
     raise MeException("Can't update the profile. Please check your input again.")
+
+
+def get_session(seed: str, phone_number: int) -> Union[str, None]:
+    """
+    Generate session token to use in order to get sms or call in the authentication process.
+
+    :param seed: The AntiSessionBot key from the APK (You need to extract it yourself).
+    :type seed: str
+    :param phone_number: Your phone number in international format.
+    :type phone_number: int
+    :raises: :py:exc:`~meapi.utils.exceptions.MeException` If the 'Crypto' package isn't installed.
+    :return: Session token.
+    :rtype: str
+    """
+    try:
+        from Crypto.Cipher import AES
+    except ImportError:
+        raise MeException('You need to install the `Crypto` package in order to generate session token!')
+    string_material = ascii_letters + digits
+    anti_session_bot_key = sha256(seed.encode()).digest()
+    last_digit = int(str(phone_number)[-1])
+    current_time = int(time())
+    a1 = str(int(phone_number * (last_digit + 2)))
+    a2 = str(int(current_time * (last_digit + 2)))
+    len_a1_a2 = len(a1 + a2)
+    length_rand_string = abs(48 - len_a1_a2 - 2)
+    a3 = ''.join(choice(string_material) for _ in range(length_rand_string))
+    result = "{}-{}-{}".format(a1, a2, a3)
+    iv = urandom(16)
+    aes = AES.new(anti_session_bot_key, AES.MODE_CBC, iv)
+    data_to_encrypt = result.encode()
+    padding = len(data_to_encrypt) % 16
+    if padding == 0:
+        padding = 16
+    enc_data = aes.encrypt(data_to_encrypt + bytes((chr(padding) * padding).encode()))
+    final_token = b64encode(iv + enc_data)
+    return final_token.decode()
