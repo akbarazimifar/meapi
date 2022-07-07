@@ -11,4 +11,5 @@
    client
    raw
    models
+   credentials_manager
    exceptions

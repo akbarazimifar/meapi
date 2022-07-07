@@ -19,22 +19,32 @@ class Me(Auth, Account, Social, Settings, Notifications):
     Create a new instance to interact with MeAPI.
         - **See** `Authentication <https://meapi.readthedocs.io/en/latest/content/setup.html#authentication>`_ **for more information.**
 
-    :param phone_number: International phone number format. Required on the `Unofficial method <https://meapi.readthedocs.io/en/latest/content/setup.html#unofficial-method>`_. Default: ``None``.
+    :param phone_number: International phone number format. *Default:* ``None``.
+
+        - Required on the `Unofficial method <https://meapi.readthedocs.io/en/latest/content/setup.html#unofficial-method>`_.
     :type phone_number: ``str`` | ``int`` | ``None``
-    :param activation_code: You can provide the ``activation_code`` from Me in advance, without the need for a prompt. Default = ``None``.
+    :param activation_code: You can provide the ``activation_code`` from Me in advance, without the need for a prompt. *Default:* ``None``.
     :type activation_code: ``str`` | ``None``
-    :param access_token: Official access token, Required on the `Official method <https://meapi.readthedocs.io/en/latest/content/setup.html#official-method>`_. *Default:* ``None``.
+    :param access_token: Official access token. *Default:* ``None``.
+
+        - Required on the `Official method <https://meapi.readthedocs.io/en/latest/content/setup.html#official-method>`_
     :type access_token: ``str`` | ``None``
-    :param credentials_manager: Credentials manager to use in order to store and manage the credentials. Default: ``:me:obj:`~meapi.utils.credentials_managers.JsonFileCredentialsManager```.
-    :type credentials_manager: :me:obj:`~meapi.utils.credentials_managers.CredentialsManager` | ``None``
-    :param config_file: Path to credentials json file. (Only relevant if you leave ``credentials_manager`` as ``None``). Default: ``config.json``.
+    :param credentials_manager: Credentials manager to use in order to store and manage the credentials. *Default:* :py:obj:`~meapi.utils.credentials_managers.JsonFileCredentialsManager`.
+
+        - See `Credentials Manager <https://meapi.readthedocs.io/en/latest/content/credentials_manager.html>`_.
+    :type credentials_manager: :py:obj:`~meapi.utils.credentials_managers.CredentialsManager` | ``None``
+    :param config_file: Path to credentials json file. *Default:* ``config.json``.
+
+        - Only relevant if you leave ``credentials_manager`` as ``None``.
+    :param account_details: You can provide all login details can be provided in dict format. *Default:* ``None``.
+
+        - Designed for cases of new account registration without the need for a prompt.
+    :type account_details: ``dict`` | ``None``
     :type config_file: ``str`` | ``None``
     :param session: requests Session object. Default: ``None``.
     :type session: ``requests.Session`` | ``None``
     :param proxies: Dict with proxy configuration. Default: ``None``.
     :type proxies: ``dict`` | ``None``
-    :param account_details: You can provide all login details can be provided in dict format, designed for cases of new account registration without the need for a prompt. Default: ``None``
-    :type account_details: ``dict`` | ``None``
 
     Example for ``account_details``::
 

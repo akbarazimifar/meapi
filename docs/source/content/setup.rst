@@ -18,7 +18,7 @@
     - **This method is for educational purposes only and its use is at your own risk.** See `disclaimer <https://meapi.readthedocs.io/en/latest/index.html#disclaimer>`_.
     - In this method you are going to verify as a user of the app and get a token with access to all the actions that the app provides.
     - After verification, if you are connected to another device, Chances are you will be disconnected.
-    - For app users there is an Rate-limit of about ``350`` searches per day.
+    - For app users there is an Rate-limit of about ``350`` phone searches and ``500`` profile views per day.
 
 **Verification:**
 
@@ -55,18 +55,39 @@
 
     data = {
         'phone_number': 972123456789, # Required always
-        'activation_code': 123456, # Required only for the first time
+        'activation_code': '123456', # Required only for the first time
         'first_name': 'Regina', # Required for first account registration
         'last_name': 'Phalange', # Optional for first account registration
         'email': 'kenadams@friends.tv', # Optional for first account registration
-        'upload_random_data': True # Recommended for first account registration. Default: True
+        'upload_random_data': True, # Recommended for first account registration. Default: True
+        'credentials_manager': None, # Optional. Default: JsonFileCredentialsManager('config.json')
+        'session': None, # Optional. Default: new requests.Session()
+        'proxies': None, # Optional. Default: None
     }
 
     me = Me(account_details=data)
 
+**SMS or Call:**
+
+    Many ask me why there is no option to verify via SMS or call.
+
+    Well, This is because authentication via WhatsApp and Telegram, is action of the user who sends a message to the bot and receives
+    the verification code, as opposed to a call or SMS that requires an external service (which of course costs money) to make
+    the call or send the SMS.
+
+    This is why at the app level, ``Me`` Apps used a secret key to generates a time-based hashed session token.
+
+    For obvious reasons I can not provide the key, but if you have knowledge of extracting secrets from APKs, look for the key and export
+    it in the environment variables with the key ``ANTI_SESSION_BOT_KEY``.
+    meapi will detect the presence of the environment and offer you to use authentication via SMS or call.
+
+- Needless to say, the functionality is for educational purposes only.
+
 **Credentials:**
 
-- If no path to the config file is provided, the config file will be created in the location from which the library was called.
+- The default credentials manager is the JsonFileCredentialsManager, which saves the credentials in a json file ('config.file' by default).
+- You can implement your own credentials manager by implementing the CredentialsManager interface. See `Credentials Manager <https://meapi.readthedocs.io/en/latest/content/credentials_manager.html>`_.
+- If you choose to use in the default credentials manager, If no path to the config file is provided, the config file will be created in the location from which the library was called.
 - The config file ``config.json`` format is:
 
 .. literalinclude:: ../../../config.json.example
