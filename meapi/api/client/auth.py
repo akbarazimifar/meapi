@@ -152,9 +152,7 @@ class Auth:
                 self.credentials_manager.delete(str(self.phone_number))
             raise err
         if auth_data.get('access'):
-            auth_data['uuid'] = existing_data['uuid']
-            auth_data['pwd_token'] = existing_data['pwd_token']
-            self.credentials_manager.set(str(self.phone_number), auth_data)
+            self.credentials_manager.update(phone_number=str(self.phone_number), access_token=auth_data['access'])
             return True
         return False
 

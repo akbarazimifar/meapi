@@ -1,7 +1,7 @@
 import logging
 import os.path
 from abc import ABC, abstractmethod
-from json import load, JSONDecodeError, dump
+from json import load, JSONDecodeError, dump, dumps, loads
 from typing import Union
 from meapi.utils.exceptions import MeException
 
@@ -136,20 +136,22 @@ class RedisCredentialsManager(CredentialsManager):
     Redis Credentials Manager.
         - This class is used to store the credentials in a redis cache.
     """
-
     def __init__(self, redis):
         self.redis = redis
 
     def get(self, phone_number: str) -> Union[dict, None]:
-        return self.redis.get(str(phone_number))
+        data = self.redis.get(str(phone_number))
+        if data:
+            return loads(data)
+        return None
 
     def set(self, phone_number: str, data: dict):
-        self.redis.set(str(phone_number), data)
+        self.redis.set(str(phone_number), dumps(data))
 
     def update(self, phone_number: str, access_token: str):
-        existing_content = self.redis.get(str(phone_number))
+        existing_content = loads(self.redis.get(str(phone_number)))
         existing_content['access'] = access_token
-        self.redis.set(str(phone_number), existing_content)
+        self.redis.set(str(phone_number), dumps(existing_content))
 
     def delete(self, phone_number: str):
         self.redis.delete(str(phone_number))
