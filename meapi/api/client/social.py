@@ -292,7 +292,7 @@ class Social:
         """
         if sorted_by not in ['count', 'last_contact_at']:
             raise MeException("sorted_by must be one of 'count' or 'last_contact_at'.")
-        return sorted([group.Group.new_from_dict(grp, _client=self, status='active') for grp in
+        return sorted([group.Group.new_from_dict(grp, _client=self, is_active=True) for grp in
                        get_groups_raw(self)['groups']],
                       key=attrgetter(sorted_by), reverse=True)
 
@@ -317,7 +317,7 @@ class Social:
                 groups[name['name']]['contact_ids'].append(name.pop('contact_id'))
                 groups[name['name']]['contacts'].append({'user': name.pop('user')})
 
-        return sorted([group.Group.new_from_dict(grp, _client=self, status='hidden', count=len(grp['contact_ids']))
+        return sorted([group.Group.new_from_dict(grp, _client=self, is_active=False, count=len(grp['contact_ids']))
                        for grp in groups.values()], key=lambda x: x.count, reverse=True)
 
     def delete_group(self, contacts_ids: Union[group.Group, int, str, List[Union[int, str]]]) -> bool:

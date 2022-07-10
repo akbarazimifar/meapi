@@ -38,7 +38,7 @@ class Group(MeModel):
                  last_contact_at: Union[str, None] = None,
                  contacts: Union[List[dict], None] = None,
                  contact_ids: Union[List[int], None] = None,
-                 status: str = "active"
+                 is_active: bool = True
                  ):
         self.name = name
         self.count = count
@@ -46,7 +46,7 @@ class Group(MeModel):
         self.contacts = [User.new_from_dict(contact['user'], id=contact.pop('id'), in_contact_list=contact.pop('in_contact_list'))
                          for contact in contacts] if contacts else contacts
         self.contact_ids = contact_ids
-        self.status = status
+        self.is_active = is_active
         self.__client = _client
         self.__init_done = True
 
@@ -54,14 +54,15 @@ class Group(MeModel):
         """
         Deletes the group.
             - The same as :py:func:`~meapi.Me.delete_group`.
+            - You get ``True`` even if the group is already hidden.
 
         Returns:
             ``bool``: ``True`` if the group was deleted, ``False`` otherwise.
         """
-        if self.status != 'active':
-            raise MeException(f"The name '{self.name}' is already hidden!")
-        if self.__client.delete_name(self.contact_ids):
-            self.status = 'hidden'
+        if not self.is_active:
+            return True
+        if self.__client.delete_group(self.contact_ids):
+            self.is_active = False
             return True
         return False
 
@@ -69,14 +70,15 @@ class Group(MeModel):
         """
         Restores the group.
             - The same as :py:func:`~meapi.Me.restore_group`.
+            - You get ``True`` even if the group is already active.
 
         Returns:
             ``bool``: ``True`` if the group was restored, ``False`` otherwise.
         """
-        if self.status != 'hidden':
-            raise MeException(f"The name '{self.name}' is already activated!")
-        if self.__client.restore_name(self.contact_ids):
-            self.status = 'active'
+        if self.is_active:
+            return True
+        if self.__client.restore_group(self.contact_ids):
+            self.is_active = True
             return True
         return False
 
@@ -84,6 +86,7 @@ class Group(MeModel):
         """
         Asks from the users in the group to rename you in their contact list.
             - The same as :py:func:`~meapi.Me.ask_group_rename`.
+            - You can't adk rename a group if it's hidden (``is_active=False``).
 
         Parameters:
             new_name (``str``):
@@ -92,7 +95,7 @@ class Group(MeModel):
         Returns:
             ``bool``: ``True`` if the suggested send, ``False`` otherwise.
         """
-        if self.status != 'active':
+        if not self.is_active:
             raise MeException("You can't ask to rename if the name is hidden. restore and then ask again!")
         if self.__client.ask_group_rename(self.contact_ids, new_name):
             return True
@@ -100,12 +103,12 @@ class Group(MeModel):
 
     def __setattr__(self, key, value):
         if getattr(self, '_Group__init_done', None):
-            if key != 'status':
+            if key != 'is_active':
                 raise MeException("You can't change this attr!")
         return super().__setattr__(key, value)
 
     def __repr__(self):
-        return f"<Group name={self.name} count={self.count}>"
+        return f"<Group name={self.name} count={self.count} is_active={self.is_active}>"
 
     def __str__(self):
         return self.name

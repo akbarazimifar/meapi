@@ -37,6 +37,7 @@ class Auth:
         """
         if not activation_code and self._activation_code:
             activation_code = self._activation_code
+            self._activation_code = None  # expire after one use
 
         if activation_code and not match(r'^\d{6}$', str(activation_code)):
             raise MeException("Not a valid 6-digits activation code!")
