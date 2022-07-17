@@ -95,10 +95,10 @@ def _register_new_account(client) -> str:
     Register new account.
         - Internal function to register new account and return the new UUID.
     """
-    print("** This is a new account and you need to register first.")
     if client._account_details:
         account_details: dict = client._account_details
     else:
+        print("** This is a new account and you need to register first.")
         account_details = {}
     first_name = None
     last_name = None
@@ -135,7 +135,7 @@ def _register_new_account(client) -> str:
 
     results = client.update_profile_details(first_name=first_name, last_name=last_name, email=email, login_type='email')
     if results[0]:
-        msg = "** Your profile successfully created! **\n"
+        msg = "** Your profile successfully created! **\n" if client._account_details is None else ""
         if upload_random_data:
             client.upload_random_data()
         else:

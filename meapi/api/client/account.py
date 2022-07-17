@@ -202,7 +202,10 @@ class Account:
             print("Are you sure you want to delete your account? (y/n)")
             if input().lower() != 'y':
                 return False
-        return True if not delete_account_raw(self) else False
+        if delete_account_raw(self) == {}:
+            self._logout()
+            return True
+        return False
 
     def suspend_account(self: 'Me', yes_im_sure: bool = False) -> bool:
         """
@@ -217,7 +220,10 @@ class Account:
             print("Are you sure you want to suspend your account? (y/n)")
             if input().lower() != 'y':
                 return False
-        return suspend_account_raw(self)['contact_suspended']
+        if suspend_account_raw(self)['contact_suspended']:
+            self._logout()
+            return True
+        return False
 
     def add_contacts(self: 'Me', contacts: List[dict]) -> dict:
         """

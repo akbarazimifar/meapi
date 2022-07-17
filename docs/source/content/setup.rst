@@ -40,7 +40,7 @@
     ** Enter your verification code (6 digits):
 
 - Go into `WhatsApp <https://wa.me/972543229534?text=Connectme>`_ (+972543229534) and send any message to this number.
-- You can also verify by Me Telegram bot (Only if you have Telegram account on this number!) and get verification code of 6 digits.
+- You can also verify by ``Me`` Telegram bot (Only if you have Telegram account on this number!) and get verification code of 6 digits.
 - Enter the code in the terminal and you will see if the verification was successful.
 - If this is a new number that is not already open an account, you will be required to fill in some details like name and email in order to create an account.
 - If you keep getting ``404`` error, you may want to run the :py:func:`~meapi.Me.upload_random_data` function, in order to activate the account.
@@ -85,7 +85,7 @@
 
 **Credentials:**
 
-- The default credentials manager is the JsonFileCredentialsManager, which saves the credentials in a json file ('config.file' by default).
+- The default credentials manager is the JsonFileCredentialsManager, which saves the credentials in a json file (``config.json`` by default).
 - You can implement your own credentials manager by implementing the CredentialsManager interface. See `Credentials Manager <https://meapi.readthedocs.io/en/latest/content/credentials_manager.html>`_.
 - If you choose to use in the default credentials manager, If no path to the config file is provided, the config file will be created in the location from which the library was called.
 - The config file ``config.json`` format is:

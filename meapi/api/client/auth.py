@@ -151,13 +151,17 @@ class Auth:
         except MeApiException as err:
             if err.http_status == 400 and err.msg == 'api_incorrect_pwd_token':
                 err.reason = f"Your 'pwd_token' in is broken (You probably activated the account elsewhere)." \
-                             f"You need to call 'client._activate_account()' in order to generate a new 'pwd_token'."
+                             f"You need to call 'client._activate_account()' or create new instance of Me() in "\
+                             "order to generate a new 'pwd_token'."
                 self._credentials_manager.delete(str(self.phone_number))
             raise err
         if auth_data.get('access'):
             self._credentials_manager.update(phone_number=str(self.phone_number), access_token=auth_data['access'])
             return True
         return False
+
+    def _logout(self: 'Me'):
+        self._credentials_manager.delete(str(self.phone_number))
 
     def _make_request(self: 'Me',
                       req_type: str,

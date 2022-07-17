@@ -328,8 +328,11 @@ def delete_account_raw(client: 'Me') -> dict:
     :param client: :py:obj:`~meapi.Me` client object.
     :type client: :py:obj:`~meapi.Me`
     :rtype: ``dict``
+
+    Example::
+
+        {}
     """
-    # todo add json exmaple
     return client._make_request('delete', '/main/settings/remove-user/')
 
 
@@ -340,8 +343,29 @@ def suspend_account_raw(client: 'Me') -> dict:
     :param client: :py:obj:`~meapi.Me` client object.
     :type client: :py:obj:`~meapi.Me`
     :rtype: ``dict``
+
+    Example::
+
+        {
+            'mutual_contacts_available': False,
+            'contact_suspended': True,
+            'last_backup_at': None,
+            'last_restore_at': None,
+            'who_watched_enabled': False,
+            'comments_enabled': False,
+            'language': 'en',
+            'notifications_enabled': False,
+            'location_enabled': False,
+            'names_notification_enabled': False,
+            'who_watched_notification_enabled': False,
+            'comments_notification_enabled': False,
+            'birthday_notification_enabled': False,
+            'system_notification_enabled': False,
+            'distance_notification_enabled': False,
+            'who_deleted_enabled': False,
+            'who_deleted_notification_enabled': False
+        }
     """
-    # todo add json example
     return client._make_request('put', '/main/settings/suspend-user/')
 
 

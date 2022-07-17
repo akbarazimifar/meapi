@@ -166,7 +166,7 @@ class Comment(MeModel):
         return super().__setattr__(key, value)
 
     def __repr__(self):
-        return f"<Comment id={self.id} status={self.status} msg={self.message}>"
+        return f"<Comment id={self.id} status={self.status} msg={self.message} author={self.author}>"
 
     def __str__(self):
         return self.message
