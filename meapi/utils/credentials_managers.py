@@ -92,16 +92,16 @@ class JsonFileCredentialsManager(CredentialsManager):
             self.config_file = 'config.json'
 
     def _read_or_create(self):
-        with open(self.config_file, "r") as config_file:
-            if os.path.exists(self.config_file):
+        if os.path.exists(self.config_file):
+            with open(self.config_file, "r") as config_file:
                 try:
                     existing_content = load(config_file)
                 except JSONDecodeError:
                     raise MeException("Not a valid json file: " + self.config_file)
-            else:
-                with open(self.config_file, "w") as new_config_file:
-                    new_config_file.write('{}')
-                    existing_content = {}
+        else:
+            with open(self.config_file, "w") as new_config_file:
+                new_config_file.write('{}')
+                existing_content = {}
         return existing_content
 
     def get(self, phone_number: str) -> Union[dict, None]:
