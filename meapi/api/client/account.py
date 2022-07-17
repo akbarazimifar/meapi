@@ -40,9 +40,9 @@ class Account:
         """
         Get user's profile.
 
-        For Me users (those who have registered in the app) there is an account UUID obtained when receiving
-        information about the phone number :py:func:`phone_search`. With it, you can get social information
-        and perform social actions.
+         For Me users (those who have registered in the app) there is an account UUID obtained when receiving
+         information about the phone number :py:func:`phone_search`. With it,
+         you can get social information and perform social actions.
 
         :param uuid: The user's UUID as ``str`` or :py:obj:`~meapi.models.contact.Contact` or :py:obj:`~meapi.models.user.User` objects.
         :type uuid: ``str`` | :py:obj:`~meapi.models.contact.Contact` | :py:obj:`~meapi.models.user.User`

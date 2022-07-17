@@ -29,6 +29,23 @@ def activate_account_raw(client: 'Me', phone_number: int, activation_code: str) 
 
 
 def generate_new_access_token_raw(client: 'Me', phone_number: str, pwd_token: str) -> dict:
+    """
+    Get new ``access_token``.
+
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
+    :param phone_number: International phone number format.
+    :type phone_number: ``int``
+    :param pwd_token: The ``pwd_token`` from the first activation (``activate_account_raw``).
+    :type pwd_token: ``str``
+
+    Example::
+
+        {
+            "access": "eyxxxxKV1xxxxxx1NiJ9.xxx.xxx",
+            "refresh": "xxxx.xxxxxx.xxxx-xxxxx-xxxx"
+        }
+    """
     body = {"phone_number": phone_number, "pwd_token": pwd_token}
     return client._make_request(req_type='post', endpoint='/auth/authorization/login/', body=body)
 

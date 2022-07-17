@@ -57,7 +57,8 @@ class Social:
         """
         Get list of users who deleted you from their contacts.
 
-        **The** ``who_deleted`` **setting must be enabled in your settings account in order to see who deleted you. See** :py:func:`change_settings`.
+         The ``who_deleted_enabled`` setting must be ``True`` in your settings account in order to see who deleted you. See :py:func:`change_settings`.
+         You can use ``incognito=True`` to automatically enable and disable before and after.
 
         :param incognito: If ``True``, this will set ``who_deleted`` to ``True``, and in the end, return it back to ``False``. *Default:* ``False``.
          (Required two more API calls to enable ``who_deleted`` and to disable it after.)
@@ -81,7 +82,8 @@ class Social:
         """
         Get list of users who watched your profile.
 
-        **The** ``who_watched`` **setting must be enabled in your settings account in order to see who watched your profile. See** :py:func:`change_settings`.
+         The ``who_watched_enabled`` setting must be ``True`` in your settings account in order to see who watched your profile. See :py:func:`change_settings`.
+         You can use ``incognito=True`` to automatically enable and disable before and after.
 
         :param incognito: If ``True``, this will set ``who_watched`` to ``True``, and in the end, return it back to ``False``. *Default:* ``False``.
          (Required two more API calls to enable ``who_watched`` and to disable it after.)
