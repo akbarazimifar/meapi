@@ -1,9 +1,11 @@
 import copy
 from datetime import datetime
-from typing import Union, List
+from typing import Union, List, TYPE_CHECKING
 from meapi.utils.exceptions import MeException
 from meapi.utils.helpers import parse_date
 from meapi.models.me_model import MeModel
+if TYPE_CHECKING:  # always False at runtime.
+    from meapi import Me
 
 
 class Social(MeModel):
@@ -28,17 +30,17 @@ class Social(MeModel):
         twitter (~meapi.models.social.SocialMediaAccount):
             Twitter account.
     """
-    def __init__(self=None,
-                 facebook: Union[dict, None] = None,
-                 fakebook: Union[dict, None] = None,
-                 instagram: Union[dict, None] = None,
-                 linkedin: Union[dict, None] = None,
-                 pinterest: Union[dict, None] = None,
-                 spotify: Union[dict, None] = None,
-                 tiktok: Union[dict, None] = None,
-                 twitter: Union[dict, None] = None,
+    def __init__(self,
+                 _client: 'Me',
+                 facebook: dict = None,
+                 fakebook: dict = None,
+                 instagram: dict = None,
+                 linkedin: dict = None,
+                 pinterest: dict = None,
+                 spotify: dict = None,
+                 tiktok: dict = None,
+                 twitter: dict = None,
                  _my_social: bool = False,
-                 _client = None
                  ):
         self.facebook: SocialMediaAccount = SocialMediaAccount.new_from_dict(facebook, _client=_client, _my_social=_my_social, name='facebook')
         self.fakebook: SocialMediaAccount = SocialMediaAccount.new_from_dict(fakebook, _client=_client, _my_social=_my_social, name='fakebook')
@@ -75,13 +77,13 @@ class SocialMediaAccount(MeModel):
     .. automethod:: unhide
     """
     def __init__(self,
-                 name: str,
+                 _client: 'Me',
                  _my_social: bool,
-                 _client = None,
-                 posts: Union[List[dict], None] = None,
-                 profile_id: Union[str, None] = None,
-                 is_active: Union[bool, None] = None,
-                 is_hidden: Union[bool, None] = None,
+                 name: str,
+                 posts: List[dict] = None,
+                 profile_id: str = None,
+                 is_active: bool = None,
+                 is_hidden: bool = None,
                  ):
         self.name = name
         self.posts: Union[List[Post], None] = [Post.new_from_dict(post) for post in posts] if posts else posts
@@ -203,13 +205,13 @@ class Post(MeModel):
             Photo of post.
     """
     def __init__(self,
-                 posted_at: Union[str, None] = None,
-                 photo: Union[str, None] = None,
-                 text_first: Union[str, None] = None,
-                 text_second: Union[str, None] = None,
-                 author: Union[str, None] = None,
-                 redirect_id: Union[str, None] = None,
-                 owner: Union[str, None] = None
+                 posted_at: str = None,
+                 photo: str = None,
+                 text_first: str = None,
+                 text_second: str = None,
+                 author: str = None,
+                 redirect_id: str = None,
+                 owner: str = None
                  ):
         self.posted_at: Union[datetime, None] = parse_date(posted_at) if posted_at else posted_at
         self.photo = photo

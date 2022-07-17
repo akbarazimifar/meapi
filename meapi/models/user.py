@@ -1,12 +1,15 @@
-from typing import Union
+from typing import Union, TYPE_CHECKING
 from meapi.models.common import _CommonMethodsForUserContactProfile
 from meapi.models.me_model import MeModel
+if TYPE_CHECKING:  # always False at runtime.
+    from meapi import Me
 
 
 class User(MeModel, _CommonMethodsForUserContactProfile):
     """
     Represents a user.
-        - A user is a person who can log in to the app. if you search a phone number with :py:func:`~meapi.Me.phone_search`, you will get a contact, but if this contact registered on the app, you get a user attribute.
+        - A user is a person who log in to the app.
+        - If you search a phone number with :py:func:`~meapi.Me.phone_search`, you will get a contact, but if this contact registered on the app, you get a user attribute.
 
     Parameters:
          name (``str``):
@@ -34,43 +37,42 @@ class User(MeModel, _CommonMethodsForUserContactProfile):
             who deleted him from his contacts, no ads, and more).
         in_contact_list (``bool`` *optional*):
             Whether the contact is in your contacts book.
-         location_enabled (``bool`` *optional*):
+        location_enabled (``bool`` *optional*):
             Whether the user has enabled location sharing.
-         verify_subscription (``bool`` *optional*):
+        verify_subscription (``bool`` *optional*):
             Whether the user has verified his subscription.
-         id (``int`` *optional*):
+        id (``int`` *optional*):
             The id of the contact.
-         comment_count (``int`` *optional*):
+        comment_count (``int`` *optional*):
             The number of comments the user have in his profile.
-         distance (``float`` *optional*):
+        distance (``float`` *optional*):
             The distance between you and the user (Only if the user shared his location with you. See :py:func:`~meapi.Me.suggest_turn_on_location`).
 
     Methods:
 
-    .. automethod:: as_vcard
-    .. automethod:: report_spam
-    .. automethod:: get_profile
-    .. automethod:: block
-    .. automethod:: unblock
+        Get the user as Vcard: :py:func:`~meapi.models.common._CommonMethodsForUserContactProfile.as_vcard`.
+        Block the user: :py:func:`~meapi.models.common._CommonMethodsForUserContactProfile.block`.
+        Unblock this user: :py:func:`~meapi.models.common._CommonMethodsForUserContactProfile.unblock`.
+        Report this user as spam: :py:func:`~meapi.models.common._CommonMethodsForUserContactProfile.report_spam`.
     """
     def __init__(self,
-                 _client,
+                 _client: 'Me',
                  first_name: str,
                  last_name: str,
                  uuid: str,
                  phone_number: int,
-                 email: Union[str, None] = None,
-                 profile_picture: Union[str, None] = None,
-                 slogan: Union[str, None] = None,
-                 gender: Union[str, None] = None,
-                 is_verified: Union[bool, None] = None,
-                 is_premium: Union[bool, None] = None,
-                 location_enabled: Union[bool, None] = None,
-                 verify_subscription: Union[bool, None] = None,
-                 id: Union[int, None] = None,
-                 comment_count: Union[int, None] = None,
-                 distance: Union[float, None] = None,
-                 in_contact_list: Union[bool, None] = None
+                 email: str = None,
+                 profile_picture: str = None,
+                 slogan: str = None,
+                 gender: str = None,
+                 is_verified: bool = None,
+                 is_premium: bool = None,
+                 location_enabled: bool = None,
+                 verify_subscription: bool = None,
+                 id: int = None,
+                 comment_count: int = None,
+                 distance: float = None,
+                 in_contact_list: bool = None
                  ):
         self.__client = _client
         self.email = email

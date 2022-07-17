@@ -3,8 +3,10 @@ from typing import Tuple, List
 from meapi.api.raw.account import *
 from meapi.utils.validations import validate_contacts, validate_calls, validate_phone_number
 from meapi.utils.exceptions import MeApiException, MeException
-from meapi.utils.helpers import get_random_data, register_new_account
+from meapi.utils.helpers import generate_random_data, _register_new_account
 from meapi.models import contact, profile, call, blocked_number, user
+if TYPE_CHECKING:  # always False at runtime.
+    from meapi import Me
 
 
 class Account:
@@ -12,10 +14,10 @@ class Account:
     This class is not intended to create an instance's but only to be inherited by ``Me``.
     The separation is for order purposes only.
     """
-    def __init__(self):
+    def __init__(self: 'Me'):
         raise MeException("Account class is not intended to create an instance's but only to be inherited by Me class.")
 
-    def phone_search(self, phone_number: Union[str, int]) -> Union[contact.Contact, None]:
+    def phone_search(self: 'Me', phone_number: Union[str, int]) -> Union[contact.Contact, None]:
         """
         Get information on any phone number.
 
@@ -34,7 +36,7 @@ class Account:
                 raise err
         return contact.Contact.new_from_dict(response['contact'], _client=self)
 
-    def get_profile(self, uuid: Union[str, contact.Contact, user.User]) -> profile.Profile:
+    def get_profile(self: 'Me', uuid: Union[str, contact.Contact, user.User]) -> profile.Profile:
         """
         Get user's profile.
 
@@ -59,7 +61,7 @@ class Account:
         extra_profile = res.pop('profile')
         return profile.Profile.new_from_dict(res, _client=self, **extra_profile)
 
-    def get_my_profile(self) -> profile.Profile:
+    def get_my_profile(self: 'Me') -> profile.Profile:
         """
         Get your profile information.
 
@@ -76,7 +78,7 @@ class Account:
             extra = {}
         return profile.Profile.new_from_dict(_client=self, data=res, _my_profile=True, **extra)
 
-    def get_uuid(self, phone_number: Union[int, str] = None) -> Union[str, None]:
+    def get_uuid(self: 'Me', phone_number: Union[int, str] = None) -> Union[str, None]:
         """
         Get user's uuid (To use in :py:func:`get_profile`, :py:func:`get_comments` and more).
 
@@ -94,11 +96,12 @@ class Account:
             return get_my_profile_raw(self)['uuid']
         except MeApiException as err:
             if err.http_status == 401:  # on login, if no active account on this number you need to register
-                return register_new_account(self)
+                return _register_new_account(self)
             else:
                 raise err
 
-    def update_profile_details(self, country_code: str = None,
+    def update_profile_details(self: 'Me',
+                               country_code: str = None,
                                date_of_birth: str = None,
                                device_type: str = None,
                                login_type: str = None,
@@ -108,7 +111,8 @@ class Account:
                                last_name: str = None,
                                gender: str = None,
                                profile_picture_url: str = None,
-                               slogan: str = None) -> Tuple[bool, profile.Profile]:
+                               slogan: str = None
+                               ) -> Tuple[bool, profile.Profile]:
         """
         Update your profile details.
             - The default of the parameters is ``None``. if you leave it ``None``, the parameter will not be updated.
@@ -185,7 +189,7 @@ class Account:
                 successes += 1
         return bool(successes == len(body.keys())), profile.Profile.new_from_dict(res, _client=self, _my_profile=True)
 
-    def delete_account(self, yes_im_sure: bool = False) -> bool:
+    def delete_account(self: 'Me', yes_im_sure: bool = False) -> bool:
         """
         Delete your account and it's data (!!!)
 
@@ -200,7 +204,7 @@ class Account:
                 return False
         return True if not delete_account_raw(self) else False
 
-    def suspend_account(self, yes_im_sure: bool = False) -> bool:
+    def suspend_account(self: 'Me', yes_im_sure: bool = False) -> bool:
         """
         Suspend your account until your next login.
 
@@ -215,7 +219,7 @@ class Account:
                 return False
         return suspend_account_raw(self)['contact_suspended']
 
-    def add_contacts(self, contacts: List[dict]) -> dict:
+    def add_contacts(self: 'Me', contacts: List[dict]) -> dict:
         """
         Upload new contacts to your Me account. See :py:func:`upload_random_data`.
 
@@ -237,7 +241,7 @@ class Account:
         """
         return add_contacts_raw(self, validate_contacts(contacts))
 
-    def remove_contacts(self, contacts: List[dict]) -> dict:
+    def remove_contacts(self: 'Me', contacts: List[dict]) -> dict:
         """
         Remove contacts from your Me account.
 
@@ -248,7 +252,7 @@ class Account:
         """
         return remove_contacts_raw(self, validate_contacts(contacts))
 
-    def get_saved_contacts(self) -> List[contact.Contact]:
+    def get_saved_contacts(self: 'Me') -> List[contact.Contact]:
         """
         Get all the contacts stored in your contacts (Which has an Me account).
 
@@ -257,7 +261,7 @@ class Account:
         """
         return [contact for group in self.get_groups_names() for contact in group.contacts if contact.in_contact_list]
 
-    def get_unsaved_contacts(self) -> List[contact.Contact]:
+    def get_unsaved_contacts(self: 'Me') -> List[contact.Contact]:
         """
         Get all the contacts that not stored in your contacts (Which has an Me account).
 
@@ -266,7 +270,7 @@ class Account:
         """
         return [contact for group in self.get_groups_names() for contact in group.contacts if not contact.in_contact_list]
 
-    def add_calls_to_log(self, calls: List[dict]) -> List[call.Call]:
+    def add_calls_to_log(self: 'Me', calls: List[dict]) -> List[call.Call]:
         """
         Add call to your calls log. See :py:func:`upload_random_data`.
 
@@ -292,7 +296,7 @@ class Account:
         r = self._make_request('post', '/main/call-log/change-sync/', body)
         return [call.Call.new_from_dict(cal) for cal in r['added_list']]
 
-    def remove_calls_from_log(self, calls: List[dict]) -> List[call.Call]:
+    def remove_calls_from_log(self: 'Me', calls: List[dict]) -> List[call.Call]:
         """
         Remove calls from your calls log.
 
@@ -317,7 +321,7 @@ class Account:
         body = {"add": [], "remove": validate_calls(calls)}
         return [call.Call.new_from_dict(cal) for cal in self._make_request('post', '/main/call-log/change-sync/', body)]
 
-    def block_profile(self, phone_number: Union[str, int], block_contact=True, me_full_block=True) -> blocked_number.BlockedNumber:
+    def block_profile(self: 'Me', phone_number: Union[str, int], block_contact=True, me_full_block=True) -> blocked_number.BlockedNumber:
         """
         Block user profile.
 
@@ -332,9 +336,9 @@ class Account:
         """
         res = block_profile_raw(client=self, phone_number=validate_phone_number(phone_number), me_full_block=me_full_block, block_contact=block_contact)
         if res['success']:
-            return blocked_number.BlockedNumber.new_from_dict(**body, _client=self)
+            return blocked_number.BlockedNumber.new_from_dict(**res, _client=self)
 
-    def unblock_profile(self, phone_number: int, unblock_contact=True, me_full_unblock=True) -> bool:
+    def unblock_profile(self: 'Me', phone_number: int, unblock_contact=True, me_full_unblock=True) -> bool:
         """
         Unblock user profile.
 
@@ -352,7 +356,7 @@ class Account:
             return True
         return False
 
-    def block_numbers(self, numbers: Union[int, List[int]]) -> bool:
+    def block_numbers(self: 'Me', numbers: Union[int, List[int]]) -> bool:
         """
         Block phone numbers.
 
@@ -365,7 +369,7 @@ class Account:
             numbers = [numbers]
         return bool([phone['phone_number'] for phone in block_numbers_raw(self, numbers)].sort() == numbers.sort())
 
-    def unblock_numbers(self, numbers: Union[int, List[int]]) -> bool:
+    def unblock_numbers(self: 'Me', numbers: Union[int, List[int]]) -> bool:
         """
         Unblock numbers.
 
@@ -378,7 +382,7 @@ class Account:
             numbers = [numbers]
         return unblock_numbers_raw(self, numbers)['success']
 
-    def get_blocked_numbers(self) -> List[blocked_number.BlockedNumber]:
+    def get_blocked_numbers(self: 'Me') -> List[blocked_number.BlockedNumber]:
         """
         Get list of your blocked numbers. See :py:func:`unblock_numbers`.
 
@@ -387,7 +391,7 @@ class Account:
         """
         return [blocked_number.BlockedNumber.new_from_dict(blocked) for blocked in get_blocked_numbers_raw(self)]
 
-    def upload_random_data(self, contacts=True, calls=True, location=True) -> bool:
+    def upload_random_data(self: 'Me', contacts=True, calls=True, location=True) -> bool:
         """
         Upload random data to your account.
 
@@ -400,7 +404,7 @@ class Account:
         :return: Is uploading success.
         :rtype: ``bool``
         """
-        random_data = get_random_data(contacts, calls, location)
+        random_data = generate_random_data(contacts, calls, location)
         if contacts:
             self.add_contacts(random_data['contacts'])
         if calls:

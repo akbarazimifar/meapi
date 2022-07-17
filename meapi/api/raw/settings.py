@@ -1,5 +1,9 @@
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:  # always False at runtime.
+    from meapi import Me
 
-def get_settings_raw(client) -> dict:
+
+def get_settings_raw(client: 'Me') -> dict:
     """
     Get current settings.
 
@@ -32,7 +36,7 @@ def get_settings_raw(client) -> dict:
     return client._make_request('get', '/main/settings/')
 
 
-def change_settings_raw(client, **kwargs) -> dict:
+def change_settings_raw(client: 'Me', **kwargs) -> dict:
     """
     Change current settings.
 

@@ -1,6 +1,6 @@
 import copy
 from datetime import date
-from typing import List, Union
+from typing import List, Union, TYPE_CHECKING
 from meapi.utils.exceptions import MeException
 from meapi.utils.helpers import parse_date
 from meapi.models.comment import Comment
@@ -10,6 +10,8 @@ from meapi.models.me_model import MeModel
 from meapi.models.social import Social
 from meapi.models.user import User
 from meapi.models.watcher import Watcher
+if TYPE_CHECKING:  # always False at runtime.
+    from meapi import Me
 
 
 class Profile(MeModel, _CommonMethodsForUserContactProfile):
@@ -162,55 +164,55 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
 
     Methods:
 
-    .. automethod:: as_vcard
-    .. automethod:: block
-    .. automethod:: unblock
-    .. automethod:: refresh
+        Get the profile as Vcard: :py:func:`~meapi.models.common._CommonMethodsForUserContactProfile.as_vcard`.
+        Block the profile: :py:func:`~meapi.models.common._CommonMethodsForUserContactProfile.block`.
+        Unblock this profile: :py:func:`~meapi.models.common._CommonMethodsForUserContactProfile.unblock`.
+        Report this profile as spam: :py:func:`~meapi.models.common._CommonMethodsForUserContactProfile.report_spam`.
     """
     def __init__(self,
-                 _client,
-                 comments_blocked: Union[bool, None] = None,
-                 is_he_blocked_me: Union[bool, None] = None,
-                 is_permanent: Union[bool, None] = None,
-                 is_shared_location: Union[bool, None] = None,
-                 last_comment: Union[dict, None] = None,
-                 mutual_contacts_available: Union[bool, None] = None,
-                 mutual_contacts: Union[List[dict], None] = None,
-                 share_location: Union[bool, None] = None,
-                 social: Union[dict, None] = None,
-                 carrier: Union[str, None] = None,
-                 comments_enabled: Union[bool, None] = None,
-                 country_code: Union[str, None] = None,
-                 date_of_birth: Union[str, None] = None,
-                 device_type: Union[str, None] = None,
-                 distance: Union[float, None] = None,
-                 email: Union[str, None] = None,
-                 facebook_url: Union[str, None] = None,
-                 first_name: Union[str, None] = None,
-                 gdpr_consent: Union[bool, None] = None,
-                 gender: Union[str, None] = None,
-                 google_url: Union[None, None] = None,
-                 is_premium: Union[bool, None] = None,
-                 is_verified: Union[bool, None] = None,
-                 last_name: Union[str, None] = None,
-                 location_enabled: Union[bool, None] = None,
-                 location_longitude: Union[float, None] = None,
-                 location_latitude: Union[float, None] = None,
-                 location_name: Union[str, None] = None,
-                 login_type: Union[str, None] = None,
-                 me_in_contacts: Union[bool, None] = None,
-                 phone_number: Union[int, None] = None,
-                 phone_prefix: Union[int, None] = None,
-                 profile_picture: Union[str, None] = None,
-                 slogan: Union[str, None] = None,
-                 user_type: Union[str, None] = None,
-                 uuid: Union[str, None] = None,
-                 verify_subscription: Union[bool, None] = None,
-                 who_deleted_enabled: Union[bool, None] = None,
-                 who_deleted: Union[List[dict], None] = None,
-                 who_watched_enabled: Union[bool, None] = None,
-                 who_watched: Union[List[dict], None] = None,
-                 friends_distance: Union[dict, None] = None,
+                 _client: 'Me',
+                 comments_blocked: bool = None,
+                 is_he_blocked_me: bool = None,
+                 is_permanent: bool = None,
+                 is_shared_location: bool = None,
+                 last_comment: dict = None,
+                 mutual_contacts_available: bool = None,
+                 mutual_contacts: List[dict] = None,
+                 share_location: bool = None,
+                 social: dict = None,
+                 carrier: str = None,
+                 comments_enabled: bool = None,
+                 country_code: str = None,
+                 date_of_birth: str = None,
+                 device_type: str = None,
+                 distance: float = None,
+                 email: str = None,
+                 facebook_url: str = None,
+                 first_name: str = None,
+                 gdpr_consent: bool = None,
+                 gender: str = None,
+                 google_url: None = None,
+                 is_premium: bool = None,
+                 is_verified: bool = None,
+                 last_name: str = None,
+                 location_enabled: bool = None,
+                 location_longitude: float = None,
+                 location_latitude: float = None,
+                 location_name: str = None,
+                 login_type: str = None,
+                 me_in_contacts: bool = None,
+                 phone_number: int = None,
+                 phone_prefix: int = None,
+                 profile_picture: str = None,
+                 slogan: str = None,
+                 user_type: str = None,
+                 uuid: str = None,
+                 verify_subscription: bool = None,
+                 who_deleted_enabled: bool = None,
+                 who_deleted: List[dict] = None,
+                 who_watched_enabled: bool = None,
+                 who_watched: List[dict] = None,
+                 friends_distance: dict = None,
                  _my_profile: bool = False
                  ):
         self.__client = _client
@@ -221,7 +223,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         self.last_comment = Comment.new_from_dict(last_comment, _client=_client, profile_uuid=uuid)
         self.mutual_contacts_available = mutual_contacts_available
         self.mutual_contacts: List[User] = [User.new_from_dict(mutual_contact['referenced_user']) for mutual_contact in
-                                                     mutual_contacts] if mutual_contacts_available else mutual_contacts
+                                            mutual_contacts] if mutual_contacts_available else mutual_contacts
         self.share_location = share_location
         self.social: Social = Social.new_from_dict(social, _client=_client, _my_social=_my_profile) if social else social
         self.carrier = carrier

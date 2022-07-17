@@ -1,9 +1,11 @@
 from datetime import datetime
-from typing import Union
+from typing import Union, TYPE_CHECKING
 from meapi.utils.exceptions import MeException
 from meapi.utils.helpers import parse_date
 from meapi.models.me_model import MeModel
 from meapi.models.user import User
+if TYPE_CHECKING:  # always False at runtime.
+    from meapi import Me
 
 
 class Comment(MeModel):
@@ -39,17 +41,17 @@ class Comment(MeModel):
     .. automethod:: unlike
     """
     def __init__(self,
-                 _client,
-                 like_count: Union[int, None] = None,
-                 status: Union[str, None] = None,
-                 message: Union[str, None] = None,
-                 author: Union[dict, None] = None,
-                 is_liked: Union[bool, None] = None,
-                 id: Union[int, None] = None,
-                 comments_blocked: Union[bool, None] = None,
-                 created_at: Union[str, None] = None,
-                 comment_likes: Union[dict, None] = None,
-                 profile_uuid: Union[str, None] = None,
+                 _client: 'Me',
+                 like_count: int = None,
+                 status: str = None,
+                 message: str = None,
+                 author: dict = None,
+                 is_liked: bool = None,
+                 id: int = None,
+                 comments_blocked: bool = None,
+                 created_at: str = None,
+                 comment_likes: dict = None,
+                 profile_uuid: str = None,
                  _my_comment: bool = False
                  ):
         self.like_count = like_count

@@ -1,7 +1,10 @@
 from meapi.utils.helpers import HEADERS
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:  # always False at runtime.
+    from meapi import Me
 
 
-def activate_account_raw(client, phone_number: int, activation_code: str) -> dict:
+def activate_account_raw(client: 'Me', phone_number: int, activation_code: str) -> dict:
     """
     Activate your account with the activation code.
 
@@ -25,12 +28,12 @@ def activate_account_raw(client, phone_number: int, activation_code: str) -> dic
     return client._make_request(req_type='post', endpoint='/auth/authorization/activate/', body=body, headers=HEADERS)
 
 
-def generate_new_access_token_raw(client, phone_number: str, pwd_token: str) -> dict:
+def generate_new_access_token_raw(client: 'Me', phone_number: str, pwd_token: str) -> dict:
     body = {"phone_number": phone_number, "pwd_token": pwd_token}
     return client._make_request(req_type='post', endpoint='/auth/authorization/login/', body=body)
 
 
-def ask_for_call_raw(client, phone_number: str, session_token: str) -> dict:
+def ask_for_call_raw(client: 'Me', phone_number: str, session_token: str) -> dict:
     """
     Ask Me to call you with the activation code.
 
@@ -57,7 +60,7 @@ def ask_for_call_raw(client, phone_number: str, session_token: str) -> dict:
     return client._make_request(req_type='post', endpoint='/auth/authorization/verify/', headers=headers, body=body)
 
 
-def ask_for_sms_raw(client, phone_number: str, session_token: str) -> dict:
+def ask_for_sms_raw(client: 'Me', phone_number: str, session_token: str) -> dict:
     """
     Ask me to send you the activation code in SMS.
 

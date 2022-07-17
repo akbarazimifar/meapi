@@ -52,7 +52,7 @@ def validate_phone_number(phone_number: Union[str, int]) -> int:
      - ``(972) 123-4567890``, ``+9721234567890``, ``123-456-7890`` --> ``9721234567890``.
 
     :param phone_number: phone number in global format.
-    :type phone_number: Union[int, str]
+    :type phone_number:  ``int`` | ``str``
     :raises MeException: If length of phone number not between 9-15.
     :return: fixed phone number
     :rtype: int

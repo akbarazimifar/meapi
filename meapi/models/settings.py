@@ -1,7 +1,9 @@
-from typing import Union
+from typing import Union, TYPE_CHECKING
 from meapi.utils.exceptions import MeException
 from meapi.models.me_model import MeModel
 from meapi.utils.helpers import parse_date
+if TYPE_CHECKING:  # always False at runtime.
+    from meapi import Me
 
 
 class Settings(MeModel):
@@ -78,25 +80,25 @@ class Settings(MeModel):
             Number of spammers.
     """
     def __init__(self,
-                 _client,
-                 birthday_notification_enabled: Union[bool, None] = None,
-                 comments_enabled: Union[bool, None] = None,
-                 comments_notification_enabled: Union[bool, None] = None,
-                 contact_suspended: Union[bool, None] = None,
-                 distance_notification_enabled: Union[bool, None] = None,
-                 language: Union[str, None] = None,
-                 last_backup_at: Union[str, None] = None,
-                 last_restore_at: Union[str, None] = None,
-                 location_enabled: Union[bool, None] = None,
-                 mutual_contacts_available: Union[bool, None] = None,
-                 names_notification_enabled: Union[bool, None] = None,
-                 notifications_enabled: Union[bool, None] = None,
-                 spammers_count: Union[int, None] = None,
-                 system_notification_enabled: Union[bool, None] = None,
-                 who_deleted_enabled: Union[bool, None] = None,
-                 who_deleted_notification_enabled: Union[bool, None] = None,
-                 who_watched_enabled: Union[bool, None] = None,
-                 who_watched_notification_enabled: Union[bool, None] = None,
+                 _client: 'Me',
+                 birthday_notification_enabled: bool = None,
+                 comments_enabled: bool = None,
+                 comments_notification_enabled: bool = None,
+                 contact_suspended: bool = None,
+                 distance_notification_enabled: bool = None,
+                 language: str = None,
+                 last_backup_at: str = None,
+                 last_restore_at: str = None,
+                 location_enabled: bool = None,
+                 mutual_contacts_available: bool = None,
+                 names_notification_enabled: bool = None,
+                 notifications_enabled: bool = None,
+                 spammers_count: int = None,
+                 system_notification_enabled: bool = None,
+                 who_deleted_enabled: bool = None,
+                 who_deleted_notification_enabled: bool = None,
+                 who_watched_enabled: bool = None,
+                 who_watched_notification_enabled: bool = None,
                  ):
         self.birthday_notification_enabled = birthday_notification_enabled
         self.comments_enabled = comments_enabled

@@ -1,7 +1,9 @@
-from typing import Union, List
+from typing import Union, List, TYPE_CHECKING
+if TYPE_CHECKING:  # always False at runtime.
+    from meapi import Me
 
 
-def phone_search_raw(client, phone_number: Union[str, int]) -> dict:
+def phone_search_raw(client: 'Me', phone_number: Union[str, int]) -> dict:
     """
     Get information on any phone number.
 
@@ -66,7 +68,7 @@ def phone_search_raw(client, phone_number: Union[str, int]) -> dict:
     return client._make_request(req_type='get', endpoint=f'/main/contacts/search/?phone_number={phone_number}')
 
 
-def get_profile_raw(client, uuid: Union[str, None]) -> dict:
+def get_profile_raw(client: 'Me', uuid: str = None) -> dict:
     """
     Get other users profile.
 
@@ -240,7 +242,7 @@ def get_profile_raw(client, uuid: Union[str, None]) -> dict:
     return client._make_request('get', f'/main/users/profile/{uuid}')
 
 
-def get_my_profile_raw(client) -> dict:
+def get_my_profile_raw(client: 'Me') -> dict:
     """
     Get your profile.
 
@@ -279,7 +281,7 @@ def get_my_profile_raw(client) -> dict:
     return client._make_request('get', '/main/users/profile/me/')
 
 
-def update_profile_details_raw(client, **kwargs) -> dict:
+def update_profile_details_raw(client: 'Me', **kwargs) -> dict:
     """
     Update your profile details.
 
@@ -319,9 +321,10 @@ def update_profile_details_raw(client, **kwargs) -> dict:
     return client._make_request('patch', '/main/users/profile/', kwargs)
 
 
-def delete_account_raw(client) -> dict:
+def delete_account_raw(client: 'Me') -> dict:
     """
     Delete your account.
+
     :param client: :py:obj:`~meapi.Me` client object.
     :type client: :py:obj:`~meapi.Me`
     :rtype: ``dict``
@@ -330,7 +333,7 @@ def delete_account_raw(client) -> dict:
     return client._make_request('delete', '/main/settings/remove-user/')
 
 
-def suspend_account_raw(client) -> dict:
+def suspend_account_raw(client: 'Me') -> dict:
     """
     Suspend your account.
 
@@ -342,12 +345,12 @@ def suspend_account_raw(client) -> dict:
     return client._make_request('put', '/main/settings/suspend-user/')
 
 
-def _contact_handler(client, to_add: bool, contacts: List[dict]) -> dict:
+def _contact_handler(client: 'Me', to_add: bool, contacts: List[dict]) -> dict:
     body = {"add": contacts if to_add else [], "is_first": False, "remove": contacts if not to_add else []}
     return client._make_request('post', '/main/contacts/sync/', body)
 
 
-def add_contacts_raw(client, contacts: List[dict]) -> dict:
+def add_contacts_raw(client: 'Me', contacts: List[dict]) -> dict:
     """
     Upload new contacts to your Me account.
 
@@ -394,7 +397,7 @@ def add_contacts_raw(client, contacts: List[dict]) -> dict:
     return _contact_handler(client, to_add=True, contacts=contacts)
 
 
-def remove_contacts_raw(client, contacts: List[dict]) -> dict:
+def remove_contacts_raw(client: 'Me', contacts: List[dict]) -> dict:
     """
     Remove contacts from your Me account.
 
@@ -434,14 +437,14 @@ def remove_contacts_raw(client, contacts: List[dict]) -> dict:
     return _contact_handler(client, to_add=False, contacts=contacts)
 
 
-def block_profile_raw(client, phone_number: int, block_contact: bool, me_full_block: bool) -> dict:
+def block_profile_raw(client: 'Me', phone_number: int, block_contact: bool, me_full_block: bool) -> dict:
     """
     Block user profile.
 
     :param client: :py:obj:`~meapi.Me` client object.
     :type client: :py:obj:`~meapi.Me`
     :param phone_number: User phone number in international format.
-    :type phone_number: Union[str, int]
+    :type phone_number:  ``int`` | ``str``
     :param block_contact: To block for calls.
     :type block_contact: ``bool``
     :param me_full_block: To block for social.
@@ -460,7 +463,7 @@ def block_profile_raw(client, phone_number: int, block_contact: bool, me_full_bl
     return client._make_request('post', '/main/users/profile/block/', body)
 
 
-def unblock_profile_raw(client, phone_number: int, unblock_contact=True, me_full_unblock=True) -> dict:
+def unblock_profile_raw(client: 'Me', phone_number: int, unblock_contact=True, me_full_unblock=True) -> dict:
     """
     Unlock user profile.
 
@@ -486,7 +489,7 @@ def unblock_profile_raw(client, phone_number: int, unblock_contact=True, me_full
     return client._make_request('post', '/main/users/profile/block/', body)
 
 
-def block_numbers_raw(client, numbers: List[int]) -> dict:
+def block_numbers_raw(client: 'Me', numbers: List[int]) -> dict:
     """
     Block numbers.
 
@@ -510,7 +513,7 @@ def block_numbers_raw(client, numbers: List[int]) -> dict:
     return client._make_request('post', '/main/users/profile/bulk-block/', {"phone_numbers": numbers})
 
 
-def unblock_numbers_raw(client, numbers: List[int]) -> dict:
+def unblock_numbers_raw(client: 'Me', numbers: List[int]) -> dict:
     """
     Unblock phone numbers.
 
@@ -531,7 +534,7 @@ def unblock_numbers_raw(client, numbers: List[int]) -> dict:
     return client._make_request('post', '/main/users/profile/bulk-unblock/', {"phone_numbers": numbers})
 
 
-def get_blocked_numbers_raw(client) -> List[dict]:
+def get_blocked_numbers_raw(client: 'Me') -> List[dict]:
     """
     Get your blocked numbers.
 

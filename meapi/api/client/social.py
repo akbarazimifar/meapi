@@ -10,6 +10,8 @@ from meapi.models import deleter, watcher, group, social, user, comment, friends
 from meapi.api.raw.social import *
 from operator import attrgetter
 from logging import getLogger
+if TYPE_CHECKING:  # always False at runtime.
+    from meapi import Me
 
 _logger = getLogger(__name__)
 
@@ -20,22 +22,22 @@ class Social:
     The separation is for order purposes only.
     """
 
-    def __init__(self):
+    def __init__(self: 'Me'):
         raise MeException("Social class is not intended to create an instance's but only to be inherited by Me class.")
 
-    def friendship(self, phone_number: Union[int, str]) -> friendship.Friendship:
+    def friendship(self: 'Me', phone_number: Union[int, str]) -> friendship.Friendship:
         """
         Get friendship information between you and another number.
         like count mutual friends, total calls duration, how do you name each other, calls count, your watches, comments, and more.
 
         :param phone_number: International phone number format.
-        :type phone_number: Union[int, str]
+        :type phone_number: ``int`` | ``str``
         :return: Friendship object.
         :rtype: :py:obj:`~meapi.models.friendship.Friendship`
         """
         return friendship.Friendship.new_from_dict(friendship_raw(self, validate_phone_number(phone_number)))
 
-    def report_spam(self, country_code: str, spam_name: str, phone_number: Union[str, int]) -> bool:
+    def report_spam(self: 'Me', country_code: str, spam_name: str, phone_number: Union[str, int]) -> bool:
         """
         Report spam on another phone number.
             - You get notify when your report is approved. See :py:func:`get_notifications`.
@@ -45,13 +47,13 @@ class Social:
         :param spam_name: The spam name that you want to give to the spammer.
         :type spam_name: str
         :param phone_number: spammer phone number in international format.
-        :type phone_number: Union[int, str]
+        :type phone_number: int | str
         :return: Is report success
         :rtype: bool
         """
         return report_spam_raw(self, country_code.upper(), str(validate_phone_number(phone_number)), spam_name)['success']
 
-    def who_deleted(self, incognito: bool = False, sorted_by: Union[str, None] = 'created_at') -> List[deleter.Deleter]:
+    def who_deleted(self: 'Me', incognito: bool = False, sorted_by: Union[str, None] = 'created_at') -> List[deleter.Deleter]:
         """
         Get list of users who deleted you from their contacts.
 
@@ -61,7 +63,7 @@ class Social:
          (Required two more API calls to enable ``who_deleted`` and to disable it after.)
         :type incognito: bool
         :param sorted_by: Sort by ``created_at`` or ``None``. *Default:* ``created_at``.
-        :type sorted_by: Union[str, None]
+        :type sorted_by: str
         :return: List of Deleter objects sorted by their creation time.
         :rtype: List[:py:obj:`~meapi.models.deleter.Deleter`]
         """
@@ -75,7 +77,7 @@ class Social:
         deleters = [deleter.Deleter.new_from_dict(dlt) for dlt in res]
         return sorted(deleters, key=attrgetter(sorted_by), reverse=True) if sorted_by else deleters
 
-    def who_watched(self, incognito: bool = False, sorted_by: str = 'count') -> List[watcher.Watcher]:
+    def who_watched(self: 'Me', incognito: bool = False, sorted_by: str = 'count') -> List[watcher.Watcher]:
         """
         Get list of users who watched your profile.
 
@@ -99,7 +101,7 @@ class Social:
         return sorted([watcher.Watcher.new_from_dict(watch) for watch in
                        res], key=attrgetter(sorted_by), reverse=True)
 
-    def get_comments(self, uuid: Union[str, Profile, User, Contact] = None) -> List[comment.Comment]:
+    def get_comments(self: 'Me', uuid: Union[str, Profile, User, Contact] = None) -> List[comment.Comment]:
         """
         Get comments in user's profile.
             - Call the method with no parameters to get comments in your profile.
@@ -139,7 +141,7 @@ class Social:
         return sorted([comment.Comment.new_from_dict(com, _client=self, _my_comment=_my_comment, profile_uuid=uuid)
                        for com in comments], key=lambda x: x.like_count, reverse=True)
 
-    def get_comment(self, comment_id: Union[int, str]) -> dict:
+    def get_comment(self: 'Me', comment_id: Union[int, str]) -> dict:
         """
         Get comment details, comment text, who and how many liked, create time and more.
             - This methods return :py:obj:`~meapi.models.comment.Comment` object with just ``message``, ``like_count`` and ``comment_likes`` atrrs.
@@ -153,7 +155,7 @@ class Social:
             comment_id = comment_id.id
         return comment.Comment.new_from_dict(get_comment_raw(self, int(comment_id)), _client=self, id=int(comment_id))
 
-    def publish_comment(self, uuid: Union[str, Profile, User, Contact], your_comment: str, remove_credit: bool = False) -> comment.Comment:
+    def publish_comment(self: 'Me', uuid: Union[str, Profile, User, Contact], your_comment: str, remove_credit: bool = False) -> comment.Comment:
         """
         Publish comment in user's profile.
             - You can publish comment on your own profile or on someone else's profile.
@@ -164,9 +166,9 @@ class Social:
          Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
         :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
         :param your_comment: Your comment.
-        :type your_comment: str
+        :type your_comment: ``str``
         :param remove_credit: If ``True``, this will remove your credit from the comment. *Default:* ``False``.
-        :type remove_credit: bool
+        :type remove_credit: ``bool``
         :return: :py:obj:`~meapi.models.comment.Comment` object.
         :rtype: :py:obj:`~meapi.models.comment.Comment`
         """
@@ -183,7 +185,7 @@ class Social:
         return comment.Comment.new_from_dict(publish_comment_raw(self, str(uuid), str(your_comment)),
                                              _client=self, profile_uuid=uuid, _my_comment=True if self.uuid == uuid else False)
 
-    def approve_comment(self, comment_id: Union[str, int, comment.Comment]) -> bool:
+    def approve_comment(self: 'Me', comment_id: Union[str, int, comment.Comment]) -> bool:
         """
         Approve comment. (You can always delete it with :py:func:`delete_comment`.)
             - You can only approve comments in your profile!
@@ -192,7 +194,7 @@ class Social:
         :param comment_id: Comment id from :py:func:`get_comments`. or just :py:obj:`~meapi.models.comment.Comment` object.
         :type comment_id: ``str`` | ``int`` | :py:obj:`~meapi.models.comment.Comment`
         :return: Is approve success.
-        :rtype: bool
+        :rtype: ``bool``
         """
         if isinstance(comment_id, comment.Comment):
             if comment_id._Comment__my_comment:
@@ -209,7 +211,7 @@ class Social:
             else:
                 raise err
 
-    def delete_comment(self, comment_id: Union[str, int, comment.Comment]) -> bool:
+    def delete_comment(self: 'Me', comment_id: Union[str, int, comment.Comment]) -> bool:
         """
         Delete (Ignore) comment. (you can always approve it with :py:func:`approve_comment`.)
             - You can only delete comments from your profile!
@@ -217,7 +219,7 @@ class Social:
         :param comment_id: Comment id from :py:func:`get_comments`. or just :py:obj:`~meapi.models.comment.Comment` object.
         :type comment_id: ``int`` | ``str`` | :py:obj:`~meapi.models.comment.Comment`
         :return: Is deleting success.
-        :rtype: bool
+        :rtype: ``bool``
         """
         if isinstance(comment_id, comment.Comment):
             if comment_id._Comment__my_comment:
@@ -234,7 +236,7 @@ class Social:
             else:
                 raise err
 
-    def like_comment(self, comment_id: Union[int, str, comment.Comment]) -> bool:
+    def like_comment(self: 'Me', comment_id: Union[int, str, comment.Comment]) -> bool:
         """
         Like comment.
             - If the comment is already liked, you get ``True`` anyway.
@@ -243,7 +245,7 @@ class Social:
         :param comment_id: Comment id from :py:func:`get_comments`. or just :py:obj:`~meapi.models.comment.Comment` object.
         :type comment_id: ``int`` | ``str`` | :py:obj:`~meapi.models.comment.Comment`
         :return: Is like success.
-        :rtype: bool
+        :rtype: ``bool``
         """
         if isinstance(comment_id, comment.Comment):
             if getattr(comment_id, 'comment_likes', None):
@@ -257,7 +259,7 @@ class Social:
                 return False
             raise err
 
-    def unlike_comment(self, comment_id: Union[int, str, comment.Comment]) -> bool:
+    def unlike_comment(self: 'Me', comment_id: Union[int, str, comment.Comment]) -> bool:
         """
         Unlike comment.
             - If the comment is already unliked, you get ``True`` anyway.
@@ -266,7 +268,7 @@ class Social:
         :param comment_id: Comment id from :py:func:`get_comments`. or just :py:obj:`~meapi.models.comment.Comment` object.
         :type comment_id: ``int`` | ``str`` | :py:obj:`~meapi.models.comment.Comment`
         :return: Is unlike success.
-        :rtype: bool
+        :rtype: ``bool``
         """
         if isinstance(comment_id, comment.Comment):
             if getattr(comment_id, 'comment_likes', None):
@@ -280,7 +282,7 @@ class Social:
                 return False
             raise err
 
-    def get_groups(self, sorted_by: str = 'count') -> List[group.Group]:
+    def get_groups(self: 'Me', sorted_by: str = 'count') -> List[group.Group]:
         """
         Get groups of names and see how people named you.
             - `For more information about Group: <https://me.app/who-saved-my-number/>`_
@@ -296,7 +298,7 @@ class Social:
                        get_groups_raw(self)['groups']],
                       key=attrgetter(sorted_by), reverse=True)
 
-    def get_deleted_groups(self) -> List[group.Group]:
+    def get_deleted_groups(self: 'Me') -> List[group.Group]:
         """
         Get group names that you deleted.
 
@@ -320,7 +322,7 @@ class Social:
         return sorted([group.Group.new_from_dict(grp, _client=self, is_active=False, count=len(grp['contact_ids']))
                        for grp in groups.values()], key=lambda x: x.count, reverse=True)
 
-    def delete_group(self, contacts_ids: Union[group.Group, int, str, List[Union[int, str]]]) -> bool:
+    def delete_group(self: 'Me', contacts_ids: Union[group.Group, int, str, List[Union[int, str]]]) -> bool:
         """
         Delete group name.
             - You can restore deleted group with :py:func:`restore_name`.
@@ -329,7 +331,7 @@ class Social:
         :param contacts_ids: :py:obj:`~meapi.models.group.Group` object, single or list of contact ids from the same group. See :py:func:`get_groups`.
         :type contacts_ids: :py:obj:`~meapi.models.group.Group` | ``int`` | ``str`` | List[``int``, ``str``]
         :return: Is delete success.
-        :rtype: bool
+        :rtype: ``bool``
         """
         if isinstance(contacts_ids, group.Group):
             contacts_ids = contacts_ids.contact_ids
@@ -337,7 +339,7 @@ class Social:
             contacts_ids = [contacts_ids]
         return delete_group_raw(self, [int(_id) for _id in contacts_ids])['success']
 
-    def restore_group(self, contacts_ids: Union[int, str, List[Union[int, str]]]) -> bool:
+    def restore_group(self: 'Me', contacts_ids: Union[int, str, List[Union[int, str]]]) -> bool:
         """
         Restore deleted group from.
             - You can get deleted groups with :py:func:`get_deleted_groups`.
@@ -345,7 +347,7 @@ class Social:
         :param contacts_ids: :py:obj:`~meapi.models.group.Group` object, single or list of contact ids from the same group. See :py:func:`get_groups`.
         :type contacts_ids: :py:obj:`~meapi.models.group.Group` | ``int`` | ``str`` | List[``int``, ``str``]
         :return: Is delete success.
-        :rtype: bool
+        :rtype: ``bool``
         """
         if isinstance(contacts_ids, group.Group):
             contacts_ids = contacts_ids.contact_ids
@@ -353,16 +355,16 @@ class Social:
             contacts_ids = [contacts_ids]
         return restore_group_raw(self, [int(_id) for _id in contacts_ids])['success']
 
-    def ask_group_rename(self, contacts_ids: Union[group.Group, int, str, List[Union[int, str]]], new_name: Union[str, None] = None) -> bool:
+    def ask_group_rename(self: 'Me', contacts_ids: Union[group.Group, int, str, List[Union[int, str]]], new_name: Union[str, None] = None) -> bool:
         """
         Suggest new name to group of people and ask them to rename you in their contacts book.
 
         :param contacts_ids: :py:obj:`~meapi.models.group.Group` object, single or list of contact ids from the same group. See :py:func:`get_groups`.
         :type contacts_ids: :py:obj:`~meapi.models.group.Group` | ``int`` | ``str`` | List[``int``, ``str``]
         :param new_name: Suggested name, Default: Your profile name from :py:func:`get_profile`.
-        :type new_name: Union[str, None]
+        :type new_name: ``str`` | ``None``
         :return: Is asking success.
-        :rtype: bool
+        :rtype: ``bool``
         """
         if not new_name:  # suggest your name in your profile
             new_name = self.get_my_profile().name
@@ -374,7 +376,7 @@ class Social:
             contacts_ids = contacts_ids.contact_ids
         return ask_group_rename_raw(self, [int(_id) for _id in contacts_ids], new_name)['success']
 
-    def get_socials(self, uuid: Union[str, Profile, User, Contact] = None) -> social.Social:
+    def get_socials(self: 'Me', uuid: Union[str, Profile, User, Contact] = None) -> social.Social:
         """
         Get connected social networks to Me account.
 
@@ -382,8 +384,7 @@ class Social:
          Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
         :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
         :return: Dict with social networks and posts.
-        :rtype: dict
-
+        :rtype: ``dict``
         """
         if isinstance(uuid, (User, Profile)):
             uuid = uuid.uuid
@@ -396,7 +397,7 @@ class Social:
             return social.Social.new_from_dict(get_my_social_raw(self), _client=self, _my_social=True)
         return self.get_profile(uuid).social
 
-    def add_social(self,
+    def add_social(self: 'Me',
                    twitter_token: str = None,
                    spotify_token: str = None,
                    instagram_token: str = None,
@@ -446,7 +447,7 @@ class Social:
                     successes += 1
         return bool(successes == not_null_values)
 
-    def remove_social(self,
+    def remove_social(self: 'Me',
                       twitter: bool = False,
                       spotify: bool = False,
                       instagram: bool = False,
@@ -488,7 +489,7 @@ class Social:
                     successes += 1
         return bool(true_values == successes)
 
-    def switch_social_status(self,
+    def switch_social_status(self: 'Me',
                              twitter: bool = None,
                              spotify: bool = None,
                              instagram: bool = None,
@@ -535,7 +536,7 @@ class Social:
                         successes += 1
         return bool(not_null_values == successes)
 
-    def numbers_count(self) -> int:
+    def numbers_count(self: 'Me') -> int:
         """
         Get total count of numbers on Me.
 
@@ -544,7 +545,7 @@ class Social:
         """
         return numbers_count_raw(self)['count']
 
-    def suggest_turn_on_comments(self, uuid: Union[str, Profile, User, Contact]) -> bool:
+    def suggest_turn_on_comments(self: 'Me', uuid: Union[str, Profile, User, Contact]) -> bool:
         """
         Ask another user to turn on comments in his profile.
 
@@ -552,7 +553,7 @@ class Social:
          Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
         :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
         :return: Is request success.
-        :rtype: bool
+        :rtype: ``bool``
         """
         if isinstance(uuid, Profile):
             if uuid.comments_enabled:
@@ -570,7 +571,7 @@ class Social:
 
         return suggest_turn_on_comments_raw(self, str(uuid))['requested']
 
-    def suggest_turn_on_mutual(self, uuid: Union[str, Profile, User, Contact]) -> bool:
+    def suggest_turn_on_mutual(self: 'Me', uuid: Union[str, Profile, User, Contact]) -> bool:
         """
         Ask another user to turn on mutual contacts on his profile.
 
@@ -578,7 +579,7 @@ class Social:
          Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
         :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
         :return: Is request success.
-        :rtype: bool
+        :rtype: ``bool``
         """
         if isinstance(uuid, Profile):
             if uuid.mutual_contacts_available:
@@ -596,7 +597,7 @@ class Social:
 
         return suggest_turn_on_mutual_raw(self, str(uuid))['requested']
 
-    def suggest_turn_on_location(self, uuid: Union[str, Profile, User, Contact]) -> bool:
+    def suggest_turn_on_location(self: 'Me', uuid: Union[str, Profile, User, Contact]) -> bool:
         """
         Ask another user to share his location with you.
 
@@ -604,7 +605,7 @@ class Social:
          Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
         :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
         :return: Is request success.
-        :rtype: bool
+        :rtype: ``bool``
         """
         if isinstance(uuid, (Profile, User)):
             uuid = uuid.uuid
@@ -618,7 +619,7 @@ class Social:
 
         return suggest_turn_on_location_raw(self, str(uuid))['requested']
 
-    def get_age(self, uuid: Union[str, Profile, User, Contact] = None) -> int:
+    def get_age(self: 'Me', uuid: Union[str, Profile, User, Contact] = None) -> int:
         """
         Get user age. calculate from ``date_of_birth``, provided by :py:func:`get_profile`.
 
@@ -626,7 +627,7 @@ class Social:
          Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
         :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
         :return: User age if date of birth exists. else - ``0``.
-        :rtype: int
+        :rtype: ``int``
         """
         if isinstance(uuid, Profile):
             return uuid.age
@@ -647,21 +648,21 @@ class Social:
             return (today - profile.date_of_birth).days / 365
         return 0
 
-    def is_spammer(self, phone_number: Union[int, str]) -> int:
+    def is_spammer(self: 'Me', phone_number: Union[int, str]) -> int:
         """
         Check on phone number if reported as spam.
 
         :param phone_number: International phone number format.
-        :type phone_number: Union[int, str]
+        :type phone_number: ``int`` | ``str``
         :return: count of spam reports. ``0`` if None.
-        :rtype: int
+        :rtype: ``int``
         """
         results = self.phone_search(phone_number)
         if results:
             return results.suggested_as_spam
         return 0
 
-    def update_location(self, latitude: float, longitude: float) -> bool:
+    def update_location(self: 'Me', latitude: float, longitude: float) -> bool:
         """
         Update your location. See :py:func:`upload_random_data`.
 
@@ -676,7 +677,7 @@ class Social:
             raise MeException("Not a valid coordination!")
         return update_location_raw(self, latitude, longitude)['success']
 
-    def share_location(self, uuid: Union[str, Profile, User, Contact]) -> bool:
+    def share_location(self: 'Me', uuid: Union[str, Profile, User, Contact]) -> bool:
         """
         Share your location with another user.
 
@@ -684,7 +685,7 @@ class Social:
          Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
         :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
         :return: Is sharing success.
-        :rtype: bool
+        :rtype: ``bool``
         """
         if isinstance(uuid, (Profile, User)):
             uuid = uuid.uuid
@@ -697,14 +698,14 @@ class Social:
             raise MeException("You can't share location with yourself!")
         return share_location_raw(self, uuid)['success']
 
-    def stop_sharing_location(self, uuids: Union[str, Profile, User, Contact, List[Union[str, Profile, User, Contact]]]) -> bool:
+    def stop_sharing_location(self: 'Me', uuids: Union[str, Profile, User, Contact, List[Union[str, Profile, User, Contact]]]) -> bool:
         """
         Stop sharing your :py:func:`update_location` with users.
 
         :param uuids: uuid/s of the user/s that you want to stop sharing your location with.
         :type uuids: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact` | List[``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
         :return: is stopping success.
-        :rtype: bool
+        :rtype: ``bool``
         """
         if not isinstance(uuids, list):
             uuids = [uuids]
@@ -720,14 +721,14 @@ class Social:
 
         return stop_sharing_location_raw(self, uuids)['success']
 
-    def stop_shared_location(self, uuids: Union[str, Profile, User, Contact, List[Union[str, Profile, User, Contact]]]) -> bool:
+    def stop_shared_location(self: 'Me', uuids: Union[str, Profile, User, Contact, List[Union[str, Profile, User, Contact]]]) -> bool:
         """
         Stop locations that shared with you.
 
         :param uuids: uuid/s of the user/s that you want to stop sharing your location with.
         :type uuids: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact` | List[``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
         :return: is stopping success.
-        :rtype: bool
+        :rtype: ``bool``
         """
         if not isinstance(uuids, list):
             uuids = [uuids]
@@ -743,7 +744,7 @@ class Social:
 
         return stop_shared_locations_raw(self, uuids)['success']
 
-    def locations_shared_by_me(self) -> List[user.User]:
+    def locations_shared_by_me(self: 'Me') -> List[user.User]:
         """
         Get list of users that you shared your location with them.
 
@@ -752,7 +753,7 @@ class Social:
         """
         return [user.User.new_from_dict(usr, _client=self) for usr in locations_shared_by_me_raw(self)]
 
-    def locations_shared_with_me(self) -> List[user.User]:
+    def locations_shared_with_me(self: 'Me') -> List[user.User]:
         """
         Get users who have shared their location with you.
 

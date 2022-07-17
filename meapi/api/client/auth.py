@@ -2,10 +2,12 @@ from json import JSONDecodeError, loads
 from os import environ
 from re import match
 from time import sleep
-from typing import Union
+from typing import Union, TYPE_CHECKING
 from meapi.api.raw.auth import generate_new_access_token_raw, activate_account_raw, ask_for_sms_raw, ask_for_call_raw
 from meapi.utils.exceptions import MeException, MeApiException
-from meapi.utils.helpers import get_session, HEADERS
+from meapi.utils.helpers import _get_session, HEADERS
+if TYPE_CHECKING:  # always False at runtime.
+    from meapi import Me
 
 ME_BASE_API = 'https://app.mobile.me.app'
 wa_auth_url = "https://wa.me/972543229534?text=Connectme"
@@ -17,10 +19,10 @@ class Auth:
     This class is not intended to create an instance's but only to be inherited by ``Me``.
     The separation is for order purposes only.
     """
-    def __init__(self):
+    def __init__(self: 'Me'):
         raise MeException("Auth class is not intended to create an instance's but only to be inherited by Me class.")
 
-    def _activate_account(self, activation_code: Union[int, str] = None) -> bool:
+    def _activate_account(self: 'Me', activation_code: Union[int, str] = None) -> bool:
         """
         Activate new phone number account.
         - If ``activation_code`` is not provided, the method will prompt for activation code via WhatsApp, Telegram, SMS or Call.
@@ -33,7 +35,7 @@ class Auth:
             - ``api_phone_number_doesnt_exists`` if not a valid ``phone_number``.
             - ``api_activation_code_expired``, ``api_incorrect_activation_code`` If activation-code is incorrect.
         :return: Is success.
-        :rtype: bool
+        :rtype: ``bool``
         """
         if not activation_code and self._activation_code:
             activation_code = self._activation_code
@@ -98,16 +100,16 @@ class Auth:
         if access_token:
             self._access_token = access_token  # in order to get the uuid.
             results['uuid'] = self.get_uuid()  # if this is a new account, you will need to create one.
-            self.credentials_manager.set(str(self.phone_number), results)
+            self._credentials_manager.set(str(self.phone_number), results)
             self.uuid = results['uuid']
             self._access_token = results['access']
             return True
         else:
             return False
 
-    def _ask_for_code(self, code_method: str):
+    def _ask_for_code(self: 'Me', code_method: str):
         try:
-            session_token = get_session(environ.get('ANTI_SESSION_BOT_KEY'), self.phone_number)
+            session_token = _get_session(environ.get('ANTI_SESSION_BOT_KEY'), self.phone_number)
         except Exception as err:
             print('ERROR: ' + str(err))
             return False
@@ -123,22 +125,22 @@ class Auth:
                 print(err)
             return False
 
-    def _ask_for_call(self):
+    def _ask_for_call(self: 'Me'):
         return self._ask_for_code("call")
 
-    def _ask_for_sms(self):
+    def _ask_for_sms(self: 'Me'):
         return self._ask_for_code("sms")
 
-    def _generate_access_token(self) -> bool:
+    def _generate_access_token(self: 'Me') -> bool:
         """
         Generate new access token.
 
         :raises MeApiException: msg: ``api_incorrect_pwd_token`` if ``pwd_token`` is broken.
         In this case, you need to generate a new ``pwd_token``. by calling to :py:func:`~meapi.Me._activate_account`.
-        :return: is success.
-        :type: bool
+        :return: Is success.
+        :type: ``bool``
         """
-        existing_data = self.credentials_manager.get(str(self.phone_number))
+        existing_data = self._credentials_manager.get(str(self.phone_number))
         if not existing_data:
             if self._activate_account():
                 return True
@@ -150,14 +152,14 @@ class Auth:
             if err.http_status == 400 and err.msg == 'api_incorrect_pwd_token':
                 err.reason = f"Your 'pwd_token' in is broken (You probably activated the account elsewhere)." \
                              f"You need to call 'client._activate_account()' in order to generate a new 'pwd_token'."
-                self.credentials_manager.delete(str(self.phone_number))
+                self._credentials_manager.delete(str(self.phone_number))
             raise err
         if auth_data.get('access'):
-            self.credentials_manager.update(phone_number=str(self.phone_number), access_token=auth_data['access'])
+            self._credentials_manager.update(phone_number=str(self.phone_number), access_token=auth_data['access'])
             return True
         return False
 
-    def _make_request(self,
+    def _make_request(self: 'Me',
                       req_type: str,
                       endpoint: str,
                       body: dict = None,
@@ -167,16 +169,16 @@ class Auth:
         Internal method to make requests to Me api and return the response.
 
         :param req_type: HTTP request type: ``post``, ``get``, ``put``, ``patch``, ``delete``.
-        :type req_type: str
+        :type req_type: ``str``
         :param endpoint: api endpoint.
-        :type endpoint: str
+        :type endpoint: ``str``
         :param body: The body of the request. Default: ``None``.
-        :type body: dict
+        :type body: ``dict``
         :param headers: Use different headers instead of the default.
-        :type headers: dict
+        :type headers: ``dict``
         :raises MeApiException: If HTTP status is bigger than ``400``.
         :return: API response as dict or list.
-        :rtype: Union[dict, list]
+        :rtype:  ``dict`` | ``list``
         """
         url = ME_BASE_API + endpoint
         request_types = ['post', 'get', 'put', 'patch', 'delete']
@@ -195,7 +197,7 @@ class Auth:
                 raise MeException(f"The response (Status code: {response.status_code}) received does not contain a valid JSON:\n" + str(response.text))
             if response.status_code == 403 and self.phone_number:
                 if self._generate_access_token():
-                    self._access_token = self.credentials_manager.get(str(self.phone_number)).get('access')
+                    self._access_token = self._credentials_manager.get(str(self.phone_number)).get('access')
                     continue
                 raise MeException("Cannot generate new access token!")
 

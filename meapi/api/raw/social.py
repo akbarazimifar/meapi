@@ -1,7 +1,9 @@
-from typing import Union, List
+from typing import List, TYPE_CHECKING
+if TYPE_CHECKING:  # always False at runtime.
+    from meapi import Me
 
 
-def friendship_raw(client, phone_number: int) -> dict:
+def friendship_raw(client: 'Me', phone_number: int) -> dict:
     """
     Get friendship information between you and another number.
     like count mutual friends, total calls duration, how do you name each other, calls count, your watches, comments, and more.
@@ -32,7 +34,7 @@ def friendship_raw(client, phone_number: int) -> dict:
     return client._make_request('get', f'/main/contacts/friendship/?phone_number={phone_number}')
 
 
-def report_spam_raw(client, country_code: str, phone_number: str, spam_name: str) -> dict:
+def report_spam_raw(client: 'Me', country_code: str, phone_number: str, spam_name: str) -> dict:
     """
     Report a number as spam.
 
@@ -55,7 +57,7 @@ def report_spam_raw(client, country_code: str, phone_number: str, spam_name: str
     return client._make_request('post', f'/main/names/suggestion/report/', body=body)
 
 
-def who_deleted_raw(client) -> List[dict]:
+def who_deleted_raw(client: 'Me') -> List[dict]:
     """
     Get a list of users that deleted you from their contacts.
 
@@ -88,7 +90,7 @@ def who_deleted_raw(client) -> List[dict]:
     return client._make_request('get', '/main/users/profile/who-deleted/')
 
 
-def who_watched_raw(client) -> List[dict]:
+def who_watched_raw(client: 'Me') -> List[dict]:
     """
     Get a list of users that watched you.
 
@@ -123,7 +125,7 @@ def who_watched_raw(client) -> List[dict]:
     return client._make_request('get', '/main/users/profile/who-watched/')
 
 
-def get_comments_raw(client, uuid: str) -> dict:
+def get_comments_raw(client: 'Me', uuid: str) -> dict:
     """
     Get user comments.
 
@@ -188,7 +190,7 @@ def get_comments_raw(client, uuid: str) -> dict:
     return client._make_request('get', f'/main/comments/list/{uuid}')
 
 
-def get_comment_raw(client, comment_id: int) -> dict:
+def get_comment_raw(client: 'Me', comment_id: int) -> dict:
     """
     Get comment details, comment text, who and how many liked, create time and more.
 
@@ -228,7 +230,7 @@ def get_comment_raw(client, comment_id: int) -> dict:
     return client._make_request('get', f'/main/comments/retrieve/{comment_id}')
 
 
-def publish_comment_raw(client, uuid: str, your_comment: str) -> dict:
+def publish_comment_raw(client: 'Me', uuid: str, your_comment: str) -> dict:
     """
     Publish comment.
 
@@ -269,7 +271,7 @@ def publish_comment_raw(client, uuid: str, your_comment: str) -> dict:
     return client._make_request('post', f'/main/comments/add/{uuid}/', body)
 
 
-def approve_comment_raw(client, comment_id: int) -> dict:
+def approve_comment_raw(client: 'Me', comment_id: int) -> dict:
     """
     Approve comment.
 
@@ -307,7 +309,7 @@ def approve_comment_raw(client, comment_id: int) -> dict:
     return client._make_request('post', f'/main/comments/approve/{comment_id}/')
 
 
-def delete_comment_raw(client, comment_id: int) -> dict:
+def delete_comment_raw(client: 'Me', comment_id: int) -> dict:
     """
     Delete comment.
 
@@ -345,7 +347,7 @@ def delete_comment_raw(client, comment_id: int) -> dict:
     return client._make_request('delete', f'/main/comments/approve/{comment_id}/')
 
 
-def like_comment_raw(client, comment_id: int) -> dict:
+def like_comment_raw(client: 'Me', comment_id: int) -> dict:
     """
     Like comment.
 
@@ -379,7 +381,7 @@ def like_comment_raw(client, comment_id: int) -> dict:
     return client._make_request('post', f'/main/comments/like/{comment_id}/')
 
 
-def unlike_comment_raw(client, comment_id: int) -> dict:
+def unlike_comment_raw(client: 'Me', comment_id: int) -> dict:
     """
     Unlike comment.
 
@@ -417,7 +419,7 @@ def unlike_comment_raw(client, comment_id: int) -> dict:
     return client._make_request('delete', f'/main/comments/like/{comment_id}/')
 
 
-def get_groups_raw(client) -> dict:
+def get_groups_raw(client: 'Me') -> dict:
     """
     Get groups of names and see how people named you.
 
@@ -459,7 +461,7 @@ def get_groups_raw(client) -> dict:
     return client._make_request('get', '/main/names/groups/')
 
 
-def get_deleted_groups_raw(client) -> dict:
+def get_deleted_groups_raw(client: 'Me') -> dict:
     """
     Get group names that you deleted.
 
@@ -500,7 +502,7 @@ def get_deleted_groups_raw(client) -> dict:
     return client._make_request('get', '/main/settings/hidden-names/')
 
 
-def delete_group_raw(client, contact_ids: List[int]) -> dict:
+def delete_group_raw(client: 'Me', contact_ids: List[int]) -> dict:
     """
     Delete group.
 
@@ -520,7 +522,7 @@ def delete_group_raw(client, contact_ids: List[int]) -> dict:
     return client._make_request('post', '/main/contacts/hide/', {'contact_ids': contact_ids})
 
 
-def restore_group_raw(client, contact_ids: List[int]) -> dict:
+def restore_group_raw(client: 'Me', contact_ids: List[int]) -> dict:
     """
     Restore group.
 
@@ -540,7 +542,7 @@ def restore_group_raw(client, contact_ids: List[int]) -> dict:
     return client._make_request('post', '/main/settings/hidden-names/', {'contact_ids': contact_ids})
 
 
-def ask_group_rename_raw(client, contact_ids: List[int], new_name: str) -> dict:
+def ask_group_rename_raw(client: 'Me', contact_ids: List[int], new_name: str) -> dict:
     """
     Ask contacts in a group to rename you in their contact book.
 
@@ -562,7 +564,7 @@ def ask_group_rename_raw(client, contact_ids: List[int], new_name: str) -> dict:
     return client._make_request('post', '/main/names/suggestion/', {'contact_ids': contact_ids, 'name': new_name})
 
 
-def get_my_social_raw(client) -> dict:
+def get_my_social_raw(client: 'Me') -> dict:
     """
     Get connected social networks to your Me account.
 
@@ -679,7 +681,7 @@ def get_my_social_raw(client) -> dict:
     return client._make_request('post', '/main/social/update/')
 
 
-def add_social_token_raw(client, social_name: str, token: str) -> dict:
+def add_social_token_raw(client: 'Me', social_name: str, token: str) -> dict:
     """
     Connect social network (that required token) to your Me account.
         - Available social networks: ``facebook``, ``instagram``, ``spotify``, ``twitter``, ``tiktok``.
@@ -702,7 +704,7 @@ def add_social_token_raw(client, social_name: str, token: str) -> dict:
     return client.self._make_request('post', f'/main/social/save-auth-token/', {'social_name': social_name, 'code_first': token})
 
 
-def add_social_url_raw(client, social_name: str, url: str) -> dict:
+def add_social_url_raw(client: 'Me', social_name: str, url: str) -> dict:
     """
     Connect social network (that required url) to your Me account.
         - Available for ``linkedin`` and ``pintrest``.
@@ -725,7 +727,7 @@ def add_social_url_raw(client, social_name: str, url: str) -> dict:
     return client._make_request('post', '/main/social/update-url/', {'social_name': social_name, 'profile_id': url})
 
 
-def remove_social_raw(client, social_name: str) -> dict:
+def remove_social_raw(client: 'Me', social_name: str) -> dict:
     """
     Remove social network from your Me account.
         - Available social networks: ``facebook``, ``instagram``, ``spotify``, ``twitter``, ``tiktok``, ``linkedin``, ``pintrest``.
@@ -746,7 +748,7 @@ def remove_social_raw(client, social_name: str) -> dict:
     return client._make_request('post', '/main/social/delete/', {'social_name': social_name})
 
 
-def switch_social_status_raw(client, social_name: str) -> dict:
+def switch_social_status_raw(client: 'Me', social_name: str) -> dict:
     """
     Switch social network status (hidden or shown) from your Me account.
         - Available social networks: ``facebook``, ``instagram``, ``spotify``, ``twitter``, ``tiktok``, ``linkedin``, ``pintrest``.
@@ -767,7 +769,7 @@ def switch_social_status_raw(client, social_name: str) -> dict:
     return client._make_request('post', '/main/social/hide/', {'social_name': social_name})
 
 
-def numbers_count_raw(client) -> dict:
+def numbers_count_raw(client: 'Me') -> dict:
     """
     Get total count of numbers on Me.
 
@@ -785,7 +787,7 @@ def numbers_count_raw(client) -> dict:
     return client._make_request('get', '/main/contacts/count/')
 
 
-def suggest_turn_on_comments_raw(client, uuid: str):
+def suggest_turn_on_comments_raw(client: 'Me', uuid: str):
     """
     Ask from user to turn on comments in his profile.
 
@@ -805,7 +807,7 @@ def suggest_turn_on_comments_raw(client, uuid: str):
     return client._make_request('post', '/main/users/profile/suggest-turn-on-comments/', {'uuid': uuid})
 
 
-def suggest_turn_on_mutual_raw(client, uuid: str):
+def suggest_turn_on_mutual_raw(client: 'Me', uuid: str):
     """
     Ask from user to turn on mutual contacts in his profile.
 
@@ -825,7 +827,7 @@ def suggest_turn_on_mutual_raw(client, uuid: str):
     return client._make_request('post', '/main/users/profile/suggest-turn-on-mutual/', {'uuid': uuid})
 
 
-def suggest_turn_on_location_raw(client, uuid: str):
+def suggest_turn_on_location_raw(client: 'Me', uuid: str):
     """
     Ask from user to share his location with you.
 
@@ -845,7 +847,7 @@ def suggest_turn_on_location_raw(client, uuid: str):
     return client._make_request('post', '/main/users/profile/suggest-turn-on-location/', {'uuid': uuid})
 
 
-def update_location_raw(client, latitude: float, longitude: float):
+def update_location_raw(client: 'Me', latitude: float, longitude: float):
     """
     Update your location.
 
@@ -868,7 +870,7 @@ def update_location_raw(client, latitude: float, longitude: float):
     return client._make_request('post', '/main/location/update/', body)
 
 
-def share_location_raw(client, uuid: str):
+def share_location_raw(client: 'Me', uuid: str):
     """
     Share your location with user.
 
@@ -888,7 +890,7 @@ def share_location_raw(client, uuid: str):
     return client._make_request('post', f'/main/users/profile/share-location/{uuid}/')
 
 
-def stop_sharing_location_raw(client, uuids: List[str]) -> dict:
+def stop_sharing_location_raw(client: 'Me', uuids: List[str]) -> dict:
     """
     Stop sharing your location with user.
 
@@ -908,7 +910,7 @@ def stop_sharing_location_raw(client, uuids: List[str]) -> dict:
     return client._make_request('post', '/main/users/profile/share-location/stop-for-me/', {"uuids": uuids})
 
 
-def stop_shared_locations_raw(client, uuids: List[str]) -> dict:
+def stop_shared_locations_raw(client: 'Me', uuids: List[str]) -> dict:
     """
     Stop location that shared with you.
 
@@ -928,7 +930,7 @@ def stop_shared_locations_raw(client, uuids: List[str]) -> dict:
     return client._make_request('post', '/main/users/profile/share-location/stop/', {"uuids": uuids})
 
 
-def locations_shared_by_me_raw(client) -> List[dict]:
+def locations_shared_by_me_raw(client: 'Me') -> List[dict]:
     """
     Get list of users that you shared your location with them.
 
@@ -952,7 +954,7 @@ def locations_shared_by_me_raw(client) -> List[dict]:
     return client._make_request('get', '/main/users/profile/share-location/')
 
 
-def locations_shared_with_me_raw(client) -> dict:
+def locations_shared_with_me_raw(client: 'Me') -> dict:
     """
     Get users who have shared a location with you. See also :py:func:`locations_shared_by_me`.
 

@@ -1,8 +1,10 @@
 from datetime import datetime
-from typing import Union
+from typing import Union, TYPE_CHECKING
 from meapi.models.me_model import MeModel
 from meapi.utils.exceptions import MeException
 from meapi.utils.helpers import parse_date
+if TYPE_CHECKING:  # always False at runtime.
+    from meapi import Me
 
 
 class Notification(MeModel):
@@ -55,7 +57,7 @@ class Notification(MeModel):
     .. automethod:: read
     """
     def __init__(self,
-                 _client,
+                 _client: 'Me',
                  id: int,
                  created_at: str,
                  modified_at: str,

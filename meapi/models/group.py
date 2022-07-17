@@ -1,9 +1,11 @@
 from datetime import datetime
-from typing import Union, List
+from typing import Union, List, TYPE_CHECKING
 from meapi.models.user import User
 from meapi.utils.exceptions import MeException
 from meapi.utils.helpers import parse_date
 from meapi.models.me_model import MeModel
+if TYPE_CHECKING:  # always False at runtime.
+    from meapi import Me
 
 
 class Group(MeModel):
@@ -32,7 +34,7 @@ class Group(MeModel):
     .. automethod:: ask_to_rename
     """
     def __init__(self,
-                 _client,
+                 _client: 'Me',
                  name: Union[str, None] = None,
                  count: Union[int, None] = None,
                  last_contact_at: Union[str, None] = None,

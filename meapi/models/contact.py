@@ -1,9 +1,11 @@
 from datetime import datetime
-from typing import Union
+from typing import Union, TYPE_CHECKING
 from meapi.utils.helpers import parse_date
 from meapi.models.common import _CommonMethodsForUserContactProfile
 from meapi.models.me_model import MeModel
 from meapi.models.user import User
+if TYPE_CHECKING:  # always False at runtime.
+    from meapi import Me
 
 
 class Contact(MeModel, _CommonMethodsForUserContactProfile):
@@ -49,29 +51,28 @@ class Contact(MeModel, _CommonMethodsForUserContactProfile):
 
     Methods:
 
-    .. automethod:: get_profile
-    .. automethod:: as_vcard
-    .. automethod:: block
-    .. automethod:: unblock
-    .. automethod:: report_spam
+        Get the contact as Vcard: :py:func:`~meapi.models.common._CommonMethodsForUserContactProfile.as_vcard`.
+        Block this contact: :py:func:`~meapi.models.common._CommonMethodsForUserContactProfile.block`.
+        Unblock this contact: :py:func:`~meapi.models.common._CommonMethodsForUserContactProfile.unblock`.
+        Report this contact as spam: :py:func:`~meapi.models.common._CommonMethodsForUserContactProfile.report_spam`.
     """
     def __init__(self,
-                 _client,
-                 name: Union[str, None] = None,
-                 id: Union[int, None] = None,
-                 picture: Union[None, None] = None,
-                 user: Union[dict, None] = None,
-                 suggested_as_spam: Union[int, None] = None,
-                 is_permanent: Union[bool, None] = None,
-                 is_pending_name_change: Union[bool, None] = None,
-                 user_type: Union[str, None] = None,
-                 phone_number: Union[int, None] = None,
-                 cached: Union[bool, None] = None,
-                 is_shared_location: Union[bool, None] = None,
-                 created_at: Union[str, None] = None,
-                 modified_at: Union[str, None] = None,
-                 in_contact_list: Union[bool, None] = None,
-                 is_my_contact: Union[bool, None] = None
+                 _client: 'Me',
+                 phone_number: int,
+                 name: str = None,
+                 id: int = None,
+                 picture: None = None,
+                 user: dict = None,
+                 suggested_as_spam: int = None,
+                 is_permanent: bool = None,
+                 is_pending_name_change: bool = None,
+                 user_type: str = None,
+                 cached: bool = None,
+                 is_shared_location: bool = None,
+                 created_at: str = None,
+                 modified_at: str = None,
+                 in_contact_list: bool = None,
+                 is_my_contact: bool = None
                  ):
         self.__client = _client
         self.name = name

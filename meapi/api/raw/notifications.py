@@ -1,7 +1,9 @@
-from typing import List, Union
+from typing import List, TYPE_CHECKING
+if TYPE_CHECKING:  # always False at runtime.
+    from meapi import Me
 
 
-def unread_notifications_count_raw(client) -> dict:
+def unread_notifications_count_raw(client: 'Me') -> dict:
     """
     Get number of unread notifications.
 
@@ -11,7 +13,7 @@ def unread_notifications_count_raw(client) -> dict:
     return client._make_request('get', '/notification/notification/count/')
 
 
-def get_notifications_raw(client, page_number: int, results_limit: int, categories: List[str] = None) -> dict:
+def get_notifications_raw(client: 'Me', page_number: int, results_limit: int, categories: List[str] = None) -> dict:
     """
     Get notifications.
 
@@ -94,9 +96,9 @@ def get_notifications_raw(client, page_number: int, results_limit: int, categori
                         "phone_number": 878634535436,
                         "notification_id": None,
                         "profile_picture": None,
-                    },
-                },
-            ],
+                    }
+                }
+            ]
         }
     """
     params = f"?page={page_number}&page_size={results_limit}&status=distributed"
@@ -105,7 +107,7 @@ def get_notifications_raw(client, page_number: int, results_limit: int, categori
     return client._make_request('get', '/notification/notification/items/' + params)
 
 
-def read_notification_raw(client, notification_id: int) -> dict:
+def read_notification_raw(client: 'Me', notification_id: int) -> dict:
     """
     Mark notification as read.
 
@@ -115,6 +117,7 @@ def read_notification_raw(client, notification_id: int) -> dict:
     :rtype: ``dict``
 
     Example::
+
         {
             'id': 3487438454,
             'created_at': '2022-06-28T22:12:36Z',

@@ -1,7 +1,8 @@
-from typing import Union
+from typing import TYPE_CHECKING
 from meapi.models.me_model import MeModel
 from meapi.utils.exceptions import MeException
-
+if TYPE_CHECKING:  # always False at runtime.
+    from meapi import Me
 
 class BlockedNumber(MeModel):
     """
@@ -17,7 +18,7 @@ class BlockedNumber(MeModel):
             The phone number of the contact.
     """
     def __init__(self,
-                 _client,
+                 _client: 'Me',
                  block_contact: bool,
                  me_full_block: bool,
                  phone_number: int

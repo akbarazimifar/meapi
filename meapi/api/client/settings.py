@@ -2,6 +2,8 @@ from typing import Tuple
 from meapi.utils.exceptions import MeException
 from meapi.models import settings
 from meapi.api.raw.settings import *
+if TYPE_CHECKING:  # always False at runtime.
+    from meapi import Me
 
 
 class Settings:
@@ -9,10 +11,10 @@ class Settings:
     This class is not intended to create an instance's but only to be inherited by ``Me``.
     The separation is for order purposes only.
     """
-    def __init__(self):
+    def __init__(self: 'Me'):
         raise MeException("Settings class is not intended to create an instance's but only to be inherited by Me class.")
 
-    def get_settings(self) -> settings.Settings:
+    def get_settings(self: 'Me') -> settings.Settings:
         """
         Get current settings.
 
@@ -21,7 +23,7 @@ class Settings:
         """
         return settings.Settings.new_from_dict(get_settings_raw(self), _client=self)
 
-    def change_settings(self,
+    def change_settings(self: 'Me',
                         mutual_contacts_available: bool = None,
                         who_watched_enabled: bool = None,
                         who_deleted_enabled: bool = None,

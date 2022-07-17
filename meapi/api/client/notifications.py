@@ -2,6 +2,8 @@ from typing import Union, Tuple
 from meapi.api.raw.notifications import *
 from meapi.models.notification import Notification
 from meapi.utils.exceptions import MeException
+if TYPE_CHECKING:  # always False at runtime.
+    from meapi import Me
 
 notification_categories = {
     'names': ['JOINED_ME', 'CONTACT_ADD', 'UPDATED_CONTACT', 'DELETED_CONTACT', 'NEW_NAME_REQUEST', 'NEW_NAME_REQUEST_APPROVED'],
@@ -19,10 +21,10 @@ class Notifications:
     This class is not intended to create an instance's but only to be inherited by ``Me``.
     The separation is for order purposes only.
     """
-    def __init__(self):
+    def __init__(self: 'Me'):
         raise MeException("Notifications class is not intended to create an instance's but only to be inherited by Me class.")
 
-    def unread_notifications_count(self) -> int:
+    def unread_notifications_count(self: 'Me') -> int:
         """
         Get count of unread notifications.
 
@@ -31,7 +33,7 @@ class Notifications:
         """
         return unread_notifications_count_raw(self)['count']
 
-    def get_notifications(self,
+    def get_notifications(self: 'Me',
                           page_number: int = 1,
                           results_limit: int = 20,
                           names_filter: bool = False,
@@ -76,7 +78,7 @@ class Notifications:
         return results['count'], [Notification.new_from_dict(notification, _client=self,
                                                              **notification.pop('context')) for notification in results['results']]
 
-    def read_notification(self, notification_id: Union[int, str]) -> bool:
+    def read_notification(self: 'Me', notification_id: Union[int, str]) -> bool:
         """
         Mark notification as read.
 
