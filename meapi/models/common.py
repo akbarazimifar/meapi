@@ -1,12 +1,19 @@
+from functools import reduce
+from typing import TYPE_CHECKING, Union
 from meapi.utils.exceptions import MeException
-from meapi.utils.helpers import as_vcard
+from meapi.utils.helpers import get_img_binary_content, encode_string
+
+if TYPE_CHECKING:  # always False at runtime.
+    from meapi.models.profile import Profile
+    from meapi.models.user import User
+    from meapi.models.contact import Contact
 
 
 class _CommonMethodsForUserContactProfile:
     """
-    Common methods for user, profile and contact.
+    Common methods for :py:obj:`~meapi.models.profile.Profile`, :py:obj:`~meapi.models.user.User` and :py:obj:`~meapi.models.contact.Contact`.
     """
-    def get_profile(self):
+    def get_profile(self: Union['Profile', 'User', 'Contact']) -> Union['Profile', None]:
         """
         Returns the profile of the contact.
 
@@ -22,7 +29,7 @@ class _CommonMethodsForUserContactProfile:
             uuid = self.uuid
         return getattr(self, f'_{self.__class__.__name__}__client').get_profile(uuid)
 
-    def block(self, block_contact=True, me_full_block=True) -> bool:
+    def block(self: Union['Profile', 'User', 'Contact'], block_contact=True, me_full_block=True) -> bool:
         """
         Block a contact.
 
@@ -39,7 +46,7 @@ class _CommonMethodsForUserContactProfile:
             raise MeException("you can't block yourself!")
         return getattr(self, f'_{self.__class__.__name__}__client').block_profile(phone_number=self.phone_number, block_contact=block_contact, me_full_block=me_full_block)
 
-    def unblock(self, unblock_contact=True, me_full_unblock=True) -> bool:
+    def unblock(self: Union['Profile', 'User', 'Contact'], unblock_contact=True, me_full_unblock=True) -> bool:
         """
         Unblock a contact.
 
@@ -56,7 +63,7 @@ class _CommonMethodsForUserContactProfile:
             raise MeException("you can't unblock yourself!")
         return getattr(self, f'_{self.__class__.__name__}__client').unblock_profile(phone_number=self.phone_number, unblock_contact=unblock_contact, me_full_unblock=me_full_unblock)
 
-    def report_spam(self, spam_name: str, country_code: str) -> bool:
+    def report_spam(self: Union['Profile', 'User', 'Contact'], spam_name: str, country_code: str) -> bool:
         """
         Report this contact as spam.
             - The same as :py:func:`~meapi.Me.report_spam`.
@@ -72,17 +79,22 @@ class _CommonMethodsForUserContactProfile:
         """
         return getattr(self, f'_{self.__class__.__name__}__client').report_spam(phone_number=self.phone_number, spam_name=spam_name, country_code=country_code)
 
-    def as_vcard(self, prefix_name: str = "", dl_profile_picture: bool = True, **kwargs) -> str:
+    def as_vcard(self: Union['Profile', 'User', 'Contact'], prefix_name: str = "", dl_profile_picture: bool = True, **kwargs) -> str:
         """
         Get contact data in vcard format in order to add it to your contacts book.
 
-        Example:
+        Usage examples:
             .. code-block:: python
 
+                # Get your profile as vcard
+                my_profile = me.get_my_profile()
+                print(my_profile.as_vcard(twitter='social.twitter.profile_id', gender='gender')
+
+                # Save profiles as vcard file
                 uuids = ['xx-xx-xx-xx', 'yy-yy-yy-yy', 'zz-zz-zz-zz']
                 profiles = [me.get_profile(uuid) for uuid in uuids] # can raise rate limit exception.
-                vcards = [profile.as_vcard(prefix_name="Imported - ", dl_profile_picture=False,
-                    twitter='social.twitter.profile_id', gender='gender') for profile in profiles]
+                vcards = [profile.as_vcard(prefix_name="Imported", dl_profile_picture=False,
+                    location='location_name') for profile in profiles]
                 with open('contacts.vcf', 'w') as contacts:
                     contacts.write('\\n'.join(vcards))
 
@@ -100,6 +112,43 @@ class _CommonMethodsForUserContactProfile:
 
         Returns:
             ``str``: Vcard format as string. See `Wikipedia <https://en.wikipedia.org/wiki/VCard#Properties>`_ for more information.
+
+        Results example::
+
+            BEGIN:VCARD
+            VERSION:3.0
+            FN;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:Rachel Green
+            TEL;CELL:1234567890
+            PHOTO;ENCODING=BASE64;JPEG:/9j/4AAQSgyIR..........
+            EMAIL:rachelg@friends.tv
+            BDAY:1969-05-05
+            NOTE;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:Twitter: RachelGreeen | Gender: F
+            END:VCARD
         """
-        return as_vcard(self, prefix_name, dl_profile_picture, **kwargs)
+        vcard_data = {'start': "BEGIN:VCARD", 'version': "VERSION:3.0"}
+        full_name = ((str(prefix_name) + ' - ') if prefix_name else '') + (self.name or f'Unknown - {self.phone_number}')
+        vcard_data['name'] = f"FN;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:{encode_string(full_name)}"
+        vcard_data['phone'] = f"TEL;CELL:{self.phone_number}"
+        if dl_profile_picture and getattr(self, 'profile_picture', None):
+            binary = get_img_binary_content(self.profile_picture)
+            if binary:
+                vcard_data['photo'] = f"PHOTO;ENCODING=BASE64;JPEG:{binary}"
+        if getattr(self, 'email', None):
+            vcard_data['email'] = f"EMAIL:{self.email}"
+        if getattr(self, 'date_of_birth', None):
+            vcard_data['birthday'] = f"BDAY:{self.date_of_birth}"
+
+        notes = 'Extracted with meapi <https://github.com/david-lev/meapi>' if not kwargs.get('remove_credit', False) else ''
+        for key, value in kwargs.items():
+            try:
+                attr_value = reduce(getattr, value.split('.'), self)
+                if attr_value and isinstance(attr_value, (str, int)):
+                    notes += f" | {str(key).replace('_', ' ').title()}: {attr_value}"
+            except AttributeError:
+                continue
+
+        vcard_data['note'] = f"NOTE;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:{encode_string(notes)}"
+        vcard_data['end'] = "END:VCARD"
+
+        return "\n".join([val for val in vcard_data.values()])
 

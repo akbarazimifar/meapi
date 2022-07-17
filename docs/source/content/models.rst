@@ -26,6 +26,13 @@
 .. currentmodule:: meapi.models.contact
 .. autoclass:: Contact()
 
+🤲 Common model
+----------------
+
+.. currentmodule:: meapi.models.common
+.. autoclass:: _CommonMethodsForUserContactProfile()
+    :members:
+
 👥 Group model
 --------------
 

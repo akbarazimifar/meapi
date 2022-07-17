@@ -99,36 +99,36 @@ class Me(Auth, Account, Social, Settings, Notifications):
 
         # check for the presence valid credentials manager, else use default (JsonFileCredentialsManager)
         if isinstance(credentials_manager, CredentialsManager):
-            self.credentials_manager = credentials_manager
+            self._credentials_manager = credentials_manager
         else:
-            self.credentials_manager = JsonFileCredentialsManager(config_file)
+            self._credentials_manager = JsonFileCredentialsManager(config_file)
 
         # set the rest of the attributes
         self.phone_number = validate_phone_number(phone_number) if (phone_number and not access_token) else phone_number
+        self.uuid = None
         self._activation_code = activation_code
         self._access_token = access_token
-        self.account_details = account_details
-        self.uuid = None
+        self._account_details = account_details
         self._proxies = proxies
         self._session: Session = session or Session()  # create new session if not provided
 
         # if access_token not provided, try to get it from the credentials manager, if not found, activate the account.
         if not self._access_token:
-            auth_data = self.credentials_manager.get(str(self.phone_number))
+            auth_data = self._credentials_manager.get(str(self.phone_number))
             if auth_data:
                 data = auth_data
             else:
                 self._activate_account(self._activation_code)
-                data = self.credentials_manager.get(str(self.phone_number))
+                data = self._credentials_manager.get(str(self.phone_number))
 
             self._access_token = data['access']
             self.uuid = data['uuid']
 
     def __repr__(self):
-        return f"<Me {'phone=' + str(self.phone_number) + ' uuid=' + self.uuid if self.phone_number else 'access_token mode'} >"
+        return f"<Me {('phone=' + str(self.phone_number) + ' uuid=' + self.uuid) if self.phone_number else 'access_token mode'} >"
 
     def __str__(self):
-        return str(self.phone_number) if self.phone_number else str(self._access_token)
+        return str(self.phone_number) if self.phone_number else 'access_token mode'
 
     def __del__(self):
         if isinstance(getattr(self, '_session', None), Session):

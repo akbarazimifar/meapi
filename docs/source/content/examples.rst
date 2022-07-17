@@ -12,18 +12,20 @@
 
 .. code-block:: python
 
-    phones = ['+972123456789', '+972123456789', '+972123456789']
-    for phone in phones:
+    with open('phone_numbers.txt', 'r') as f:
+        # txt file with phone numbers in separate lines
+        phone_numbers = f.read().splitlines()
+
+    for number in phone_numbers:
         try:
-            res = me.phone_search(phone)
+            res = me.phone_search(number)
             if res:
-                print(res.name, res.phone_number)
-                continue
-            print('No match for {}'.format(phone))
+                print(f'{number} - {res.name}')
         except MeApiException as e:
             if e.msg == 'api_search_passed_limit':
                 print('passed limit for phone searches')
                 break
+            raise e
 
 - Advanced profile view:
 
@@ -43,8 +45,7 @@
                   profile.carrier,
                   profile.device_type)
     except MeApiException as e:
-        if e.msg == 'api_profile_view_passed_limit':
-            print('profile view limit reached')
+        print('profile view limit reached') if e.msg == 'api_profile_view_passed_limit' else raise e
 
 - Get social networks:
 

@@ -62,31 +62,31 @@ ________________________
 🔎 Searching:
 ^^^^^^^^^^^^^
 
-* Search phone numbers
-* Get user full profile: profile picture, birthday, location, platform, socials and more
-* Spam indication and report
+* 📞 Search phone numbers
+* 😎 Get user full profile: profile picture, birthday, location, platform, socials and more
+* 🚫 Spam indication and report
 
 🌐 Social:
 ^^^^^^^^^^
 
-* Get user social networks: facebook, instagram, twitter, spotify and more
-* See how people call you
-* Get mutual contacts
-* See who watched your profile
-* See who deleted you from his contacts book
-* Get, publish and manage comments
-* Report spam on phone numbers
-* Read app notifications
+* 📱 Get user social networks: facebook, instagram, twitter, spotify and more
+* ✍️ See how people call you
+* 🙌 Get mutual contacts
+* 👁 See who watched your profile
+* 🗑 See who deleted you from his contacts book
+* 💬 Get, publish and manage comments
+* 📍 Get users location
+* 🔔 Read app notifications
 
 ⚙️ Settings:
 ^^^^^^^^^^^^^
 
-* Change profile information
-* Connect social networks (And get verified blue check)
-* Upload contacts and calls history
-* Block profiles and numbers
-* Update your location
-* Delete or suspend your account
+* ✏ Change profile information
+* 🛡 Configure social settings
+* 🔗 Connect social networks (And get verified blue check)
+* ⬆ Upload contacts and calls history
+* ⛔ Block profiles and numbers
+* ❌ Delete or suspend your account
 
 
 👨‍💻 **Usage**

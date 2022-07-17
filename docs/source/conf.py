@@ -62,7 +62,7 @@ pygments_style = "friendly"
 html_theme = "furo"
 copybutton_prompt_text = "$ "
 suppress_warnings = ["image.not_readable"]
-html_favicon = "../images/favicon.ico"
+html_favicon = "favicon.ico"
 
 
 # Add any paths that contain custom static files (such as style sheets) here,
