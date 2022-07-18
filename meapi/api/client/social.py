@@ -309,17 +309,14 @@ class Social:
         """
         groups = {}
         for name in get_deleted_groups_raw(self)['names']:  # group names together.
-            group_name = name['name']
-            if group_name not in groups.keys():
-                del name['created_at']
-                del name['hidden_at']
-                del name['in_contact_list']
-                name['contact_ids'] = [name.pop('contact_id')]
-                name['contacts'] = [{'user': name.pop('user')}]
-                groups[group_name] = name
+            if name['name'] not in groups.keys():
+                groups[name['name']] = {'contacts': [{'user': name['user'], 'id': name['contact_id'],
+                                                      'in_contact_list': name['in_contact_list']}], 'contact_ids': [name['contact_id']]}
             else:
-                groups[name['name']]['contact_ids'].append(name.pop('contact_id'))
-                groups[name['name']]['contacts'].append({'user': name.pop('user')})
+                groups[name['name']]['contact_ids'].append(name['contact_id'])
+                groups[name['name']]['contacts'].append({'user': name['user'], 'id': name['contact_id'],
+                                                         'in_contact_list': name['in_contact_list']})
+            groups[name['name']]['name'] = name['name']
 
         return sorted([group.Group.new_from_dict(grp, _client=self, is_active=False, count=len(grp['contact_ids']))
                        for grp in groups.values()], key=lambda x: x.count, reverse=True)

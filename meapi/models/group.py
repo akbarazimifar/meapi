@@ -45,7 +45,7 @@ class Group(MeModel):
         self.name = name
         self.count = count
         self.last_contact_at: Union[datetime, None] = parse_date(last_contact_at)
-        self.contacts = [User.new_from_dict(contact['user'], id=contact.pop('id'), in_contact_list=contact.pop('in_contact_list'))
+        self.contacts = [User.new_from_dict(contact.get('user'), id=contact.get('id'), in_contact_list=contact.get('in_contact_list'))
                          for contact in contacts] if contacts else contacts
         self.contact_ids = contact_ids
         self.is_active = is_active
