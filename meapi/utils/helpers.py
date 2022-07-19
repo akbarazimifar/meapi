@@ -4,7 +4,7 @@ from datetime import datetime, date
 from quopri import encodestring
 from random import randint, choice, uniform, random
 from re import sub
-from typing import Union
+from typing import Union, Optional
 from requests import get
 from meapi.utils.exceptions import MeException
 from string import ascii_letters, digits
@@ -16,14 +16,14 @@ RANDOM_API = "https://random-data-api.com/api"
 HEADERS = {'accept-encoding': 'gzip', 'user-agent': 'okhttp/4.9.1', 'content-type': 'application/json; charset=UTF-8'}
 
 
-def parse_date(date_str: Union[str, None], date_only=False) -> Union[datetime, date, None]:
+def parse_date(date_str: Optional[str], date_only=False) -> Optional[Union[datetime, date]]:
     if date_str is None:
         return date_str
     date_obj = datetime.strptime(str(date_str), '%Y-%m-%d' + ('' if date_only else 'T%H:%M:%S%z'))
     return date_obj.date() if date_only else date_obj
 
 
-def get_img_binary_content(img_url: str) -> Union[str, None]:
+def get_img_binary_content(img_url: str) -> Optional[str]:
     try:
         res = get(img_url)
         if res.status_code == 200:
@@ -146,7 +146,7 @@ def _register_new_account(client) -> str:
     raise MeException("Can't update the profile. Please check your input again.")
 
 
-def _get_session(seed: str, phone_number: int) -> Union[str, None]:
+def _get_session(seed: str, phone_number: int) -> str:
     """
     Generate session token to use in order to get sms or call in the authentication process.
 
@@ -166,13 +166,9 @@ def _get_session(seed: str, phone_number: int) -> Union[str, None]:
     a1 = str(int(phone_number * (last_digit + 2)))
     a2 = str(int(int(time()) * (last_digit + 2)))
     a3 = ''.join(choice(ascii_letters + digits) for _ in range(abs(48 - len(a1 + a2) - 2)))
-    result = "{}-{}-{}".format(a1, a2, a3)
     iv = urandom(16)
     aes = AES.new(sha256(seed.encode()).digest(), AES.MODE_CBC, iv)
-    data_to_encrypt = result.encode()
-    padding = len(data_to_encrypt) % 16
-    if padding == 0:
-        padding = 16
-    enc_data = aes.encrypt(data_to_encrypt + bytes((chr(padding) * padding).encode()))
-    final_token = b64encode(iv + enc_data)
+    data_to_encrypt = "{}-{}-{}".format(a1, a2, a3).encode()
+    padding = (len(data_to_encrypt) % 16) or 16
+    final_token = b64encode(iv + aes.encrypt(data_to_encrypt + bytes((chr(padding) * padding).encode())))
     return final_token.decode()

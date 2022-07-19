@@ -6,13 +6,13 @@ from meapi.models.user import User
 
 class Call(MeModel):
     def __init__(self,
-                 called_at: Union[str, None] = None,
-                 duration: Union[int, None] = None,
-                 name: Union[str, None] = None,
-                 phone_number: Union[int, None] = None,
-                 referenced_user: Union[dict, None] = None,
-                 tag: Union[str, None] = None,
-                 type: Union[str, None] = None
+                 called_at: str = None,
+                 duration: int = None,
+                 name: str = None,
+                 phone_number: int = None,
+                 referenced_user: dict = None,
+                 tag: str = None,
+                 type: str = None
                  ):
         self.called_at = parse_date(called_at)
         self.duration = duration

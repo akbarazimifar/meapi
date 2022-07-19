@@ -229,7 +229,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         self.carrier = carrier
         self.comments_enabled = comments_enabled
         self.country_code = country_code
-        self.date_of_birth: Union[date, None] = parse_date(date_of_birth, date_only=True)
+        self.date_of_birth: Optional[date] = parse_date(date_of_birth, date_only=True)
         self.device_type = device_type
         self.distance = distance
         self.friends_distance = [User.new_from_dict(user.get('author')) for user in friends_distance.get('friends')] if friends_distance else None
@@ -262,11 +262,11 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         self.__my_profile = _my_profile
 
     @property
-    def name(self) -> str:
+    def name(self) -> Optional[str]:
         """
         Returns the full name of the user. ``first_name`` + ``last_name``.
         """
-        return (self.first_name or '') + (' ' if self.first_name and self.last_name else '') + (self.last_name or '')
+        return (self.first_name or '') + (' ' if self.first_name and self.last_name else '') + (self.last_name or '') or None
 
     @property
     def age(self) -> int:

@@ -1,5 +1,5 @@
 from re import match, M
-from typing import Tuple, List
+from typing import Tuple, List, Optional, TYPE_CHECKING
 from meapi.api.raw.account import *
 from meapi.utils.validations import validate_contacts, validate_calls, validate_phone_number
 from meapi.utils.exceptions import MeApiException, MeException
@@ -17,7 +17,7 @@ class Account:
     def __init__(self: 'Me'):
         raise MeException("Account class is not intended to create an instance's but only to be inherited by Me class.")
 
-    def phone_search(self: 'Me', phone_number: Union[str, int]) -> Union[contact.Contact, None]:
+    def phone_search(self: 'Me', phone_number: Union[str, int]) -> Optional[contact.Contact]:
         """
         Get information on any phone number.
 
@@ -78,7 +78,7 @@ class Account:
             extra = {}
         return profile.Profile.new_from_dict(_client=self, data=res, _my_profile=True, **extra)
 
-    def get_uuid(self: 'Me', phone_number: Union[int, str] = None) -> Union[str, None]:
+    def get_uuid(self: 'Me', phone_number: Union[int, str] = None) -> Optional[str]:
         """
         Get user's uuid (To use in :py:func:`get_profile`, :py:func:`get_comments` and more).
 
@@ -213,8 +213,8 @@ class Account:
 
         :param yes_im_sure: ``True`` to suspend your account and ignore prompt. *Default:* ``False``.
         :type yes_im_sure: ``bool``
-        :return: is suspended.
-        :rtype: bool
+        :return: Is suspended.
+        :rtype: ``bool``
         """
         if not yes_im_sure:
             print("Are you sure you want to suspend your account? (y/n)")
@@ -230,9 +230,9 @@ class Account:
         Upload new contacts to your Me account. See :py:func:`upload_random_data`.
 
         :param contacts: List of dicts with contacts data.
-        :type contacts: List[dict])
+        :type contacts: List[``dict``])
         :return: Dict with upload results.
-        :rtype: dict
+        :rtype: ``dict``
 
         Example of list of contacts to add::
 

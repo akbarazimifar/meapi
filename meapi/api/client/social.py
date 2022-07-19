@@ -1,5 +1,5 @@
 from re import match, sub
-from typing import Union
+from typing import Union, Optional
 from meapi.models.contact import Contact
 from meapi.models.profile import Profile
 from meapi.models.user import User
@@ -53,7 +53,7 @@ class Social:
         """
         return report_spam_raw(self, country_code.upper(), str(validate_phone_number(phone_number)), spam_name)['success']
 
-    def who_deleted(self: 'Me', incognito: bool = False, sorted_by: Union[str, None] = 'created_at') -> List[deleter.Deleter]:
+    def who_deleted(self: 'Me', incognito: bool = False, sorted_by: Optional[str] = 'created_at') -> List[deleter.Deleter]:
         """
         Get list of users who deleted you from their contacts.
 
@@ -169,7 +169,7 @@ class Social:
         :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
         :param your_comment: Your comment.
         :type your_comment: ``str``
-        :param remove_credit: If ``True``, this will remove your credit from the comment. *Default:* ``False``.
+        :param remove_credit: If ``True``, this will remove the credit from the comment. *Default:* ``False``.
         :type remove_credit: ``bool``
         :return: :py:obj:`~meapi.models.comment.Comment` object.
         :rtype: :py:obj:`~meapi.models.comment.Comment`
@@ -354,7 +354,7 @@ class Social:
             contacts_ids = [contacts_ids]
         return restore_group_raw(self, [int(_id) for _id in contacts_ids])['success']
 
-    def ask_group_rename(self: 'Me', contacts_ids: Union[group.Group, int, str, List[Union[int, str]]], new_name: Union[str, None] = None) -> bool:
+    def ask_group_rename(self: 'Me', contacts_ids: Union[group.Group, int, str, List[Union[int, str]]], new_name: Optional[str] = None) -> bool:
         """
         Suggest new name to group of people and ask them to rename you in their contacts book.
 
@@ -644,7 +644,7 @@ class Social:
             today = date.today()
             if profile.date_of_birth > today:
                 return 0
-            return (today - profile.date_of_birth).days / 365
+            return int((today - profile.date_of_birth).days / 365)
         return 0
 
     def is_spammer(self: 'Me', phone_number: Union[int, str]) -> int:

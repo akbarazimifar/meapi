@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Union, List, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING
 from meapi.models.user import User
 from meapi.utils.exceptions import MeException
 from meapi.utils.helpers import parse_date
@@ -35,16 +35,16 @@ class Group(MeModel):
     """
     def __init__(self,
                  _client: 'Me',
-                 name: Union[str, None] = None,
-                 count: Union[int, None] = None,
-                 last_contact_at: Union[str, None] = None,
-                 contacts: Union[List[dict], None] = None,
-                 contact_ids: Union[List[int], None] = None,
+                 name: str = None,
+                 count: int = None,
+                 last_contact_at: str = None,
+                 contacts: List[dict] = None,
+                 contact_ids: List[int] = None,
                  is_active: bool = True
                  ):
         self.name = name
         self.count = count
-        self.last_contact_at: Union[datetime, None] = parse_date(last_contact_at)
+        self.last_contact_at: Optional[datetime] = parse_date(last_contact_at)
         self.contacts = [User.new_from_dict(contact.get('user'), id=contact.get('id'), in_contact_list=contact.get('in_contact_list'))
                          for contact in contacts] if contacts else contacts
         self.contact_ids = contact_ids

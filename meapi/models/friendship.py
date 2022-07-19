@@ -1,4 +1,3 @@
-from typing import Union
 from meapi.models.me_model import MeModel
 
 
@@ -33,17 +32,17 @@ class Friendship(MeModel):
             Whether the other user is a premium user.
     """
     def __init__(self,
-                 calls_duration: Union[None, None] = None,
-                 he_called: Union[int, None] = None,
-                 he_named: Union[str, None] = None,
-                 he_watched: Union[int, None] = None,
-                 his_comment: Union[None, None] = None,
-                 i_called: Union[int, None] = None,
-                 i_named: Union[str, None] = None,
-                 i_watched: Union[int, None] = None,
-                 is_premium: Union[bool, None] = None,
-                 mutual_friends_count: Union[int, None] = None,
-                 my_comment: Union[str, None] = None
+                 calls_duration: int = None,
+                 he_called: int = None,
+                 he_named: str = None,
+                 he_watched: int = None,
+                 his_comment: str = None,
+                 i_called: int = None,
+                 i_named: str = None,
+                 i_watched: int = None,
+                 is_premium: bool = None,
+                 mutual_friends_count: int = None,
+                 my_comment: str = None
                  ):
         self.calls_duration = calls_duration
         self.he_called = he_called

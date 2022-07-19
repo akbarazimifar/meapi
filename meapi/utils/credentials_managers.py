@@ -2,7 +2,7 @@ import logging
 import os.path
 from abc import ABC, abstractmethod
 from json import load, JSONDecodeError, dump, dumps, loads
-from typing import Union
+from typing import Optional
 from meapi.utils.exceptions import MeException
 
 _logger = logging.getLogger(__name__)
@@ -15,7 +15,7 @@ class CredentialsManager(ABC):
     """
 
     @abstractmethod
-    def get(self, phone_number: str) -> Union[dict, None]:
+    def get(self, phone_number: str) -> Optional[dict]:
         """
         Get the credentials by ``client.phone_number`` key.
 
@@ -139,7 +139,7 @@ class RedisCredentialsManager(CredentialsManager):
     def __init__(self, redis):
         self.redis = redis
 
-    def get(self, phone_number: str) -> Union[dict, None]:
+    def get(self, phone_number: str) -> Optional[dict]:
         data = self.redis.get(str(phone_number))
         if data:
             return loads(data)

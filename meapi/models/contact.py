@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Union, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 from meapi.utils.helpers import parse_date
 from meapi.models.common import _CommonMethodsForUserContactProfile
 from meapi.models.me_model import MeModel
@@ -86,8 +86,8 @@ class Contact(MeModel, _CommonMethodsForUserContactProfile):
         self.phone_number = phone_number
         self.cached = cached
         self.is_shared_location = is_shared_location
-        self.created_at: Union[datetime, None] = parse_date(created_at)
-        self.modified_at: Union[datetime, None] = parse_date(modified_at)
+        self.created_at: Optional[datetime] = parse_date(created_at)
+        self.modified_at: Optional[datetime] = parse_date(modified_at)
         self.in_contact_list = in_contact_list or is_my_contact
         super().__init__()
 

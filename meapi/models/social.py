@@ -213,7 +213,7 @@ class Post(MeModel):
                  redirect_id: str = None,
                  owner: str = None
                  ):
-        self.posted_at: Union[datetime, None] = parse_date(posted_at) if posted_at else posted_at
+        self.posted_at: Optional[datetime] = parse_date(posted_at) if posted_at else posted_at
         self.photo = photo
         self.text_first = text_first
         self.text_second = text_second

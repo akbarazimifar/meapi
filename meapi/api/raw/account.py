@@ -288,7 +288,6 @@ def update_profile_details_raw(client: 'Me', **kwargs) -> dict:
     :param client: :py:obj:`~meapi.Me` client object.
     :type client: :py:obj:`~meapi.Me`
     :param kwargs: key value of profile details.
-    :type kwargs: ``dict``
 
     Example::
 

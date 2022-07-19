@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Union, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 from meapi.utils.exceptions import MeException
 from meapi.utils.helpers import parse_date
 from meapi.models.me_model import MeModel
@@ -62,7 +62,7 @@ class Comment(MeModel):
         self.id = id
         self.profile_uuid = profile_uuid
         self.comments_blocked = comments_blocked
-        self.created_at: Union[datetime, None] = parse_date(created_at)
+        self.created_at: Optional[datetime] = parse_date(created_at)
         self.comment_likes = [User.new_from_dict(user['author']) for user in
                               comment_likes] if comment_likes else None
         self.__client = _client
@@ -120,7 +120,7 @@ class Comment(MeModel):
             ``bool``: Is delete success.
         """
         if not self.__my_comment:
-            raise MeException("You can delete others comments!")
+            raise MeException("You can't delete others comments!")
         if self.status == 'ignored':
             return True
         if self.id:

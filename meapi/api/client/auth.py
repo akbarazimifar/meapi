@@ -22,13 +22,13 @@ class Auth:
     def __init__(self: 'Me'):
         raise MeException("Auth class is not intended to create an instance's but only to be inherited by Me class.")
 
-    def _activate_account(self: 'Me', activation_code: Union[int, str] = None) -> bool:
+    def _activate_account(self: 'Me', activation_code: str = None) -> bool:
         """
         Activate new phone number account.
         - If ``activation_code`` is not provided, the method will prompt for activation code via WhatsApp, Telegram, SMS or Call.
 
         :param activation_code: You can pass the activation code if you want to skip the prompt. *Default:* ``None``.
-        :type activation_code: ``int`` | ``str`` | ``None``
+        :type activation_code: ``str`` | ``None``
         :raises MeException: If pre-activation-code is not valid.
         :raises MeApiException:
             - **msg's:**
