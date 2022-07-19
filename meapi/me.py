@@ -140,3 +140,12 @@ class Me(Auth, Account, Social, Settings, Notifications):
     def __del__(self):
         if isinstance(getattr(self, '_session', None), Session):
             self._session.close()
+
+    def __setattr__(self, key, value):
+        """
+        Prevent attr changes after the init in protected data classes
+        """
+        if getattr(self, '_Me__init_done', None):
+            if key in ['phone_number', 'uuid', '_activation_code', '_account_details']:
+                raise MeException(f"You cannot modify this protected attr '{key}'!")
+        return super().__setattr__(key, value)
