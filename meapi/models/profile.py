@@ -1,6 +1,6 @@
-import copy
+from copy import deepcopy
 from datetime import date
-from typing import List, Union, TYPE_CHECKING
+from typing import List, Union, TYPE_CHECKING, Optional
 from meapi.utils.exceptions import MeException
 from meapi.utils.helpers import parse_date
 from meapi.models.comment import Comment
@@ -17,6 +17,7 @@ if TYPE_CHECKING:  # always False at runtime.
 class Profile(MeModel, _CommonMethodsForUserContactProfile):
     """
     Represents the user's profile. can also be used to update you profile details.
+        - Modifiable attributes are marked with *modifiable*.
 
     Example:
         .. code-block:: python
@@ -27,50 +28,50 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
             my_profile.last_name = "Bing"
 
     Parameters:
-        name (``str``):
+        name (``str`` *optional*):
             The user's full name (``first_name`` + ``last_name``).
 
-        first_name (``str``):
-            The user's first name.
+        first_name (``str`` *optional*):
+            The user's first name. *modifiable*.
 
         last_name (``str`` *optional*):
-            The user's last name.
+            The user's last name. *modifiable*.
 
         profile_picture (``str`` *optional*):
-            The user's profile picture url.
+            The user's profile picture url. *modifiable*.
 
         slogan (``str`` *optional*):
-            The user's bio.
+            The user's bio. *modifiable*.
 
         email (``str`` *optional*):
-            The user's email.
+            The user's email. *modifiable*.
 
         gender (``str`` *optional*):
-            The user's gender: ``N`` for male and ``F`` for female.
+            The user's gender: ``M`` for male and ``F`` for female. *modifiable*.
+
+        date_of_birth (:py:obj:`~datetime.date` *optional*):
+            The user's date of birth. *modifiable*.
+
+        age (``int``):
+            The user's age. calculated from ``date_of_birth`` if exists, else ``0``.
 
         social (:py:obj:`~meapi.models.social.Social` *optional*):
             The user's social media networks.
 
-        phone_number (``int`` *optional*):
+        phone_number (``int``):
             The user's phone number.
 
         uuid (``str``):
             The user's unique ID.
 
-        phone_prefix (``int`` *optional*):
+        phone_prefix (``str``):
             The user's phone prefix.
 
-        date_of_birth (:py:obj:`~datetime.date` *optional*):
-            The user's date of birth.
-
-        age (``int``):
-            The user's age. calculated from ``date_of_birth`` if exists, else ``0``.
-
         device_type (``str`` *optional*):
-            The user's device type: ``android`` or ``ios``.
+            The user's device type: ``android`` or ``ios``. *modifiable*.
 
         login_type (``str`` *optional*):
-            The user's login type: ``email`` or ``apple``.
+            The user's login type: ``email`` or ``apple``. *modifiable*.
 
         who_deleted_enabled (``bool``):
             Whether the user can see who deleted him (Only if ``is_premium``, Or if he uses ``meapi`` ;).
@@ -88,7 +89,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
             The users who shared their location with you.
 
         carrier (``str`` *optional*):
-            The user's cell phone carrier.
+            The user's cell phone carrier. *modifiable*.
 
         comments_enabled (``bool``):
             Whether the user is allowing comments.
@@ -96,16 +97,16 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         comments_blocked (``bool``):
             Whether the user has blocked comments.
 
-        country_code (``str`` *optional*):
-            The user's country code.
+        country_code (``str``):
+            The user's two-letter country code.
 
         location_enabled (``bool`` *optional*):
             Whether the user is allowing location.
 
-        is_shared_location (``bool``):
+        is_shared_location (``bool`` *optional*):
             Whether the user is sharing their location with you.
 
-        share_location (``bool``):
+        share_location (``bool`` *optional*):
             Whether the user is sharing their location with you.
 
         distance (``float`` *optional*):
@@ -118,35 +119,35 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
             The user's latitude coordinate.
 
         location_name (``str`` *optional*):
-            The user's location name.
+            The user's location name. *modifiable*.
 
-        is_he_blocked_me (``bool``):
+        is_he_blocked_me (``bool`` *optional*):
             Whether the user has blocked you.
 
-        is_permanent (``bool``):
+        is_permanent (``bool`` *optional*):
             Whether the user is permanent.
 
-        mutual_contacts_available (``bool``):
+        mutual_contacts_available (``bool`` *optional*):
             Whether the user has mutual contacts available.
 
         mutual_contacts (List[:py:obj:`~meapi.models.user.User`] *optional*):
             The user's mutual contacts.
                 - `For more information about MutualContact <https://me.app/mutual-contacts/>`_.
 
-        is_premium (``bool`` *optional*):
+        is_premium (``bool``):
             Whether the user is a premium user.
 
-        is_verified (``bool`` *optional*):
+        is_verified (``bool``):
             Whether the user is verified.
 
-        gdpr_consent (``bool`` *optional*):
+        gdpr_consent (``bool``):
             Whether the user has given consent to the GDPR.
 
         facebook_url (``str`` *optional*):
-            The user's Facebook ID.
+            The user's Facebook ID. *modifiable*.
 
         google_url (``str`` *optional*):
-            The user's Google ID.
+            The user's Google ID. *modifiable*.
 
         me_in_contacts (``bool`` *optional*):
             Whether you are in the user's contacts.
@@ -202,7 +203,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
                  login_type: str = None,
                  me_in_contacts: bool = None,
                  phone_number: int = None,
-                 phone_prefix: int = None,
+                 phone_prefix: str = None,
                  profile_picture: str = None,
                  slogan: str = None,
                  user_type: str = None,
@@ -234,7 +235,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         self.distance = distance
         self.friends_distance = [User.new_from_dict(user.get('author')) for user in friends_distance.get('friends')] if friends_distance else None
         self.email = email
-        self.facebook_url = facebook_url
+        self.facebook_url = f"https://facebook.com/profile.php?id={facebook_url}" if facebook_url else facebook_url
         self.first_name = first_name
         self.gdpr_consent = gdpr_consent
         self.gender = gender
@@ -283,7 +284,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
             - You don't need to call this method if you change the profile by assigning a new value to the attrs (If i'ts your profile).
         """
         self.__my_profile = None  # __setattr__ relies on it to prevent changes
-        self.__dict__ = copy.deepcopy(self.__client.get_profile(self.uuid).__dict__)
+        self.__dict__ = deepcopy(self.__client.get_profile(self.uuid).__dict__)
         if self.__my_profile:
             return True
         return False
@@ -293,15 +294,18 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
             if self.__my_profile:
                 if key == '_Profile__my_profile':
                     return super().__setattr__(key, value)
-                if key not in ['country_code', 'date_of_birth', 'device_type', 'login_type', 'email', 'first_name',
-                               'last_name', 'slogan', 'gender', 'profile_picture_url', 'facebook_url']:
-                    raise MeException("You cannot change this field!")
-                res = self.__client.update_profile_details(**{key: value})
-                if (res[0] and str(getattr(res[1], key, None)) == str(value)) or key == 'profile_picture':
+                modifiable_attrs = ['first_name', 'last_name', 'email', 'gender', 'slogan', 'profile_picture_url',
+                                    'date_of_birth', 'location_name', 'device_type', 'login_type', 'facebook_url',
+                                    'google_url', 'carrier']
+                if key not in modifiable_attrs:
+                    raise MeException(f"You can not modify this attr!\nThe modifiable attrs are: {modifiable_attrs}")
+                success, new_profile = self.__client.update_profile_details(**{key: value})
+                if (success and str(getattr(new_profile, key, None)) == str(value)) or key == 'profile_picture':
                     # Can't check if profile picture updated because Me convert's it to their own url.
                     if key == 'date_of_birth':
                         value = parse_date(value, date_only=True)
-                    return super().__setattr__(key, value)
+                    if key == 'facebook_url' and value:
+                        value = f"https://facebook.com/profile.php?id={value}"
                 else:
                     raise MeException(f"Failed to change '{getattr(self, key)}' to '{value}'!")
             else:

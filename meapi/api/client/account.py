@@ -101,87 +101,93 @@ class Account:
                 raise err
 
     def update_profile_details(self: 'Me',
-                               country_code: str = None,
-                               date_of_birth: str = None,
-                               device_type: str = None,
-                               login_type: str = None,
-                               email: str = None,
-                               facebook_url: str = None,
-                               first_name: str = None,
-                               last_name: str = None,
-                               gender: str = None,
-                               profile_picture_url: str = None,
-                               slogan: str = None
+                               first_name: str = False,
+                               last_name: str = False,
+                               email: str = False,
+                               gender: str = False,
+                               slogan: str = False,
+                               profile_picture_url: str = False,
+                               date_of_birth: str = False,
+                               location_name: str = False,
+                               carrier: str = False,
+                               device_type: str = False,
+                               login_type: str = False,
+                               facebook_url: str = False,
+                               google_url: str = False,
                                ) -> Tuple[bool, profile.Profile]:
         """
         Update your profile details.
-            - The default of the parameters is ``None``. if you leave it ``None``, the parameter will not be updated.
+            - The default of the parameters is ``Flase``. if you leave it ``False``, the parameter will not be updated.
 
-        :param login_type: ``email`` or ``apple``. *Default:* ``None``.
-        :type login_type: ``str``
-        :param country_code: Your phone number country code (``972`` = ``IL`` etc.) // `Country codes <https://countrycode.org/>`_. *Default:* ``None``.
-        :type country_code: ``str``
-        :param date_of_birth: ``YYYY-MM-DD`` format. for example: ``1997-05-15``. *Default:* ``None``.
-        :type date_of_birth: ``str``
-        :param device_type: ``android`` or ``ios``. *Default:* ``None``.
-        :type device_type: ``str``
-        :param email: For example: ``name@domian.com``. *Default:* ``None``.
-        :type email: ``str``
-        :param facebook_url: facebook id, for example: ``24898745174639``. *Default:* ``None``.
-        :type facebook_url: ``str`` | ``int``
-        :param first_name: First name. *Default:* ``None``.
+        :param first_name: First name.
         :type first_name: ``str``
-        :param last_name: Last name. *Default:* ``None``.
+        :param last_name: Last name.
         :type last_name: ``str``
-        :param gender: ``M`` for male, ``F`` for and ``N`` for ``None``. *Default:* ``None``.
+        :param email: For example: ``name@domian.com``.
+        :type email: ``str``
+        :param gender: ``M`` for male, ``F`` for female.
         :type gender: ``str``
-        :param profile_picture_url: Direct image url. for example: ``https://example.com/image.png``. *Default:* ``None``.
+        :param profile_picture_url: Direct image url. for example: ``https://example.com/image.png``.
         :type profile_picture_url: ``str``
-        :param slogan: Your bio. *Default:* ``None``.
+        :param slogan: Your bio.
         :type slogan: ``str``
+        :param date_of_birth: ``YYYY-MM-DD`` format. for example: ``1997-05-15``.
+        :type date_of_birth: ``str``
+        :param location_name: Your location, can be anything.
+        :type location_name: ``str``
+        :param login_type: ``email`` or ``apple``.
+        :type login_type: ``str``
+        :param device_type: ``android`` or ``ios``.
+        :type device_type: ``str``
+        :param carrier: The carrier of your phone. like ``HOT-mobile``, ``AT&T`` etc.
+        :param facebook_url: facebook id, for example: ``24898745174639``.
+        :type facebook_url: ``str`` | ``int``
+        :param google_url: google id, for example: ``24898745174639``.
+        :type google_url: ``str`` | ``int``
+
         :return: Tuple of: Is update success, new :py:obj:`meapi.models.profile.Profile` object.
         :rtype: Tuple[``bool``, :py:obj:`meapi.models.profile.Profile`]
         """
         args = locals()
         del args['self']
         for key, value in args.items():
-            if value is not None:
-                if key == 'country_code':
-                    args[key] = str(value).upper()[:2]
-                elif key == 'date_of_birth':
-                    if not match(r'^\d{4}(\-)(((0)\d)|((1)[0-2]))(\-)([0-2]\d|(3)[0-1])$', flags=M, string=str(value)):
-                        raise MeException("Birthday must be in YYYY-MM-DD format!")
-                elif key == 'device_type':
-                    device_types = ['android', 'ios']
+            if value is not False:
+                if key == 'device_type':
+                    device_types = ['android', 'ios', None]
                     if value not in device_types:
                         raise MeException(f"Device type not in the available device types ({', '.join(device_types)})!")
-                elif key == 'login_type':
-                    login_types = ['email', 'apple']
-                    if value not in login_types:
-                        raise MeException(f"Login type not in the available login types ({', '.join(login_types)})!")
-                elif key == 'email':
-                    if not match(r'^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$', str(value)):
-                        raise MeException("Email must be in user@domain.com format!")
-                elif key in ['first_name', 'last_name', 'slogan']:
-                    if not isinstance(value, str):
-                        raise MeException(f"{key.replace('_', '').capitalize()} must be a string!")
-                elif key == 'gender':
-                    genders = {'M': 'M', 'F': 'F', 'N': None, None: None}
-                    if str(value).upper() not in genders.keys():
-                        raise MeException("Gender must be: 'F' for Female, 'M' for Male, and 'None' for null.")
-                    args[key] = str(value).upper()
+                if key == 'date_of_birth':
+                    if not match(r'^\d{4}(\-)(((0)\d)|((1)[0-2]))(\-)([0-2]\d|(3)[0-1])$', flags=M, string=str(value)):
+                        raise MeException("Birthday must be in YYYY-MM-DD format!")
+                elif key in ['facebook_url', 'google_url']:
+                    if not match(r'^\d+$', str(value)):
+                        raise MeException(f"{key} must be numbers!")
                 elif key == 'profile_picture_url':
                     if not match(r'(https?:\/\/.*\.(?:png|jpg))', str(value)):
                         raise MeException("Profile picture url must be a image link!")
-                elif key == 'facebook_url':
-                    if not match(r'^\d+$', str(value)):
-                        raise MeException("Facebook url must be numbers!")
-        body = {key: val for key, val in args.items() if val is not None}
+                elif key == 'gender':
+                    genders = ['M', 'F', None]
+                    if str(value).upper() not in genders:
+                        raise MeException("Gender must be: 'F' for Female, 'M' for Male, and 'None' for null.")
+                    args[key] = str(value).upper()
+                elif key in ['first_name', 'last_name', 'slogan', 'location_name']:
+                    if not isinstance(value, str):
+                        raise MeException(f"{key} value must be a string!")
+                elif key == 'email':
+                    if not match(r'^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$', str(value)):
+                        raise MeException("Email must be in user@domain.com format!")
+                elif key == 'login_type':
+                    login_types = ['email', 'apple', None]
+                    if value not in login_types:
+                        raise MeException(f"Login type not in the available login types ({', '.join(login_types)})!")
+
+        body = {key: val for key, val in args.items() if val is not False}
         try:
             res = update_profile_details_raw(self, **body)
         except MeApiException as err:
             if err.http_status == 401 and err.msg == 'User is blocked for patch':
-                raise MeException("Locks like your account is blocked!")
+                err.reason = "Locks like your account is blocked!"
+            raise err
         successes = 0
         for key in body.keys():
             if res[key] == body[key] or key == 'profile_picture':
@@ -252,29 +258,29 @@ class Account:
         Remove contacts from your Me account.
 
         :param contacts: List of dicts with contacts data.
-        :type contacts: List[dict])
+        :type contacts: List[``dict``]
         :return: Dict with upload results.
-        :rtype: dict
+        :rtype: ``dict``
         """
         return remove_contacts_raw(self, validate_contacts(contacts))
 
-    def get_saved_contacts(self: 'Me') -> List[contact.Contact]:
+    def get_saved_contacts(self: 'Me') -> List[user.User]:
         """
         Get all the contacts stored in your contacts (Which has an Me account).
 
         :return: List of saved contacts.
-        :rtype: List[Contact]
+        :rtype: List[:py:obj:`~meapi.models.user.User`]
         """
-        return [contact for group in self.get_groups_names() for contact in group.contacts if contact.in_contact_list]
+        return [usr for grp in self.get_groups() for usr in grp.contacts if not usr.in_contact_list]
 
-    def get_unsaved_contacts(self: 'Me') -> List[contact.Contact]:
+    def get_unsaved_contacts(self: 'Me') -> List[user.User]:
         """
         Get all the contacts that not stored in your contacts (Which has an Me account).
 
-        :return: List unsaved contacts.
-        :rtype: List[Contact]
+        :return: List of unsaved contacts.
+        :rtype: List[:py:obj:`~meapi.models.user.User`]
         """
-        return [contact for group in self.get_groups_names() for contact in group.contacts if not contact.in_contact_list]
+        return [usr for grp in self.get_groups() for usr in grp.contacts if not usr.in_contact_list]
 
     def add_calls_to_log(self: 'Me', calls: List[dict]) -> List[call.Call]:
         """
