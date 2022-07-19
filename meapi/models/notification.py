@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 from meapi.models.me_model import MeModel
 from meapi.utils.exceptions import MeException
 from meapi.utils.helpers import parse_date
@@ -30,7 +30,7 @@ class Notification(MeModel):
             Delivery method of the notification. Most likely ``push``.
         distribution_date (``datetime``):
             Date of distribution.
-        message_category (``str``):
+        category (``str``):
             Category of the notification.
         message_lang (``str``):
             Language of the notification, ``en``, ``he`` etc.
@@ -51,6 +51,8 @@ class Notification(MeModel):
             Profile picture of the message context.
         tag (``str`` *optional*):
             Tag of the message context.
+        profile_view_count (``int`` *optional*):
+            Number of views of the profile watcher.
 
     Methods:
 
@@ -66,21 +68,22 @@ class Notification(MeModel):
                  status: str,
                  delivery_method: str,
                  distribution_date: str,
-                 message_subject: Union[str, None],
+                 message_subject: str,
                  message_category: str,
-                 message_body: Union[str, None],
+                 message_body: str,
                  message_lang: str,
                  category: str,
-                 phone_number: Union[int, None] = None,
-                 name: Union[str, None] = None,
-                 uuid: Union[str, None] = None,
-                 new_name: Union[str, None] = None,
-                 notification_id: Union[int, None] = None,
-                 profile_picture: Union[str, None] = None,
-                 tag: Union[str, None] = None
+                 phone_number: int = None,
+                 name: str = None,
+                 uuid: str = None,
+                 new_name: str = None,
+                 notification_id: int = None,
+                 profile_picture: str = None,
+                 tag: str = None,
+                 profile_view_count: int = None,
                  ):
         self.__client = _client
-        self.id = id
+        self.id = id or notification_id
         self.created_at: datetime = parse_date(created_at)
         self.modified_at: datetime = parse_date(modified_at)
         self.is_read = is_read
@@ -89,7 +92,7 @@ class Notification(MeModel):
         self.delivery_method = delivery_method
         self.distribution_date: datetime = parse_date(distribution_date)
         self.message_subject = message_subject
-        self.message_category = message_category
+        self.category = message_category or category
         self.message_body = message_body
         self.message_lang = message_lang
         # context:
@@ -99,6 +102,7 @@ class Notification(MeModel):
         self.phone_number = phone_number
         self.profile_picture = profile_picture
         self.tag = tag
+        self.profile_view_count = profile_view_count
         self.__init_done = True
 
     def __setattr__(self, key, value):
@@ -108,7 +112,7 @@ class Notification(MeModel):
         return super().__setattr__(key, value)
 
     def __repr__(self):
-        return f"<Notification category={self.message_category} id={self.id}>"
+        return f"<Notification category={self.category} id={self.id}>"
 
     def __str__(self):
         return str(self.id)
