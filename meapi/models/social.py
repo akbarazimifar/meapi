@@ -1,11 +1,22 @@
 import copy
 from datetime import datetime
-from typing import Union, List, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING
 from meapi.utils.exceptions import MeException
 from meapi.utils.helpers import parse_date
 from meapi.models.me_model import MeModel
 if TYPE_CHECKING:  # always False at runtime.
     from meapi import Me
+
+social_profile_urls = {
+    'facebook': "https://facebook.com/profile.php?id={}",
+    'instagram': "https://instagram.com/{}",
+    'linkedin': "https://linkedin.com/in/{}",
+    'pinterset': "https://pinterest.com/{}",
+    'spotify': "https://open.spotify.com/user/{}",
+    'twitter': "https://twitter.com/{}",
+    'tiktok': "https://tiktok.com/@{}",
+    'fakebook': "https://fakebook.com/{}",
+}
 
 
 class Social(MeModel):
@@ -60,8 +71,10 @@ class SocialMediaAccount(MeModel):
     Parameters:
         name (``str``):
             Name of social media account.
-        profile_id (``str``):
+        profile_id (``str`` *optional*):
             Profile ID or username of social media account.
+        profile_url (``str`` *optional*)
+            The profile url of media account account.
         posts (List[:py:obj:`~meapi.models.social.Post`]):
             List of posts from social media account.
         is_active (``bool``):
@@ -86,13 +99,17 @@ class SocialMediaAccount(MeModel):
                  is_hidden: bool = None,
                  ):
         self.name = name
-        self.posts: Union[List[Post], None] = [Post.new_from_dict(post) for post in posts] if posts else posts
+        self.posts: Optional[List[Post]] = [Post.new_from_dict(post) for post in posts] if posts else posts
         self.profile_id = profile_id
         self.is_active = is_active
         self.is_hidden = is_hidden
         self.__my_social = _my_social
         self.__client = _client
         self.__init_done = True
+
+    @property
+    def profile_url(self) -> Optional[str]:
+        return social_profile_urls[self.name].format(self.profile_id) if self.profile_id else self.profile_id
 
     def __setattr__(self, key, value):
         if getattr(self, '_SocialMediaAccount__init_done', None):
@@ -121,8 +138,6 @@ class SocialMediaAccount(MeModel):
         """
         if not self.__my_social:
             raise MeException(f"You cannot add social to another user!")
-        if self.is_active:
-            raise MeException("This social is already active, No need to add it again!")
         key = f'{self.name}_url' if self.name in ['linkedin', 'pinterest'] else f'{self.name}_token'
         if self.__client.add_social(**{key: token_or_url}):
             self.__dict__ = copy.deepcopy(getattr(self.__client.get_socials(), self.name).__dict__)
@@ -135,11 +150,12 @@ class SocialMediaAccount(MeModel):
 
         Returns:
             ``bool``: ``True`` if successfully removed, ``False`` otherwise.
+                - You get ``True`` even if the social media account not active.
         """
         if not self.__my_social:
             raise MeException("You cannot remove social from another user!")
         if not self.is_active:
-            raise MeException("This social is already not active!")
+            return True
         if self.__client.remove_social(**{self.name: True}):
             self.profile_id = None
             self.is_active = False
@@ -151,16 +167,17 @@ class SocialMediaAccount(MeModel):
     def hide(self) -> bool:
         """
         Hide social media account in your Me profile.
+            - You get ``True`` even if the social media account not active or already hidden.
 
         Returns:
             ``bool``: ``True`` if successfully hidden, ``False`` otherwise.
         """
         if not self.__my_social:
-            raise MeException("You cannot remove social from another user!")
+            raise MeException("You cannot hide social of another user!")
         if not self.is_active:
-            raise MeException("This social is not active!")
+            return True
         if self.is_hidden:
-            raise MeException("This social is already hidden!")
+            return True
         if self.__client.switch_social_status(**{self.name: False}):
             self.is_hidden = True
             return True
@@ -169,16 +186,17 @@ class SocialMediaAccount(MeModel):
     def unhide(self) -> bool:
         """
         Unhide social media account in your Me profile.
+            - You get ``True`` even if the social media already unhidden.
 
         Returns:
             ``bool``: ``True`` if successfully unhidden, ``False`` otherwise.
         """
         if not self.__my_social:
-            raise MeException("You cannot remove social from another user!")
+            raise MeException("You cannot unhide social of another user!")
         if not self.is_active:
-            raise MeException("This social is not active!")
+            return False
         if not self.is_hidden:
-            raise MeException("This social is already unhidden!")
+            return True
         if self.__client.switch_social_status(**{self.name: True}):
             self.is_hidden = False
             return True
