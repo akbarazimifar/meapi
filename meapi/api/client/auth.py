@@ -6,6 +6,8 @@ from typing import Union, TYPE_CHECKING
 from meapi.api.raw.auth import generate_new_access_token_raw, activate_account_raw, ask_for_sms_raw, ask_for_call_raw
 from meapi.utils.exceptions import MeException, MeApiException
 from meapi.utils.helpers import _get_session, HEADERS
+from meapi.utils.validations import validate_auth_response
+
 if TYPE_CHECKING:  # always False at runtime.
     from meapi import Me
 
@@ -99,13 +101,10 @@ class Auth:
 
         if access_token:
             self._access_token = access_token  # in order to get the uuid.
-            results['uuid'] = self.get_uuid()  # if this is a new account, you will need to create one.
-            self._credentials_manager.set(str(self.phone_number), results)
-            self.uuid = results['uuid']
-            self._access_token = results['access']
+            self.uuid = results['uuid'] = self.get_uuid()  # if this is a new account, you will need to create one.
+            self._credentials_manager.set(str(self.phone_number), validate_auth_response(results))
             return True
-        else:
-            return False
+        return False
 
     def _ask_for_code(self: 'Me', code_method: str):
         try:
@@ -140,7 +139,7 @@ class Auth:
         :return: Is success.
         :type: ``bool``
         """
-        existing_data = self._credentials_manager.get(str(self.phone_number))
+        existing_data = validate_auth_response(self._credentials_manager.get(str(self.phone_number)))
         if not existing_data:
             if self._activate_account():
                 return True
@@ -201,7 +200,7 @@ class Auth:
                 raise MeException(f"The response (Status code: {response.status_code}) received does not contain a valid JSON:\n" + str(response.text))
             if response.status_code == 403 and self.phone_number:
                 if self._generate_access_token():
-                    self._access_token = self._credentials_manager.get(str(self.phone_number)).get('access')
+                    self._access_token = validate_auth_response(self._credentials_manager.get(str(self.phone_number))).get('access')
                     continue
                 raise MeException("Cannot generate new access token!")
 

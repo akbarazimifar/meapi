@@ -63,3 +63,22 @@ def validate_phone_number(phone_number: Union[str, int]) -> int:
             return int(phone_number)
     raise MeException("Not a valid phone number! " + phone_number)
 
+
+def validate_auth_response(auth_data: dict) -> dict:
+    """
+    Check if the CredentialsManager gets or return the expected data format
+
+    :param auth_data: dict with ``access``, ``refresh``, ``uuid``, and ``pwd_token``.
+    :type auth_data: dict
+    :return: The same information he received.
+    :rtype: dict
+    :raises MeException: If the data does not valid.
+    """
+    if not isinstance(auth_data, dict):
+        raise MeException("auth_data should be a dict!")
+    expected_keys = ['access', 'refresh', 'uuid', 'pwd_token']
+    if sorted(expected_keys) != sorted(auth_data.keys()):
+        raise MeException(f"The auth_data should contain the following keys: {expected_keys}. Your data contains this keys: {list(auth_data.keys())}")
+    if not all(isinstance(val, str) for val in auth_data.values()):
+        raise MeException("The auth_data values should be strings!")
+    return auth_data

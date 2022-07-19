@@ -8,7 +8,7 @@ from meapi.api.client.social import Social
 from meapi.api.client.auth import Auth
 from meapi.utils.credentials_managers import CredentialsManager, JsonFileCredentialsManager
 from meapi.utils.exceptions import MeException
-from meapi.utils.validations import validate_phone_number
+from meapi.utils.validations import validate_phone_number, validate_auth_response
 from logging import getLogger
 
 _logger = getLogger(__name__)
@@ -88,6 +88,7 @@ class Me(Auth, Account, Social, Settings, Notifications):
         if activation_code:
             if not match(r'^\d{6}$', str(activation_code)):
                 raise MeException("Not a valid 6-digits activation code!")
+        self._activation_code = activation_code
 
         # check for the presence of the phone number or access token
         if not access_token and not phone_number and not account_details:
@@ -106,7 +107,6 @@ class Me(Auth, Account, Social, Settings, Notifications):
         # set the rest of the attributes
         self.phone_number = validate_phone_number(phone_number) if (phone_number and not access_token) else phone_number
         self.uuid = None
-        self._activation_code = activation_code
         self._access_token = access_token
         self._account_details = account_details
         self._proxies = proxies
@@ -114,15 +114,22 @@ class Me(Auth, Account, Social, Settings, Notifications):
 
         # if access_token not provided, try to get it from the credentials manager, if not found, activate the account.
         if not self._access_token:
-            auth_data = self._credentials_manager.get(str(self.phone_number))
-            if auth_data:
-                data = auth_data
-            else:
-                self._activate_account(self._activation_code)
-                data = self._credentials_manager.get(str(self.phone_number))
+            auth_data = None
+            activate_already = False
+            while not auth_data:
+                auth_data = validate_auth_response(self._credentials_manager.get(str(self.phone_number)))
+                if not auth_data:
+                    if activate_already:
+                        raise MeException("It seems that the CredentialsManager does not provide the necessary data!")
+                    if self._activate_account(self._activation_code):
+                        activate_already = True
+                    else:
+                        raise MeException("Failed to activate the account!")
 
-            self._access_token = data['access']
-            self.uuid = data['uuid']
+            self._access_token = auth_data['access']
+            self.uuid = auth_data['uuid']
+
+        self.__init_done = True
 
     def __repr__(self):
         return f"<Me {('phone=' + str(self.phone_number) + ' uuid=' + self.uuid) if self.phone_number else 'access_token mode'} >"

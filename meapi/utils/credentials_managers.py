@@ -104,7 +104,7 @@ class JsonFileCredentialsManager(CredentialsManager):
                 existing_content = {}
         return existing_content
 
-    def get(self, phone_number: str) -> Union[dict, None]:
+    def get(self, phone_number: str) -> Optional[dict]:
         existing_content = self._read_or_create()
         if not existing_content.get(str(phone_number)):
             return None
