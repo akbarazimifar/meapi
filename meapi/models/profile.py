@@ -26,6 +26,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
             my_profile = me.get_my_profile()
             my_profile.first_name = "Chandler"
             my_profile.last_name = "Bing"
+            my_profile.profile_picture = "/home/david/Downloads/my_profile.jpg"
 
     Parameters:
         name (``str`` *optional*):
@@ -294,7 +295,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
             if self.__my_profile:
                 if key == '_Profile__my_profile':
                     return super().__setattr__(key, value)
-                modifiable_attrs = ['first_name', 'last_name', 'email', 'gender', 'slogan', 'profile_picture_url',
+                modifiable_attrs = ['first_name', 'last_name', 'email', 'gender', 'slogan', 'profile_picture',
                                     'date_of_birth', 'location_name', 'device_type', 'login_type', 'facebook_url',
                                     'google_url', 'carrier']
                 if key not in modifiable_attrs:
@@ -302,6 +303,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
                 success, new_profile = self.__client.update_profile_details(**{key: value})
                 if (success and str(getattr(new_profile, key, None)) == str(value)) or key == 'profile_picture':
                     # Can't check if profile picture updated because Me convert's it to their own url.
+                    value = getattr(new_profile, key, None)
                     if key == 'date_of_birth':
                         value = parse_date(value, date_only=True)
                     if key == 'facebook_url' and value:

@@ -578,3 +578,38 @@ def get_blocked_numbers_raw(client: 'Me') -> List[dict]:
     """
     return client._make_request('get', '/main/settings/blocked-phone-numbers/')
 
+
+def upload_image_raw(client: 'Me', binary_img: bytes) -> dict:
+    """
+    Upload image to ``Me`` servers.
+
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
+    :param binary_img: Binary image.
+    :type binary_img: ``bytes``
+    :return: dict with upload details.
+    :rtype: ``dict``
+
+    Example::
+
+        {
+            'attributes': {
+                'image_type': 'jpeg'
+            },
+            'content_type': 'image/jpeg',
+            'created_at': '2022-07-20T20:40:09Z',
+            'deletion_msg': None,
+            'deletion_status': None,
+            'file_hash': '24edcdoisubas7afb94hd8w7a2c38',
+            'id': 422374926,
+            'is_processed': True,
+            'name': '165didw08856_temp.jpg',
+            'old_url': None,
+            'path': '/meapp-s3-files/ehfe9whufe9ufh9eww.jpg',
+            'processed_at': None,
+            'size': 0.0,
+            'url': 'https://d18zaexen4dp1s.cloudfront.net/24e9a99sdisfiseorew0b5a7a2c38.jpg'
+        }
+    """
+    headers = {'user-agent': 'okhttp/4.9.1'}
+    return client._make_request('post', '/media/file/upload/', files={'file': binary_img}, headers=headers)

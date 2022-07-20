@@ -167,6 +167,7 @@ class Auth:
                       endpoint: str,
                       body: dict = None,
                       headers: dict = None,
+                      files: dict = None,
                       ) -> Union[dict, list]:
         """
         Internal method to make requests to Me api and return the response.
@@ -193,7 +194,7 @@ class Auth:
         while max_rounds != 0:
             max_rounds -= 1
             headers['authorization'] = self._access_token
-            response = getattr(self._session, req_type)(url=url, json=body, headers=headers, proxies=self._proxies)
+            response = getattr(self._session, req_type)(url=url, json=body, files=files, headers=headers, proxies=self._proxies)
             try:
                 response_text = loads(response.text)
             except JSONDecodeError:

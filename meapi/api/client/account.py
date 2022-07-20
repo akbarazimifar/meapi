@@ -3,7 +3,7 @@ from typing import Tuple, List, Optional, TYPE_CHECKING
 from meapi.api.raw.account import *
 from meapi.utils.validations import validate_contacts, validate_calls, validate_phone_number
 from meapi.utils.exceptions import MeApiException, MeException
-from meapi.utils.helpers import generate_random_data, _register_new_account
+from meapi.utils.helpers import generate_random_data, _register_new_account, _upload_picture
 from meapi.models import contact, profile, call, blocked_number, user
 if TYPE_CHECKING:  # always False at runtime.
     from meapi import Me
@@ -106,7 +106,7 @@ class Account:
                                email: str = False,
                                gender: str = False,
                                slogan: str = False,
-                               profile_picture_url: str = False,
+                               profile_picture: str = False,
                                date_of_birth: str = False,
                                location_name: str = False,
                                carrier: str = False,
@@ -127,8 +127,8 @@ class Account:
         :type email: ``str``
         :param gender: ``M`` for male, ``F`` for female.
         :type gender: ``str``
-        :param profile_picture_url: Direct image url. for example: ``https://example.com/image.png``.
-        :type profile_picture_url: ``str``
+        :param profile_picture: Direct image url or local image path. for example: ``https://example.com/image.png``, ``/home/david/Downloads/my_profile.jpg.
+        :type profile_picture: ``str``
         :param slogan: Your bio.
         :type slogan: ``str``
         :param date_of_birth: ``YYYY-MM-DD`` format. for example: ``1997-05-15``.
@@ -156,30 +156,29 @@ class Account:
                     device_types = ['android', 'ios', None]
                     if value not in device_types:
                         raise MeException(f"Device type not in the available device types ({', '.join(device_types)})!")
-                if key == 'date_of_birth':
-                    if not match(r'^\d{4}(\-)(((0)\d)|((1)[0-2]))(\-)([0-2]\d|(3)[0-1])$', flags=M, string=str(value)):
-                        raise MeException("Birthday must be in YYYY-MM-DD format!")
-                elif key in ['facebook_url', 'google_url']:
-                    if not match(r'^\d+$', str(value)):
-                        raise MeException(f"{key} must be numbers!")
-                elif key == 'profile_picture_url':
-                    if not match(r'(https?:\/\/.*\.(?:png|jpg))', str(value)):
-                        raise MeException("Profile picture url must be a image link!")
+                if key == 'date_of_birth' and value is not None and not match(r'^\d{4}(\-)(((0)\d)|((1)[0-2]))(\-)([0-2]\d|(3)[0-1])$', flags=M, string=str(value)):
+                    raise MeException("Birthday must be in YYYY-MM-DD format!")
+                elif key in ['facebook_url', 'google_url'] and value is not None and not match(r'^\d+$', str(value)):
+                    raise MeException(f"{key} must be numbers!")
+                elif key == 'profile_picture':
+                    if value is not None:
+                        if not isinstance(value, str):
+                            raise MeException("profile_picture_url must be a url or path to a file!")
+                        args[key] = str(_upload_picture(self, **{'image': value}))
                 elif key == 'gender':
-                    genders = ['M', 'F', None]
-                    if str(value).upper() not in genders:
+                    if value not in ['M', 'm', 'F', 'f', None]:
                         raise MeException("Gender must be: 'F' for Female, 'M' for Male, and 'None' for null.")
-                    args[key] = str(value).upper()
-                elif key in ['first_name', 'last_name', 'slogan', 'location_name']:
-                    if not isinstance(value, str):
-                        raise MeException(f"{key} value must be a string!")
+                    if value:
+                        args[key] = str(value).upper()
+                elif key in ['first_name', 'last_name', 'slogan', 'location_name'] and type(value) not in [str, None]:
+                    raise MeException(f"{key} value must be a string or None!")
                 elif key == 'email':
-                    if not match(r'^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$', str(value)):
+                    if value is not None and not match(r'^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$', str(value)):
                         raise MeException("Email must be in user@domain.com format!")
                 elif key == 'login_type':
                     login_types = ['email', 'apple', None]
                     if value not in login_types:
-                        raise MeException(f"Login type not in the available login types ({', '.join(login_types)})!")
+                        raise MeException(f"{key} not in the available login types ({', '.join(login_types)})!")
 
         body = {key: val for key, val in args.items() if val is not False}
         try:
@@ -190,8 +189,7 @@ class Account:
             raise err
         successes = 0
         for key in body.keys():
-            if res[key] == body[key] or key == 'profile_picture':
-                # Can't check if profile picture updated because Me convert's it to their own url.
+            if res[key] == body[key]:
                 successes += 1
         return bool(successes == len(body.keys())), profile.Profile.new_from_dict(res, _client=self, _my_profile=True)
 
@@ -271,7 +269,7 @@ class Account:
         :return: List of saved contacts.
         :rtype: List[:py:obj:`~meapi.models.user.User`]
         """
-        return [usr for grp in self.get_groups() for usr in grp.contacts if not usr.in_contact_list]
+        return [usr for grp in self.get_groups() for usr in grp.contacts if usr.in_contact_list]
 
     def get_unsaved_contacts(self: 'Me') -> List[user.User]:
         """

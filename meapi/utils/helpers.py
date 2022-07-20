@@ -9,11 +9,30 @@ from requests import get
 from meapi.utils.exceptions import MeException
 from string import ascii_letters, digits
 from hashlib import sha256
-from os import urandom
-
+from os import urandom, path
+from meapi.api.raw.account import upload_image_raw
 
 RANDOM_API = "https://random-data-api.com/api"
 HEADERS = {'accept-encoding': 'gzip', 'user-agent': 'okhttp/4.9.1', 'content-type': 'application/json; charset=UTF-8'}
+
+
+def _upload_picture(client: 'Me', image: str) -> str:
+    """
+    Upload a profile picture from a local file or a direct url.
+
+    :param image: Path or url to the image. for example: ``https://example.com/image.png``, ``/path/to/image.png``.
+    :type image: ``str``
+    :return: The url of the uploaded image.
+    :rtype: ``str``
+    """
+    if not str(image).startswith("http"):
+        if not path.isfile(image):
+            raise MeException(f"File {image} does not exist!")
+        with open(image, 'rb') as f:
+            image_data = f.read()
+    else:
+        image_data = get(url=str(image)).content
+    return upload_image_raw(client, image_data)['url']
 
 
 def parse_date(date_str: Optional[str], date_only=False) -> Optional[Union[datetime, date]]:
