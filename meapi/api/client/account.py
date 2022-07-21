@@ -40,7 +40,7 @@ class Account:
         """
         Get user's profile.
 
-         For Me users (those who have registered in the app) there is an account UUID obtained when receiving
+         For Me users (those who have registered in the app) there is an account ``UUID`` obtained when receiving
          information about the phone number :py:func:`phone_search`. With it,
          you can get social information and perform social actions.
 
@@ -117,17 +117,17 @@ class Account:
                                ) -> Tuple[bool, profile.Profile]:
         """
         Update your profile details.
-            - The default of the parameters is ``Flase``. if you leave it ``False``, the parameter will not be updated.
+            - The default of the parameters is ``False``. if you leave it ``False``, the parameter will not be updated.
 
         :param first_name: First name.
         :type first_name: ``str``
         :param last_name: Last name.
         :type last_name: ``str``
-        :param email: For example: ``name@domian.com``.
+        :param email: For example: ``user@domian.com``.
         :type email: ``str``
         :param gender: ``M`` for male, ``F`` for female.
         :type gender: ``str``
-        :param profile_picture: Direct image url or local image path. for example: ``https://example.com/image.png``, ``/home/david/Downloads/my_profile.jpg.
+        :param profile_picture: Direct image url or local image path. for example: ``https://example.com/image.png``, ``/home/david/Downloads/my_profile.jpg``.
         :type profile_picture: ``str``
         :param slogan: Your bio.
         :type slogan: ``str``
@@ -145,8 +145,8 @@ class Account:
         :param google_url: google id, for example: ``24898745174639``.
         :type google_url: ``str`` | ``int``
 
-        :return: Tuple of: Is update success, new :py:obj:`meapi.models.profile.Profile` object.
-        :rtype: Tuple[``bool``, :py:obj:`meapi.models.profile.Profile`]
+        :return: Tuple of: Is update success, new :py:obj:`~meapi.models.profile.Profile` object.
+        :rtype: Tuple[``bool``, :py:obj:`~meapi.models.profile.Profile`]
         """
         args = locals()
         del args['self']

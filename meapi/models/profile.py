@@ -132,8 +132,8 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
             Whether the user has mutual contacts available.
 
         mutual_contacts (List[:py:obj:`~meapi.models.user.User`] *optional*):
-            The user's mutual contacts.
-                - `For more information about MutualContact <https://me.app/mutual-contacts/>`_.
+            `For more information about mutual contacts <https://me.app/mutual-contacts/>`_.
+
 
         is_premium (``bool``):
             Whether the user is a premium user.

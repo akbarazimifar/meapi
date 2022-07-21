@@ -117,7 +117,7 @@ class Me(Auth, Account, Social, Settings, Notifications):
             auth_data = None
             activate_already = False
             while not auth_data:
-                auth_data = validate_auth_response(self._credentials_manager.get(str(self.phone_number)))
+                auth_data = self._credentials_manager.get(str(self.phone_number))
                 if not auth_data:
                     if activate_already:
                         raise MeException("It seems that the CredentialsManager does not provide the necessary data!")
@@ -126,6 +126,7 @@ class Me(Auth, Account, Social, Settings, Notifications):
                     else:
                         raise MeException("Failed to activate the account!")
 
+            validate_auth_response(auth_data)
             self._access_token = auth_data['access']
             self.uuid = auth_data['uuid']
 

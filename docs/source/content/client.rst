@@ -9,9 +9,9 @@
 
 😎 Profile
 ----------
-.. automethod:: Me.update_profile_details
 .. automethod:: Me.get_profile
 .. automethod:: Me.get_my_profile
+.. automethod:: Me.update_profile_details
 
 🌐 Social
 ----------

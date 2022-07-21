@@ -377,13 +377,13 @@ class Social:
 
     def get_socials(self: 'Me', uuid: Union[str, Profile, User, Contact] = None) -> social.Social:
         """
-        Get connected social networks to Me account.
+        Get connected social networks to ``Me`` account.
 
         :param uuid: uuid of the commented user. See :py:func:`get_uuid`.
          Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
         :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
-        :return: Dict with social networks and posts.
-        :rtype: ``dict``
+        :return: :py:obj:`~meapi.models.social.Social` object with social media accounts.
+        :rtype: :py:obj:`~meapi.models.social.Social`
         """
         if isinstance(uuid, (User, Profile)):
             uuid = uuid.uuid
@@ -406,15 +406,15 @@ class Social:
                    linkedin_url: str = None, ) -> bool:
         """
         Connect social network to your me account.
-            - If you have at least 2 socials, you get** ``is_verified`` = ``True`` **in your profile (Blue check).**
+            - If you have at least ``2`` socials, you get ``is_verified=True`` in your profile (Blue check).
 
-        :param twitter_token: `Twitter Token <https://gist.github.com/david-lev/b158f1cc0cc783dbb13ff4b54416ceec#file-twitter_token-md>`_. Default = ``None``.
+        :param twitter_token: `Twitter Token. Default = ``None``.
         :type twitter_token: str
         :param spotify_token: Log in to `Spotify <https://accounts.spotify.com/authorize?client_id=0b1ea72f7dce420583038b49fd04be50&response_type=code&redirect_uri=https://app.mobile.me.app/&scope=user-read-email%20playlist-read-private>`_ and copy the token after the ``https://app.mobile.me.app/?code=``. Default = ``None``.
         :type spotify_token: str
         :param instagram_token: Log in to `Instagram <https://api.instagram.com/oauth/authorize/?app_id=195953705182737&redirect_uri=https://app.mobile.me.app/&response_type=code&scope=user_profile,user_media>`_ and copy the token after the ``https://app.mobile.me.app/?code=``. Default = ``None``.
         :type instagram_token: str
-        :param facebook_token: `Facebook token <https://facebook.com/v12.0/dialog/oauth?cct_prefetching=0&client_id=799397013456724>`_. Default = ``None``.
+        :param facebook_token: `Facebook token <https://m.facebook.com/v12.0/dialog/oauth?cct_prefetching=0&client_id=799397013456724&cbt=1658355617803&e2e=%7B%22init%22%3A1658355617803%7D&ies=1&sdk=android-12.3.0&sso=chrome_custom_tab&nonce=19c3a497-9a95-4414-838e-34a789163b1d&scope=openid%2Cemail%2C%20user_birthday%2C%20user_gender%2C%20user_link&state=%7B%220_auth_logger_id%22%3A%22a173f481-ccb8-4738-850b-2fcd6a07ae88%22%2C%223_method%22%3A%22custom_tab%22%2C%227_challenge%22%3A%221vcvqpm5ftpf9qvcb3ao%22%7D&default_audience=friends&login_behavior=NATIVE_WITH_FALLBACK&redirect_uri=fbconnect%3A%2F%2Fcct.com.nfo.me.android&auth_type=rerequest&response_type=id_token%2Ctoken%2Csigned_request%2Cgraph_domain&return_scopes=true>`_. Default = ``None``.
         :type facebook_token: str
         :param tiktok_token: Log in to `TikTok <https://www.tiktok.com/auth/authorize?response_type=code&redirect_uri=https%3A%2F%2Fopen-api.tiktok.com%2Foauth%2Fauthorize%2Fcallback%2F&client_key=awwprdkduitl3ym8&state=xxx&from=opensdk&scope=user.info.basic%2Cvideo.list&optionalScope=&signature=f906b98d2febaad72580c16652d737ef&app_identity=02fc9e030144d785e61407f04a0ff171&device_platform=android>`_ and copy the token from ``data`` > ``code``. Default = ``None``.
         :type tiktok_token: str
