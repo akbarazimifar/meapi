@@ -32,7 +32,7 @@ class Social:
 
         :param phone_number: International phone number format.
         :type phone_number: ``int`` | ``str``
-        :return: Friendship object.
+        :return: :py:obj:`~meapi.models.friendship.Friendship` object.
         :rtype: :py:obj:`~meapi.models.friendship.Friendship`
         """
         return friendship.Friendship.new_from_dict(friendship_raw(self, validate_phone_number(phone_number)))
@@ -43,13 +43,13 @@ class Social:
             - You get notify when your report is approved. See :py:func:`get_notifications`.
 
         :param country_code: Two letters code, ``IL``, ``IT``, ``US`` etc. // `Country codes <https://countrycode.org/>`_.
-        :type country_code: str
+        :type country_code: ``str``
         :param spam_name: The spam name that you want to give to the spammer.
-        :type spam_name: str
+        :type spam_name: ``str``
         :param phone_number: spammer phone number in international format.
-        :type phone_number: int | str
+        :type phone_number: ``int`` | ``str``
         :return: Is report success
-        :rtype: bool
+        :rtype: ``bool``
         """
         return report_spam_raw(self, country_code.upper(), str(validate_phone_number(phone_number)), spam_name)['success']
 
@@ -58,13 +58,12 @@ class Social:
         Get list of users who deleted you from their contacts.
 
          The ``who_deleted_enabled`` setting must be ``True`` in your settings account in order to see who deleted you. See :py:func:`change_settings`.
-         You can use ``incognito=True`` to automatically enable and disable before and after.
+         You can use ``incognito=True`` to automatically enable and disable before and after (Required two more API calls).
 
-        :param incognito: If ``True``, this will set ``who_deleted`` to ``True``, and in the end, return it back to ``False``. *Default:* ``False``.
-         (Required two more API calls to enable ``who_deleted`` and to disable it after.)
-        :type incognito: bool
+        :param incognito: If ``True``, this automatically enables and disables ``who_deleted_enabled``. *Default:* ``False``.
+        :type incognito: ``bool``
         :param sorted_by: Sort by ``created_at`` or ``None``. *Default:* ``created_at``.
-        :type sorted_by: str
+        :type sorted_by: ``str``
         :return: List of Deleter objects sorted by their creation time.
         :rtype: List[:py:obj:`~meapi.models.deleter.Deleter`]
         """
@@ -83,13 +82,12 @@ class Social:
         Get list of users who watched your profile.
 
          The ``who_watched_enabled`` setting must be ``True`` in your settings account in order to see who watched your profile. See :py:func:`change_settings`.
-         You can use ``incognito=True`` to automatically enable and disable before and after.
+         You can use ``incognito=True`` to automatically enable and disable before and after (Required two more API calls).
 
-        :param incognito: If ``True``, this will set ``who_watched`` to ``True``, and in the end, return it back to ``False``. *Default:* ``False``.
-         (Required two more API calls to enable ``who_watched`` and to disable it after.)
-        :type incognito: bool
+        :param incognito: If ``True``, this automatically enables and disables ``who_watched_enabled``. *Default:* ``False``.
+        :type incognito: ``bool``
         :param sorted_by: Sort by ``count`` or ``last_view``. *Default:* ``count``.
-        :type sorted_by: str
+        :type sorted_by: ``str``
         :return: List of Watcher objects sorted by watch count (By default) or by last view.
         :rtype: List[:py:obj:`~meapi.models.watcher.Watcher`]
         """
@@ -118,8 +116,7 @@ class Social:
                 if getattr(search, 'user', None): # search can be None if no user found
                     comments = me.get_comments(search.user)
 
-        :param uuid: User uuid. See :py:func:`get_uuid`.
-         Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
+        :param uuid: ``uuid`` of the user or :py:obj:`~meapi.models.profile.Profile`, :py:obj:`~meapi.models.user.User`, or :py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
         :type uuid: ``str`` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.contact.Contact`
         :return: List of :py:obj:`~meapi.models.comment.Comment` objects sorted by their like count.
         :rtype: List[:py:obj:`~meapi.models.comment.Comment`]
@@ -143,30 +140,29 @@ class Social:
         return sorted([comment.Comment.new_from_dict(com, _client=self, _my_comment=_my_comment, profile_uuid=uuid)
                        for com in comments], key=lambda x: x.like_count, reverse=True)
 
-    def get_comment(self: 'Me', comment_id: Union[int, str]) -> dict:
+    def get_comment(self: 'Me', comment_id: Union[int, str]) -> comment.Comment:
         """
         Get comment details, comment text, who and how many liked, create time and more.
             - This methods return :py:obj:`~meapi.models.comment.Comment` object with just ``message``, ``like_count`` and ``comment_likes`` atrrs.
 
         :param comment_id: Comment id from :py:func:`get_comments`.
         :type comment_id: ``int`` | ``str``
-        :return: Comment object.
+        :return: :py:obj:`~meapi.models.comment.Comment` object.
         :rtype: :py:obj:`~meapi.models.comment.Comment`
         """
         if isinstance(comment_id, comment.Comment):
             comment_id = comment_id.id
         return comment.Comment.new_from_dict(get_comment_raw(self, int(comment_id)), _client=self, id=int(comment_id))
 
-    def publish_comment(self: 'Me', uuid: Union[str, Profile, User, Contact], your_comment: str, remove_credit: bool = False) -> comment.Comment:
+    def publish_comment(self: 'Me', uuid: Union[str, Profile, User, Contact] = None, your_comment: str = None, remove_credit: bool = False) -> comment.Comment:
         """
         Publish comment in user's profile.
             - You can publish comment on your own profile or on someone else's profile.
             - When you publish comment on someone else's profile, the user need to approve your comment before it will be visible.
             - You can edit your comment by simple calling :py:func:`publish_comment` again. The comment status will be changed to ``waiting`` until the user approves it.
 
-        :param uuid: uuid of the commented user. See :py:func:`get_uuid`.
-         Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
-        :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
+        :param uuid: ``uuid`` of the user or :py:obj:`~meapi.models.profile.Profile`, :py:obj:`~meapi.models.user.User`, or :py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
+        :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`
         :param your_comment: Your comment.
         :type your_comment: ``str``
         :param remove_credit: If ``True``, this will remove the credit from the comment. *Default:* ``False``.
@@ -174,6 +170,10 @@ class Social:
         :return: :py:obj:`~meapi.models.comment.Comment` object.
         :rtype: :py:obj:`~meapi.models.comment.Comment`
         """
+        if not uuid:
+            uuid = self.uuid  # publish on your own profile
+        if not your_comment:
+            raise MeException("You must to provide comment.")
         if isinstance(uuid, (User, Profile)):
             uuid = uuid.uuid
         if isinstance(uuid, Contact):
@@ -379,9 +379,8 @@ class Social:
         """
         Get connected social networks to ``Me`` account.
 
-        :param uuid: uuid of the commented user. See :py:func:`get_uuid`.
-         Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
-        :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
+        :param uuid: uuid of the user or :py:obj:`~meapi.models.profile.Profile`, :py:obj:`~meapi.models.user.User`, or :py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
+        :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`
         :return: :py:obj:`~meapi.models.social.Social` object with social media accounts.
         :rtype: :py:obj:`~meapi.models.social.Social`
         """
@@ -408,22 +407,22 @@ class Social:
         Connect social network to your me account.
             - If you have at least ``2`` socials, you get ``is_verified=True`` in your profile (Blue check).
 
-        :param twitter_token: `Twitter Token. Default = ``None``.
-        :type twitter_token: str
+        :param twitter_token: Twitter Token. Default = ``None``.
+        :type twitter_token: ``str``
         :param spotify_token: Log in to `Spotify <https://accounts.spotify.com/authorize?client_id=0b1ea72f7dce420583038b49fd04be50&response_type=code&redirect_uri=https://app.mobile.me.app/&scope=user-read-email%20playlist-read-private>`_ and copy the token after the ``https://app.mobile.me.app/?code=``. Default = ``None``.
-        :type spotify_token: str
+        :type spotify_token: ``str``
         :param instagram_token: Log in to `Instagram <https://api.instagram.com/oauth/authorize/?app_id=195953705182737&redirect_uri=https://app.mobile.me.app/&response_type=code&scope=user_profile,user_media>`_ and copy the token after the ``https://app.mobile.me.app/?code=``. Default = ``None``.
-        :type instagram_token: str
+        :type instagram_token: ``str``
         :param facebook_token: `Facebook token <https://m.facebook.com/v12.0/dialog/oauth?cct_prefetching=0&client_id=799397013456724&cbt=1658355617803&e2e=%7B%22init%22%3A1658355617803%7D&ies=1&sdk=android-12.3.0&sso=chrome_custom_tab&nonce=19c3a497-9a95-4414-838e-34a789163b1d&scope=openid%2Cemail%2C%20user_birthday%2C%20user_gender%2C%20user_link&state=%7B%220_auth_logger_id%22%3A%22a173f481-ccb8-4738-850b-2fcd6a07ae88%22%2C%223_method%22%3A%22custom_tab%22%2C%227_challenge%22%3A%221vcvqpm5ftpf9qvcb3ao%22%7D&default_audience=friends&login_behavior=NATIVE_WITH_FALLBACK&redirect_uri=fbconnect%3A%2F%2Fcct.com.nfo.me.android&auth_type=rerequest&response_type=id_token%2Ctoken%2Csigned_request%2Cgraph_domain&return_scopes=true>`_. Default = ``None``.
-        :type facebook_token: str
+        :type facebook_token: ``str``
         :param tiktok_token: Log in to `TikTok <https://www.tiktok.com/auth/authorize?response_type=code&redirect_uri=https%3A%2F%2Fopen-api.tiktok.com%2Foauth%2Fauthorize%2Fcallback%2F&client_key=awwprdkduitl3ym8&state=xxx&from=opensdk&scope=user.info.basic%2Cvideo.list&optionalScope=&signature=f906b98d2febaad72580c16652d737ef&app_identity=02fc9e030144d785e61407f04a0ff171&device_platform=android>`_ and copy the token from ``data`` > ``code``. Default = ``None``.
-        :type tiktok_token: str
+        :type tiktok_token: ``str``
         :param pinterest_url: Profile url - ``https://www.pinterest.com/username/``. Default = ``None``.
-        :type pinterest_url: str
+        :type pinterest_url: ``str``
         :param linkedin_url: Profile url - ``https://www.linkedin.com/in/username``. Default = ``None``.
-        :type linkedin_url: str
-        :return: Tuple of: is_success, list of failed.
-        :rtype: bool
+        :type linkedin_url: ``str``
+        :return: Is connected successfully.
+        :rtype: ``bool``
         """
         args = locals()
         del args['self']
@@ -460,21 +459,21 @@ class Social:
             - You can also hide social instead of deleting it: :py:func:`switch_social_status`.
 
         :param twitter: To remove Twitter. Default: ``False``.
-        :type twitter: bool
+        :type twitter: ``bool``
         :param spotify: To remove Spotify. Default: ``False``.
-        :type spotify: bool
+        :type spotify: ``bool``
         :param instagram: To remove Instagram. Default: ``False``.
-        :type instagram: bool
+        :type instagram: ``bool``
         :param facebook: To remove Facebook. Default: ``False``.
-        :type facebook: bool
+        :type facebook: ``bool``
         :param pinterest: To remove Pinterest. Default: ``False``.
-        :type pinterest: bool
+        :type pinterest: ``bool``
         :param linkedin: To remove Linkedin. Default: ``False``.
-        :type linkedin: bool
+        :type linkedin: ``bool``
         :param tiktok: To remove Tiktok. Default: ``False``.
-        :type tiktok: bool
+        :type tiktok: ``bool``
         :return: Is removal success.
-        :rtype: bool
+        :rtype: ``bool``
         """
         args = locals()
         del args['self']
@@ -499,23 +498,24 @@ class Social:
                              ) -> bool:
         """
         Switch social network status: Show (``True``) or Hide (``False``).
+            - You can also delete social instead of hiding it: :py:func:`remove_social`.
 
         :param twitter: Switch Twitter status. Default: ``None``.
-        :type twitter: bool
+        :type twitter: ``bool``
         :param spotify: Switch Spotify status Default: ``None``.
-        :type spotify: bool
+        :type spotify: ``bool``
         :param instagram: Switch Instagram status Default: ``None``.
-        :type instagram: bool
+        :type instagram: ``bool``
         :param facebook: Switch Facebook status Default: ``None``.
-        :type facebook: bool
+        :type facebook: ``bool``
         :param tiktok: Switch TikTok status Default: ``None``.
-        :type tiktok: bool
+        :type tiktok: ``bool``
         :param pinterest: Switch Pinterest status Default: ``None``.
-        :type pinterest: bool
+        :type pinterest: ``bool``
         :param linkedin: Switch Linkedin status Default: ``None``.
-        :type linkedin: bool
+        :type linkedin: ``bool``
         :return: is switch success (you get ``True`` even if social active or was un/hidden before).
-        :rtype: bool
+        :rtype: ``bool``
         """
         args = locals()
         del args['self']
@@ -540,7 +540,7 @@ class Social:
         Get total count of numbers on Me.
 
         :return: total count.
-        :rtype: int
+        :rtype: ``int``
         """
         return numbers_count_raw(self)['count']
 
@@ -548,9 +548,8 @@ class Social:
         """
         Ask another user to turn on comments in his profile.
 
-        :param uuid: uuid of the user. See :py:func:`get_uuid`.
-         Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
-        :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
+        :param uuid: ``uuid``, :py:obj:`~meapi.models.profile.Profile`, :py:obj:`~meapi.models.user.User`, or :py:obj:`~meapi.models.contact.Contact` of the commented user.
+        :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`
         :return: Is request success.
         :rtype: ``bool``
         """
@@ -574,9 +573,8 @@ class Social:
         """
         Ask another user to turn on mutual contacts on his profile.
 
-        :param uuid: uuid of the user. See :py:func:`get_uuid`.
-         Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
-        :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
+        :param uuid: ``uuid``, :py:obj:`~meapi.models.profile.Profile`, :py:obj:`~meapi.models.user.User`, or :py:obj:`~meapi.models.contact.Contact` of the user.
+        :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`
         :return: Is request success.
         :rtype: ``bool``
         """
@@ -600,9 +598,8 @@ class Social:
         """
         Ask another user to share his location with you.
 
-        :param uuid: uuid of the user. See :py:func:`get_uuid`.
-         Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
-        :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
+        :param uuid: ``uuid``, :py:obj:`~meapi.models.profile.Profile`, :py:obj:`~meapi.models.user.User`, or :py:obj:`~meapi.models.contact.Contact` of the user.
+        :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`
         :return: Is request success.
         :rtype: ``bool``
         """
@@ -622,9 +619,8 @@ class Social:
         """
         Get user age. calculate from ``date_of_birth``, provided by :py:func:`get_profile`.
 
-        :param uuid: uuid of the user. See :py:func:`get_uuid`.
-         Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
-        :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
+        :param uuid: uuid of the user or :py:obj:`~meapi.models.profile.Profile`, :py:obj:`~meapi.models.user.User`, or :py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
+        :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`
         :return: User age if date of birth exists. else - ``0``.
         :rtype: ``int``
         """
@@ -666,11 +662,11 @@ class Social:
         Update your location. See :py:func:`upload_random_data`.
 
         :param latitude: location latitude coordinates.
-        :type latitude: float
+        :type latitude: ``float``
         :param longitude: location longitude coordinates.
-        :type longitude: float
+        :type longitude: ``float``
         :return: Is location update success.
-        :rtype: bool
+        :rtype: ``bool``
         """
         if not isinstance(latitude, float) or not isinstance(longitude, float):
             raise MeException("Not a valid coordination!")
@@ -680,9 +676,8 @@ class Social:
         """
         Share your location with another user.
 
-        :param uuid: uuid of the user. See :py:func:`get_uuid`.
-         Or just :py:obj:`~meapi.models.user.User`/:py:obj:`~meapi.models.profile.Profile`/:py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
-        :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`]
+        :param uuid: uuid of the user or :py:obj:`~meapi.models.profile.Profile`, :py:obj:`~meapi.models.user.User`, or :py:obj:`~meapi.models.contact.Contact` objects.
+        :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`
         :return: Is sharing success.
         :rtype: ``bool``
         """

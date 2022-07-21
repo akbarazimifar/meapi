@@ -18,8 +18,11 @@ def get_notifications_raw(client: 'Me', page_number: int, results_limit: int, ca
     Get notifications.
 
     :param page_number: Page number.
+    :type page_number: ``int``
     :param results_limit: Number of results per page.
+    :type results_limit: ``int``
     :param categories: List of categories to filter.
+    :type categories: List[``str``]
     :return: Dict with notifications.
     :rtype: ``dict``
 

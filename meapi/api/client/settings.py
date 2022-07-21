@@ -18,8 +18,8 @@ class Settings:
         """
         Get current settings.
 
-        :return: :py:class:`meapi.models.settings.Settings` object.
-        :rtype: :py:class:`meapi.models.settings.Settings`
+        :return: :py:class:`~meapi.models.settings.Settings` object.
+        :rtype: :py:class:`~meapi.models.settings.Settings`
         """
         return settings.Settings.new_from_dict(get_settings_raw(self), _client=self)
 
@@ -45,12 +45,12 @@ class Settings:
         :param mutual_contacts_available: Show common contacts between users. *Default:* ``None``.
         :type mutual_contacts_available: ``bool``
         :param who_watched_enabled: Users will be notified that you have viewed their profile. *Default:* ``None``.
-            - They will only be able to get information about you if they are premium users (``is_premium`` = True in :py:func:`get_profile`) or, by using this libary....
+            - They will only be able to get information about you if they are premium users (``is_premium`` = True in :py:func:`get_profile`) or, by using ``meapi`` ;)
             - This setting must be True if you want to use :py:func:`who_watched` method.
         :type who_watched_enabled: ``bool``
         :param who_deleted_enabled: Users will be notified that you have deleted them from your contact book. *Default:* ``None``.
-            - They will only be able to get information about you if they are premium users (``is_premium`` = True in :py:func:`get_profile`) or, by using this libary....
-            - This setting must be True if you want to use :py:func:`who_deleted` method.
+            - They will only be able to get information about you if they are premium users (``is_premium`` = ``True`` in :py:func:`get_profile`) or, by using ``meapi`` ;)
+            - This setting must be ``True`` if you want to use :py:func:`who_deleted` method.
         :type who_deleted_enabled: ``bool``
         :param comments_enabled: Allow users to publish comment (:py:func:`publish_comment`) in your profile. *Default:* ``None``.
             - Comments will not be posted until you approve them with :py:func:`approve_comment`.
@@ -75,8 +75,8 @@ class Settings:
         :type names_notification_enabled: ``bool``
         :param notifications_enabled: *Default:* ``None``.
         :type notifications_enabled: ``bool``
-        :return: Tuple: is success, :py:class:`meapi.models.settings.Settings` object.
-        :rtype: Tuple[``bool``, :py:class:`meapi.models.settings.Settings`]
+        :return: Tuple: Is success, :py:class:`~meapi.models.settings.Settings` object.
+        :rtype: Tuple[``bool``, :py:class:`~meapi.models.settings.Settings`]
         """
         args = locals()
         del args['self']

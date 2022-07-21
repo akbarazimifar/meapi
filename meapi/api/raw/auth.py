@@ -38,6 +38,7 @@ def generate_new_access_token_raw(client: 'Me', phone_number: str, pwd_token: st
     :type phone_number: ``int``
     :param pwd_token: The ``pwd_token`` from the first activation (``activate_account_raw``).
     :type pwd_token: ``str``
+    :rtype: ``dict``
 
     Example::
 

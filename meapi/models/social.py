@@ -74,7 +74,7 @@ class SocialMediaAccount(MeModel):
         profile_id (``str`` *optional*):
             Profile ID or username of social media account.
         profile_url (``str`` *optional*)
-            The profile url of media account account.
+            The profile url of social media account.
         posts (List[:py:obj:`~meapi.models.social.Post`]):
             List of posts from social media account.
         is_active (``bool``):

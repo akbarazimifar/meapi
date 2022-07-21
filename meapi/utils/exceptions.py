@@ -2,7 +2,7 @@ class MeApiException(Exception):
     """
     Raise this exception if http status code is bigger than ``400``.
 
-    :param http_status: status code of the http request. ``400=>``.
+    :param http_status: status code of the http request. ``=>400``.
     :type http_status: int
     :param msg: ``api error msg``. for example: ``api_incorrect_activation_code``.
     :type msg: str

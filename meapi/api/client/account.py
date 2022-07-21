@@ -341,8 +341,8 @@ class Account:
         :type block_contact: ``bool``
         :param me_full_block: To block for social. *Default:* ``True``.
         :type me_full_block: ``bool``
-        :return: :py:obj:`meapi.models.blocked_number.BlockedNumber` object.
-        :rtype: :py:obj:`meapi.models.blocked_number.BlockedNumber`
+        :return: :py:obj:`~meapi.models.blocked_number.BlockedNumber` object.
+        :rtype: :py:obj:`~meapi.models.blocked_number.BlockedNumber`
         """
         res = block_profile_raw(client=self, phone_number=validate_phone_number(phone_number), me_full_block=me_full_block, block_contact=block_contact)
         if res['success']:

@@ -48,7 +48,7 @@ class Notifications:
         Get app notifications: new names, birthdays, comments, watches, deletes, location shares and system notifications.
 
         :param page_number: :py:func:`get_notifications`.``count`` / ``page_size``. *Default:* ``1``.
-        :type page_number: int
+        :type page_number: ``int``
         :param results_limit: Limit of notifications in each page. *Default:* ``20``.
         :type results_limit: ``int``
         :param names_filter: New names, deletes, joined, renames, rename requests. *Default:* ``False``.
@@ -85,6 +85,6 @@ class Notifications:
         :param notification_id: Notification id from :py:func:`get_notifications`.
         :type notification_id: ``int`` | ``str``
         :return: Is read success.
-        :rtype: bool
+        :rtype: ``bool``
         """
         return read_notification_raw(self, int(notification_id))['is_read']

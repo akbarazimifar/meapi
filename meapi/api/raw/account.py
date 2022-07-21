@@ -499,7 +499,7 @@ def unblock_profile_raw(client: 'Me', phone_number: int, unblock_contact=True, m
     :param me_full_unblock: To unblock for social.
     :type me_full_unblock: ``bool``
     :return: Dict of results.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example of results::
 
@@ -543,9 +543,9 @@ def unblock_numbers_raw(client: 'Me', numbers: List[int]) -> dict:
     :param client: :py:obj:`~meapi.Me` client object.
     :type client: :py:obj:`~meapi.Me`
     :param numbers: Single or list of phone numbers in international format.
-    :type numbers: List[int]
+    :type numbers: List[``int``]
     :return: dict with unblock success details.
-    :rtype: dict
+    :rtype: ``dict``
 
     Example::
 
@@ -564,7 +564,7 @@ def get_blocked_numbers_raw(client: 'Me') -> List[dict]:
     :param client: :py:obj:`~meapi.Me` client object.
     :type client: :py:obj:`~meapi.Me`
     :return: list of dicts.
-    :rtype: List[dict]
+    :rtype: List[``dict``]
 
     Example::
 

@@ -93,7 +93,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
             The user's cell phone carrier. *modifiable*.
 
         comments_enabled (``bool``):
-            Whether the user is allowing comments.
+            Whether the user is allowing comments. You can ask the user to turn on comments with :py:func:`~meapi.Me.suggest_turn_on_comments`.
 
         comments_blocked (``bool``):
             Whether the user has blocked comments.
@@ -105,7 +105,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
             Whether the user is allowing location.
 
         is_shared_location (``bool`` *optional*):
-            Whether the user is sharing their location with you.
+            Whether the user is sharing their location with you. You can ask the user to share his location with :py:func:`~meapi.Me.suggest_turn_on_location`.
 
         share_location (``bool`` *optional*):
             Whether the user is sharing their location with you.
@@ -113,11 +113,11 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         distance (``float`` *optional*):
             The user's distance from you.
 
-        location_latitude (``float`` *optional*):
-            The user's latitude coordinate.
+        location_longitude (``float`` *optional*):
+            The user's location longitude coordinate.
 
         location_latitude (``float`` *optional*):
-            The user's latitude coordinate.
+            The user's location latitude coordinate.
 
         location_name (``str`` *optional*):
             The user's location name. *modifiable*.
@@ -129,11 +129,10 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
             Whether the user is permanent.
 
         mutual_contacts_available (``bool`` *optional*):
-            Whether the user has mutual contacts available.
+            Whether the user has mutual contacts available. You can ask the user to turn on this feature with :py:func:`~meapi.Me.suggest_turn_on_mutual`.
 
         mutual_contacts (List[:py:obj:`~meapi.models.user.User`] *optional*):
             `For more information about mutual contacts <https://me.app/mutual-contacts/>`_.
-
 
         is_premium (``bool``):
             Whether the user is a premium user.
