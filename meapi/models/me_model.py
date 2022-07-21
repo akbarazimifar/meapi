@@ -28,10 +28,23 @@ class MeModel(metaclass=_ParameterReader):
     Base class for all models.
         - Allow instances to be comparable, subscript, hashable, immutable (In some cases), and json serializable.
 
+    Example:
+        .. code-block:: python
+
+            # Get your profile.
+            my_profile = me.get_my_profile()
+            my_profile.name # regular access
+            my_profile['name'] # subscript access
+            my_profile.get('name', default='') # get access
+            my_profile.as_dict() # get all data as dict
+            my_profile.as_json_string() # get all data as json string
+            my_profile == other_profile # compare two objects
+
     Methods:
 
     .. automethod:: as_dict
     .. automethod:: as_json_string
+    .. automethod:: get
     """
     def __init__(self):
         """
@@ -99,8 +112,26 @@ class MeModel(metaclass=_ParameterReader):
     def __getitem__(self, item):
         """
         Return the value of the attribute with the given name.
+            - Example: ``obj['id']``
         """
         return getattr(self, item)
+
+    def get(self, item, default=None):
+        """
+        Return the value of the attribute with the given name.
+            - Example: ``obj.get('id')``
+
+        Parameters:
+            item (``str``):
+                The name of the attribute.
+            default (``any``):
+                The default value to return if the attribute does not exist.
+                    - Default: ``None``
+
+        Returns:
+            The value of the attribute, or ``default`` if the attribute does not exist.
+        """
+        return getattr(self, item, default)
 
     def __setattr__(self, key, value):
         """
