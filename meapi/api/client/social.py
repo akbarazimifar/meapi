@@ -168,8 +168,9 @@ class Social:
         :param remove_credit: If ``True``, this will remove the credit from the comment. *Default:* ``False``.
         :type remove_credit: ``bool``
         :raises MeApiException: If the user disable comments. msg: ``api_user_comments_disabled``.
-         You need to check before if the user enable comments in his profile. me.get_profile(uuid).comments_enabled
-         You can ask the user to enable comments in his profile with :py:func:`~meapi.Me.suggest_turn_on_comments`.
+
+            - You need to check before if the user enable comments (``comments_enabled``) in his profile with :py:func:`~meapi.Me.get_profile`.
+            - You can ask the user to enable comments in his profile with :py:func:`~meapi.Me.suggest_turn_on_comments`.
         :return: :py:obj:`~meapi.models.comment.Comment` object.
         :rtype: :py:obj:`~meapi.models.comment.Comment`
         """

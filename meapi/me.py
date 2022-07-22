@@ -17,7 +17,18 @@ _logger = getLogger(__name__)
 class Me(Auth, Account, Social, Settings, Notifications):
     """
     The ``Me`` Client. Used to interact with MeAPI.
-        - **See** `Authentication <https://meapi.readthedocs.io/en/latest/content/setup.html#authentication>`_ **for more information.**
+        - See `Authentication <https://meapi.readthedocs.io/en/latest/content/setup.html#authentication>`_ for more information.
+
+    Example for setting up the client:
+
+        >>> from meapi import Me
+        >>> me = Me(phone_number=972123456789) # Unofficial method, phone number is required
+        >>> me = Me(phone_number=972123456789, activation_code='123456') # Unofficial method with pre-provided activation code
+        >>> me = Me(access_token='access_token') # Official method, access token is required
+        >>> me = Me(phone_number=972123456789, credentials_manager=JsonFileCredentialsManager('config.json')) # With credentials manager
+        >>> me = Me(phone_number=972123456789, session=my_custom_session, proxies={'http': 'http://proxy.com:8080'}) # With session and proxies
+        >>> me = Me(account_details={'phone_number': 972123456789, 'activation_code': '123456'...}) # New account registration
+
 
     :param phone_number: International phone number format. *Default:* ``None``.
 
@@ -39,22 +50,13 @@ class Me(Auth, Account, Social, Settings, Notifications):
     :param account_details: You can provide all login details can be provided in dict format. *Default:* ``None``.
 
         - Designed for cases of new account registration without the need for a prompt.
+        - See example below to all available account details.
     :type account_details: ``dict`` | ``None``
     :type config_file: ``str`` | ``None``
     :param session: requests Session object. Default: ``None``.
     :type session: ``requests.Session`` | ``None``
     :param proxies: Dict with proxy configuration. Default: ``None``.
     :type proxies: ``dict`` | ``None``
-
-    Example for setting up the client:
-
-        >>> from meapi import Me
-        >>> me = Me(phone_number=972123456789) # Unofficial method, phone number is required
-        >>> me = Me(phone_number=972123456789, activation_code='123456') # Unofficial method with pre-provided activation code
-        >>> me = Me(access_token='access_token') # Official method, access token is required
-        >>> me = Me(phone_number=972123456789, credentials_manager=JsonFileCredentialsManager('config.json')) # With credentials manager
-        >>> me = Me(phone_number=972123456789, session=my_custom_session, proxies={'http': 'http://proxy.com:8080'}) # With session and proxies
-        >>> me = Me(account_details={'phone_number': 972123456789, 'activation_code': '123456'...}) # New account registration
 
     Example for ``account_details``::
 
