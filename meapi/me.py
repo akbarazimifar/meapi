@@ -16,14 +16,14 @@ _logger = getLogger(__name__)
 
 class Me(Auth, Account, Social, Settings, Notifications):
     """
-    Create a new instance to interact with MeAPI.
+    The ``Me`` Client. Used to interact with MeAPI.
         - **See** `Authentication <https://meapi.readthedocs.io/en/latest/content/setup.html#authentication>`_ **for more information.**
 
     :param phone_number: International phone number format. *Default:* ``None``.
 
         - Required on the `Unofficial method <https://meapi.readthedocs.io/en/latest/content/setup.html#unofficial-method>`_.
     :type phone_number: ``str`` | ``int`` | ``None``
-    :param activation_code: You can provide the ``activation_code`` from Me in advance, without the need for a prompt. *Default:* ``None``.
+    :param activation_code: You can provide the ``activation_code`` from ``Me`` in advance, without the need for a prompt. *Default:* ``None``.
     :type activation_code: ``str`` | ``None``
     :param access_token: Official access token. *Default:* ``None``.
 
@@ -45,6 +45,16 @@ class Me(Auth, Account, Social, Settings, Notifications):
     :type session: ``requests.Session`` | ``None``
     :param proxies: Dict with proxy configuration. Default: ``None``.
     :type proxies: ``dict`` | ``None``
+
+    Example for setting up the client:
+
+        >>> from meapi import Me
+        >>> me = Me(phone_number=972123456789) # Unofficial method, phone number is required
+        >>> me = Me(phone_number=972123456789, activation_code='123456') # Unofficial method with pre-provided activation code
+        >>> me = Me(access_token='access_token') # Official method, access token is required
+        >>> me = Me(phone_number=972123456789, credentials_manager=JsonFileCredentialsManager('config.json')) # With credentials manager
+        >>> me = Me(phone_number=972123456789, session=my_custom_session, proxies={'http': 'http://proxy.com:8080'}) # With session and proxies
+        >>> me = Me(account_details={'phone_number': 972123456789, 'activation_code': '123456'...}) # New account registration
 
     Example for ``account_details``::
 

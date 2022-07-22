@@ -13,6 +13,20 @@ class Notification(MeModel):
         - Notification could be new comment, new profile watch, new deleted, contact birthday, suggestion, etc.
         - `For more information about Notification <https://me.app/notifications/>`_
 
+    Examples:
+
+        >>> my_notifications = me.get_notifications()
+        >>> notification = my_notifications[0][0]
+        >>> notification.category
+        'UPDATED_CONTACT'
+        >>> notification.name
+        'Mike Hannigan'
+        >>> notification.new_name
+        'Princess Consuela Banana-Hammock'
+        >>> me.publish_comment(uuid=notification.uuid, your_comment="Hi *** bag!")
+        <Comment id=678 status=waiting msg=Hi *** bag! author=Phoebe Buffay>
+
+
     Parameters:
         id (``int``):
             The id of the notification.

@@ -17,41 +17,42 @@ if TYPE_CHECKING:  # always False at runtime.
 class Profile(MeModel, _CommonMethodsForUserContactProfile):
     """
     Represents the user's profile. can also be used to update you profile details.
-        - Modifiable attributes are marked with *modifiable*.
+        - Modifiable attributes are marked with ``modifiable``.
+        - For more information about the modifiable attributes, see :py:func:`~meapi.Me.update_profile_details`.
 
     Example:
-        .. code-block:: python
 
-            # Change your name.
-            my_profile = me.get_my_profile()
-            my_profile.first_name = "Chandler"
-            my_profile.last_name = "Bing"
-            my_profile.profile_picture = "/home/david/Downloads/my_profile.jpg"
+        >>> # Update your profile details.
+        >>> my_profile = me.get_my_profile()
+        >>> my_profile.name = "Chandler Bing"
+        >>> my_profile.date_of_birth = "1998-04-08"
+        >>> my_profile.slogan = "Hi, I'm Chandler. I make jokes when I'm uncomfortable."
+        >>> my_profile.profile_picture = "/home/chandler/Downloads/my_profile.jpg"
 
     Parameters:
-        name (``str`` *optional*):
+        name (``str`` *optional*, *modifiable*):
             The user's full name (``first_name`` + ``last_name``).
 
-        first_name (``str`` *optional*):
-            The user's first name. *modifiable*.
+        first_name (``str`` *optional*, *modifiable*):
+            The user's first name.
 
-        last_name (``str`` *optional*):
-            The user's last name. *modifiable*.
+        last_name (``str`` *optional*, *modifiable*):
+            The user's last name.
 
-        profile_picture (``str`` *optional*):
-            The user's profile picture url. *modifiable*.
+        profile_picture (``str`` *optional*, *modifiable*):
+            The user's profile picture url.
 
-        slogan (``str`` *optional*):
-            The user's bio. *modifiable*.
+        slogan (``str`` *optional*, *modifiable*):
+            The user's bio.
 
-        email (``str`` *optional*):
-            The user's email. *modifiable*.
+        email (``str`` *optional*, *modifiable*):
+            The user's email.
 
-        gender (``str`` *optional*):
-            The user's gender: ``M`` for male and ``F`` for female. *modifiable*.
+        gender (``str`` *optional*, *modifiable*):
+            The user's gender: ``M`` for male and ``F`` for female.
 
-        date_of_birth (:py:obj:`~datetime.date` *optional*):
-            The user's date of birth. *modifiable*.
+        date_of_birth (:py:obj:`~datetime.date` *optional*, *modifiable*):
+            The user's date of birth.
 
         age (``int``):
             The user's age. calculated from ``date_of_birth`` if exists, else ``0``.
@@ -68,11 +69,11 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         phone_prefix (``str``):
             The user's phone prefix.
 
-        device_type (``str`` *optional*):
-            The user's device type: ``android`` or ``ios``. *modifiable*.
+        device_type (``str`` *optional*, *modifiable*):
+            The user's device type: ``android`` or ``ios``.
 
-        login_type (``str`` *optional*):
-            The user's login type: ``email`` or ``apple``. *modifiable*.
+        login_type (``str`` *optional*, *modifiable*):
+            The user's login type: ``email`` or ``apple``.
 
         who_deleted_enabled (``bool``):
             Whether the user can see who deleted him (Only if ``is_premium``, Or if he uses ``meapi`` ;).
@@ -89,8 +90,8 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         friends_distance (List[:py:obj:`~meapi.models.user.User`] *optional*):
             The users who shared their location with you.
 
-        carrier (``str`` *optional*):
-            The user's cell phone carrier. *modifiable*.
+        carrier (``str`` *optional*, *modifiable*):
+            The user's cell phone carrier.
 
         comments_enabled (``bool``):
             Whether the user is allowing comments. You can ask the user to turn on comments with :py:func:`~meapi.Me.suggest_turn_on_comments`.
@@ -119,8 +120,8 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         location_latitude (``float`` *optional*):
             The user's location latitude coordinate.
 
-        location_name (``str`` *optional*):
-            The user's location name. *modifiable*.
+        location_name (``str`` *optional*, *modifiable*):
+            The user's location name.
 
         is_he_blocked_me (``bool`` *optional*):
             Whether the user has blocked you.
@@ -143,11 +144,11 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         gdpr_consent (``bool``):
             Whether the user has given consent to the GDPR.
 
-        facebook_url (``str`` *optional*):
-            The user's Facebook ID. *modifiable*.
+        facebook_url (``str`` *optional*, *modifiable*):
+            The user's Facebook ID.
 
-        google_url (``str`` *optional*):
-            The user's Google ID. *modifiable*.
+        google_url (``str`` *optional*, *modifiable*):
+            The user's Google ID.
 
         me_in_contacts (``bool`` *optional*):
             Whether you are in the user's contacts.
@@ -269,6 +270,16 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         """
         return (self.first_name or '') + (' ' if self.first_name and self.last_name else '') + (self.last_name or '') or None
 
+    @name.setter
+    def name(self, new_name: str):
+        """
+        Sets the full name of the user. ``first_name`` + ``last_name``.
+        """
+        if ' ' in new_name:
+            self.first_name, self.last_name = new_name.split(' ', 1)
+        else:
+            self.last_name, self.first_name = new_name, ''
+
     @property
     def age(self) -> int:
         """
@@ -292,7 +303,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
     def __setattr__(self, key, value):
         if getattr(self, '_Profile__my_profile', None) is not None:
             if self.__my_profile:
-                if key == '_Profile__my_profile':
+                if key == '_Profile__my_profile' or key == 'name':
                     return super().__setattr__(key, value)
                 modifiable_attrs = ['first_name', 'last_name', 'email', 'gender', 'slogan', 'profile_picture',
                                     'date_of_birth', 'location_name', 'device_type', 'login_type', 'facebook_url',

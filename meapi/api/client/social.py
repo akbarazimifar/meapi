@@ -167,14 +167,23 @@ class Social:
         :type your_comment: ``str``
         :param remove_credit: If ``True``, this will remove the credit from the comment. *Default:* ``False``.
         :type remove_credit: ``bool``
+        :raises MeApiException: If the user disable comments. msg: ``api_user_comments_disabled``.
+         You need to check before if the user enable comments in his profile. me.get_profile(uuid).comments_enabled
+         You can ask the user to enable comments in his profile with :py:func:`~meapi.Me.suggest_turn_on_comments`.
         :return: :py:obj:`~meapi.models.comment.Comment` object.
         :rtype: :py:obj:`~meapi.models.comment.Comment`
         """
+        err_case = "User disable comments. you can ask the user to enable comments in his profile with " \
+                   "client.suggest_turn_on_comments()."
         if not uuid:
             uuid = self.uuid  # publish on your own profile
         if not your_comment:
             raise MeException("You must to provide comment.")
-        if isinstance(uuid, (User, Profile)):
+        if isinstance(uuid, Profile):
+            if uuid.comments_enabled is False:  # can be None
+                raise MeException(err_case)
+            uuid = uuid.uuid
+        if isinstance(uuid, User):
             uuid = uuid.uuid
         if isinstance(uuid, Contact):
             if uuid.user:
@@ -183,9 +192,13 @@ class Social:
                 raise MeException("Contact has no user.")
         if not remove_credit:
             your_comment += ' • Commented with meapi <https://github.com/david-lev/meapi>'
-
-        return comment.Comment.new_from_dict(publish_comment_raw(self, str(uuid), str(your_comment)),
-                                             _client=self, profile_uuid=uuid, _my_comment=True if self.uuid == uuid else False)
+        try:
+            res = publish_comment_raw(self, str(uuid), str(your_comment))
+        except MeApiException as e:
+            if e.msg == 'api_user_comments_disabled':
+                e.reason = err_case
+            raise e
+        return comment.Comment.new_from_dict(res, _client=self, profile_uuid=uuid, _my_comment=True if self.uuid == uuid else False)
 
     def approve_comment(self: 'Me', comment_id: Union[str, int, comment.Comment]) -> bool:
         """
@@ -287,7 +300,7 @@ class Social:
     def get_groups(self: 'Me', sorted_by: str = 'count') -> List[group.Group]:
         """
         Get groups of names and see how people named you.
-            - `For more information about Group: <https://me.app/who-saved-my-number/>`_
+            - `For more information about Group <https://me.app/who-saved-my-number/>`_
 
         :param sorted_by: Sort by ``count`` or ``last_contact_at``. *Default:* ``count``.
         :type sorted_by: ``str``

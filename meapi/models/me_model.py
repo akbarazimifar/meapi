@@ -1,9 +1,12 @@
 import inspect
 import json
 from abc import ABCMeta
+from typing import TYPE_CHECKING
 from datetime import datetime, date
 from meapi.utils.exceptions import MeException
 from logging import getLogger
+if TYPE_CHECKING:  # always False at runtime.
+    from meapi import Me
 
 IGNORED_KEYS = []
 _logger = getLogger(__name__)
@@ -29,21 +32,19 @@ class MeModel(metaclass=_ParameterReader):
         - Allow instances to be comparable, subscript, hashable, immutable (In some cases), and json serializable.
 
     Example:
-        .. code-block:: python
 
-            # Get your profile.
-            my_profile = me.get_my_profile()
-            my_profile.name # regular access
-            my_profile['name'] # subscript access
-            my_profile.get('name', default='') # get access
-            my_profile.as_dict() # get all data as dict
-            my_profile.as_json_string() # get all data as json string
-            my_profile == other_profile # compare two objects
+        >>> my_profile = me.get_my_profile() # Get your profile.
+        >>> my_profile.name # regular access
+        >>> my_profile['name'] # subscript access
+        >>> my_profile.get('name', default='') # get access
+        >>> my_profile.as_dict() # get all data as dict
+        >>> my_profile.as_json() # get all data as json string
+        >>> my_profile == other_profile # compare two objects
 
     Methods:
 
     .. automethod:: as_dict
-    .. automethod:: as_json_string
+    .. automethod:: as_json
     .. automethod:: get
     """
     def __init__(self):
@@ -76,14 +77,14 @@ class MeModel(metaclass=_ParameterReader):
                 data[key] = getattr(self, key, None)
         return data
 
-    def as_json_string(self, ensure_ascii=True) -> str:
+    def as_json(self, ensure_ascii=True) -> str:
         """
         Return class data in ``json`` format.
         """
         return json.dumps(self.as_dict(), ensure_ascii=ensure_ascii, sort_keys=True)
 
     @classmethod
-    def new_from_dict(cls, data: dict, _client=None, **kwargs):
+    def new_from_dict(cls, data: dict, _client: 'Me' = None, **kwargs):
         """
         Create new instance from dict.
         """
@@ -145,7 +146,7 @@ class MeModel(metaclass=_ParameterReader):
         """
         Return class data in json format
         """
-        return self.as_json_string()
+        return self.as_json()
 
     def __eq__(self, other) -> bool:
         """

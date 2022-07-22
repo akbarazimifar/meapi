@@ -7,6 +7,19 @@ class Friendship(MeModel):
         - Friendship is a relationship between you and another user.
         - `For more information about Friendship <https://me.app/friendship/>`_
 
+    Examples:
+
+        >>> janice_and_i = me.friendship(phone_number=1969030000000)
+        >>> janice_and_i.he_named
+        'Little bingaling'
+        >>> janice_and_i.i_named
+        'Oh. My. God.'
+        >>> janice_and_i.his_comment
+        'You're my little love muffin'
+        >>> janice_and_i.my_comment
+        'I seek you out!
+
+
     Parameters:
         calls_duration (``int``):
             The duration of your calls in seconds.

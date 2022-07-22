@@ -12,6 +12,20 @@ class Comment(MeModel):
     """
     Represents a comment.
 
+    Examples:
+        >>> my_comments = me.get_comments()
+        >>> my_comments[0].message
+        'We were on a break!'
+        >>> my_comments[0].like_count
+        7
+        >>> my_comments[0].author.name
+        'Ross Geller'
+        >>> my_comments[0].like()
+        True
+        >>> my_comments[0].reply("I got off the plane.")
+        <Comment id=123 status=waiting msg=I got off the plane. author=Rachel Green>
+
+
     Parameters:
         message (``str``):
             The message of the comment.
@@ -39,6 +53,7 @@ class Comment(MeModel):
     .. automethod:: edit
     .. automethod:: like
     .. automethod:: unlike
+    .. automethod:: reply
     """
     def __init__(self,
                  _client: 'Me',
@@ -158,6 +173,21 @@ class Comment(MeModel):
             self.like_count -= 1
             return True
         return False
+
+    def reply(self, your_comment: str) -> 'Comment':
+        """
+        Publish a comment in the profile of the comment author.
+            - The same as :py:func:`~meapi.Me.publish_comment`.
+            - if you already replied to the comment, this will edit the comment like :py:func:`~meapi.models.comment.Comment.edit`.
+
+        Parameters:
+            your_comment (``str``):
+                The message of the comment.
+
+        Returns:
+            :py:obj:`~meapi.models.comment.Comment`: The new comment.
+        """
+        return self.__client.publish_comment(self.profile_uuid, your_comment)
 
     def __setattr__(self, key, value):
         if getattr(self, '_Comment__init_done', None):

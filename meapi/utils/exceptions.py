@@ -17,6 +17,7 @@ class MeApiException(Exception):
     - ``api_activation_code_expired``.
     - ``api_search_passed_limit`` in :py:func:`~meapi.Me.phone_search`.
     - ``api_profile_view_passed_limit`` in :py:func:`~meapi.Me.get_profile`.
+    - ``api_user_comments_disabled`` in :py:func:`~meapi.Me.publish_comment`.
     """
     def __init__(self, http_status: int, msg: str, reason: str = None):
         self.http_status = http_status

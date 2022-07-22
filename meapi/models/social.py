@@ -21,7 +21,17 @@ social_profile_urls = {
 
 class Social(MeModel):
     """
-    **Represents user's social media accounts.**
+    Represents user's social media accounts.
+
+    Examples:
+
+        >>> my_socials = me.get_socials()
+        >>> my_socials.instagram.add(token_or_url="xxxxxxxxxxxxxxx")
+        True
+        >>> my_socials.instagram.profile_url
+        https://instagram.com/courteneycoxofficial
+        >>> my_socials.instagram.posts[0].text
+        "Okay, hypothetically, why won’t I be married when I’m 40?"
 
     Parameters:
         facebook (~meapi.models.social.SocialMediaAccount):
@@ -66,7 +76,18 @@ class Social(MeModel):
 
 class SocialMediaAccount(MeModel):
     """
-    **Represents user's social media account.**
+    Represents user's social media account.
+
+    Examples:
+
+        >>> my_socials = me.get_socials()
+        >>> my_socials.spotify.add(token_or_url="xxxxxxxxxxxxxxx") # connect spotify account
+        True
+        >>> my_socials.spotify.hide() # hide account from public
+        True
+        >>> my_socials.spotify.unhide() # unhide account from public
+        True
+        >>> my_socials.spotify.remove() # remove account
 
     Parameters:
         name (``str``):

@@ -4,10 +4,17 @@ from meapi.utils.exceptions import MeException
 if TYPE_CHECKING:  # always False at runtime.
     from meapi import Me
 
+
 class BlockedNumber(MeModel):
     """
     Represents a blocked number.
         - `For more information about blocked numbers <https://me.app/block-or-unblock-a-phone-number-me-user/>`_
+
+    Example:
+
+        >>> from meapi import Me
+        >>> blocked_numbers = Me.get_blocked_numbers()
+        >>> for blocked_number in blocked_numbers: blocked_number.unblock()
 
     Parameters:
         block_contact (``bool``):

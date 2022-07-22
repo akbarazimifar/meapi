@@ -12,15 +12,13 @@ class Settings(MeModel):
         - You can edit your settings by simply assigning a new value to the attribute.
 
     Example:
-        .. code-block:: python
-
-            # Enable who_watched just to check who watched -
-            # - your profile you and then disable it back.
-            my_settings = me.get_settings()
-            my_settings.who_watched_enabled = True
-            for watcher in me.who_watched():
-                print(watcher.user.name)
-            my_settings.who_watched_enabled = False
+        >>> # Take control of your privacy:
+        >>> my_settings = me.get_settings()
+        >>> my_settings.who_watched_enabled = False
+        >>> my_settings.who_deleted_enabled = False
+        >>> my_settings.mutual_contacts_available = False
+        >>> my_settings.comments_enabled = False
+        >>> my_settings.location_enabled = False
 
     Parameters:
         who_deleted_enabled (``bool``):

@@ -9,6 +9,16 @@ class Watcher(MeModel):
     Represents a Watcher, user who watch your profile.
         - `For more information about Watcher <https://me.app/who-viewed-my-profile/>`_
 
+    Examples:
+        >>> my_watchers = me.who_watched()
+        >>> watcher = my_watchers[0]
+        >>> watcher.user.name
+        'Mike Hannigan'
+        >>> watcher.count
+        15
+        >>> me.publish_comment(uuid=watcher.user, your_comment="So, what are your intentions with my Phoebe?")
+        <Comment id=321 status=waiting msg=o, what are your intentions with my Phoebe? author=Joey Tribbiani>
+
     Parameters:
         last_view (``datetime``):
             Date of last view.

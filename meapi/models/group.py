@@ -11,11 +11,22 @@ if TYPE_CHECKING:  # always False at runtime.
 class Group(MeModel):
     """
     Represents a group of users that save you in their contact list in the same name
-        - `For more information about this feature: <https://me.app/who-saved-my-number/>`_
+        - `For more information about this feature <https://me.app/who-saved-my-number/>`_
+
+    Examples:
+        >>> my_groups = me.get_groups()
+        >>> group = my_groups[0]
+        >>> group.name
+        'Phoebe Buffay'
+        >>> group.count
+        6
+        >>> group.last_contact_at
+        datetime.datetime(2004, 5, 6, 21, 0)
+        >>> group.ask_to_rename(new_name='Regina Phalange')
 
     Parameters:
         name (``str``):
-            The name of the group, how you save in their contact list.
+            The name of the group, how your number saved in their contact list.
         count (``int``):
             The number of users in the group.
         last_contact_at (``datetime`` *optional*):
@@ -24,8 +35,9 @@ class Group(MeModel):
             The users that are in the group.
         contact_ids (``List[int]``):
             The ids of the users that are in the group.
-        status (``str``):
-            The status of the group, can be ``active`` or ``hidden``.
+        is_active (``bool``):
+            Is the group active.
+            - You can use :py:func:`~meapi.models.group.Group.delete` to hide the group and :py:func:`~meapi.models.group.Group.restore` to restore it.
 
     Methods:
 
@@ -98,7 +110,7 @@ class Group(MeModel):
             ``bool``: ``True`` if the suggested send, ``False`` otherwise.
         """
         if not self.is_active:
-            raise MeException("You can't ask to rename if the name is hidden. restore and then ask again!")
+            return False
         if self.__client.ask_group_rename(self.contact_ids, new_name):
             return True
         return False
