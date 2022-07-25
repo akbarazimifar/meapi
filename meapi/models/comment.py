@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional, TYPE_CHECKING
 from meapi.utils.exceptions import MeException
 from meapi.utils.helpers import parse_date
-from meapi.models.me_model import MeModel
+from meapi.models.me_model import MeModel, _logger
 from meapi.models.user import User
 if TYPE_CHECKING:  # always False at runtime.
     from meapi import Me
@@ -32,7 +32,7 @@ class Comment(MeModel):
         id (``int``):
             The id of the comment.
         status (``str``):
-            The status of the comment: ``approved``, ``ignored``, ``waiting``.
+            The status of the comment: ``approved``, ``ignored``, ``waiting``, ``deleted``.
         author (:py:obj:`~meapi.models.user.User`):
             The creator of the comment.
         like_count (``int``):
@@ -49,8 +49,9 @@ class Comment(MeModel):
     Methods:
 
     .. automethod:: approve
-    .. automethod:: delete
     .. automethod:: edit
+    .. automethod:: ignore
+    .. automethod:: delete
     .. automethod:: like
     .. automethod:: unlike
     .. automethod:: reply
@@ -93,17 +94,12 @@ class Comment(MeModel):
         Returns:
             ``bool``: Is approve success.
         """
-        if not self.__my_comment:
-            raise MeException("You can only approve others comments!")
-        if self.status == 'approved':
+        if self.__client.approve_comment(self):
+            self.status = 'approved'
             return True
-        if self.id:
-            if self.__client.approve_comment(self.id):
-                self.status = 'approved'
-                return True
         return False
 
-    def edit(self, new_msg: str) -> bool:
+    def edit(self, new_msg: str, remove_credit: bool = False) -> bool:
         """
         Edit the comment.
             - You can only edit comments that posted by you.
@@ -112,36 +108,51 @@ class Comment(MeModel):
         Parameters:
             new_msg (``str``):
                 The new message of the comment.
+            remove_credit (``bool``):
+                Whether to remove the credit to ``meapi`` from the comment.
 
         Returns:
             ``bool``: Is edit success.
         """
         if self.author.uuid == self.__client.uuid:
-            if self.__client.publish_comment(self.profile_uuid, new_msg):
+            if self.status == 'deleted':
+                _logger.warning("You can't edit deleted comment!")
+                return False
+            if self.__client.publish_comment(self.profile_uuid, new_msg, remove_credit):
                 self.message = new_msg
                 self.status = 'waiting'
                 return True
             return False
         else:
-            raise MeException("You can't edit others comments!")
+            _logger.warning("You can only edit comments that posted by you.")
+            return False
 
-    def delete(self) -> bool:
+    def ignore(self) -> bool:
         """
         Ignore and hide the comment.
             - You can only ignore and hide comments that posted by others on your own profile.
             - The same as :py:func:`~meapi.Me.delete_comment`.
 
         Returns:
+            ``bool``: Is ignore success.
+        """
+        if self.__client.ignore_comment(self):
+            self.status = 'ignored'
+            return True
+        return False
+
+    def delete(self) -> bool:
+        """
+        Delete the comment.
+            - You can only delete comments that posted by you.
+            - The same as :py:func:`~meapi.Me.delete_comment`.
+
+        Returns:
             ``bool``: Is delete success.
         """
-        if not self.__my_comment:
-            raise MeException("You can't delete others comments!")
-        if self.status == 'ignored':
+        if self.__client.delete_comment(self):
+            self.status = 'deleted'
             return True
-        if self.id:
-            if self.__client.delete_comment(self.id):
-                self.status = 'ignored'
-                return True
         return False
 
     def like(self) -> bool:
@@ -152,8 +163,6 @@ class Comment(MeModel):
         Returns:
             ``bool``: Is like success.
         """
-        if self.status != 'approved':
-            raise MeException("You can only like approved comments!")
         if self.__client.like_comment(self.id):
             self.like_count += 1
             return True
@@ -167,8 +176,6 @@ class Comment(MeModel):
         Returns:
             ``bool``: Is unlike success.
         """
-        if self.status != 'approved':
-            raise MeException("You can only unlike approved comments!")
         if self.__client.unlike_comment(self.id):
             self.like_count -= 1
             return True
@@ -200,4 +207,3 @@ class Comment(MeModel):
 
     def __str__(self):
         return self.message
-

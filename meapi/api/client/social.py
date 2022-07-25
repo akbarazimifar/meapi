@@ -154,12 +154,14 @@ class Social:
             comment_id = comment_id.id
         return comment.Comment.new_from_dict(get_comment_raw(self, int(comment_id)), _client=self, id=int(comment_id))
 
-    def publish_comment(self: 'Me', uuid: Union[str, Profile, User, Contact] = None, your_comment: str = None, remove_credit: bool = False) -> comment.Comment:
+    def publish_comment(self: 'Me', uuid: Union[str, Profile, User, Contact] = None, your_comment: str = None, remove_credit: bool = False) -> Optional[comment.Comment]:
         """
         Publish comment in user's profile.
             - You can publish comment on your own profile or on someone else's profile.
             - When you publish comment on someone else's profile, the user need to approve your comment before it will be visible.
             - You can edit your comment by simple calling :py:func:`publish_comment` again. The comment status will be changed to ``waiting`` until the user approves it.
+            - You can ask the user to enable comments in his profile with :py:func:`~meapi.Me.suggest_turn_on_comments`.
+            - If the user doesn't enable comments (``comments_enabled``), or if he blocked you from comments (``comments_blocked``), you will get ``None``. You can get this info with :py:func:`~meapi.Me.get_profile`.
 
         :param uuid: ``uuid`` of the user or :py:obj:`~meapi.models.profile.Profile`, :py:obj:`~meapi.models.user.User`, or :py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
         :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`
@@ -167,22 +169,23 @@ class Social:
         :type your_comment: ``str``
         :param remove_credit: If ``True``, this will remove the credit from the comment. *Default:* ``False``.
         :type remove_credit: ``bool``
-        :raises MeApiException: If the user disable comments. msg: ``api_user_comments_disabled``.
-
-            - You need to check before if the user enable comments (``comments_enabled``) in his profile with :py:func:`~meapi.Me.get_profile`.
-            - You can ask the user to enable comments in his profile with :py:func:`~meapi.Me.suggest_turn_on_comments`.
-        :return: :py:obj:`~meapi.models.comment.Comment` object.
-        :rtype: :py:obj:`~meapi.models.comment.Comment`
+        :raises MeApiException: If the user disable comments. msg: ``api_user_comments_disabled``. If the user block you from comments. msg: ``api_comment_posting_is_not_allowed``.
+        :return: Optional :py:obj:`~meapi.models.comment.Comment` object.
+        :rtype: :py:obj:`~meapi.models.comment.Comment` | ``None``
         """
-        err_case = "User disable comments. you can ask the user to enable comments in his profile with " \
-                   "client.suggest_turn_on_comments()."
+        comments_disabled = "User disable comments. you can ask the user to enable comments in his profile with client.suggest_turn_on_comments()."
+        comments_blocked = "User block you from comments."
         if not uuid:
             uuid = self.uuid  # publish on your own profile
         if not your_comment:
             raise MeException("You must to provide comment.")
         if isinstance(uuid, Profile):
             if uuid.comments_enabled is False:  # can be None
-                raise MeException(err_case)
+                _logger.warning(comments_disabled)
+                return None
+            if uuid.comments_blocked:
+                _logger.warning(comments_blocked)
+                return None
             uuid = uuid.uuid
         if isinstance(uuid, User):
             uuid = uuid.uuid
@@ -197,14 +200,20 @@ class Social:
             res = publish_comment_raw(self, str(uuid), str(your_comment))
         except MeApiException as e:
             if e.msg == 'api_user_comments_disabled':
-                e.reason = err_case
+                _logger.warning(comments_disabled)
+                return None
+            elif e.msg == 'api_comment_posting_is_not_allowed':
+                _logger.warning(comments_blocked)
+                return None
             raise e
         return comment.Comment.new_from_dict(res, _client=self, profile_uuid=uuid, _my_comment=True if self.uuid == uuid else False)
 
     def approve_comment(self: 'Me', comment_id: Union[str, int, comment.Comment]) -> bool:
         """
-        Approve comment. (You can always delete it with :py:func:`delete_comment`.)
-            - You can only approve comments in your profile!
+        Approve comment. the comment will be visible in your profile.
+            - You can only approve comments that posted on your own profile.
+            - You can always ignore it with :py:func:`ignore_comment`.
+            - You can approve delete it with :py:func:`delete_comment`.
             - If the comment already approved, you get ``True`` anyway.
 
         :param comment_id: Comment id from :py:func:`get_comments`. or just :py:obj:`~meapi.models.comment.Comment` object.
@@ -215,22 +224,31 @@ class Social:
         if isinstance(comment_id, comment.Comment):
             if comment_id._Comment__my_comment:
                 if comment_id.status == 'approved':
-                    return True  # already approved
+                    _logger.info("APPROVE_COMMENT: Comment already approved.")
+                    return True
+                elif comment_id.status == 'deleted':
+                    _logger.warning("APPROVE_COMMENT: You can't approve deleted comment.")
+                    return False
                 comment_id = comment_id.id
             else:
-                raise MeException("You cannot approve comment of someone else profile!")
+                _logger.warning("APPROVE_COMMENT: You can only approve comments that posted on your own profile.")
+                return False
         try:
             return bool(approve_comment_raw(self, int(comment_id))['status'] == 'approved')
         except MeApiException as err:
             if err.http_status == 400 and err.msg == 'comment_already_approved':
+                _logger.info("APPROVE_COMMENT: Comment already approved.")
                 return True
-            else:
-                raise err
+            elif err.http_status == 400:
+                _logger.warning("APPROVE_COMMENT: You can only approve comments that posted on your own profile.")
+                return False
+            raise err
 
-    def delete_comment(self: 'Me', comment_id: Union[str, int, comment.Comment]) -> bool:
+    def ignore_comment(self: 'Me', comment_id: Union[str, int, comment.Comment]) -> bool:
         """
-        Delete (Ignore) comment. (you can always approve it with :py:func:`approve_comment`.)
-            - You can only delete comments from your profile!
+        Ignore comment. the comment will not be visible in your profile.
+            - you can always approve it with :py:func:`approve_comment`.)
+            - You can only ignore comments that posted on your own profile.
 
         :param comment_id: Comment id from :py:func:`get_comments`. or just :py:obj:`~meapi.models.comment.Comment` object.
         :type comment_id: ``int`` | ``str`` | :py:obj:`~meapi.models.comment.Comment`
@@ -240,17 +258,51 @@ class Social:
         if isinstance(comment_id, comment.Comment):
             if comment_id._Comment__my_comment:
                 if comment_id.status == 'ignored':
-                    return True  # already ignored
+                    _logger.info("IGNORE_COMMENT: Comment already ignored.")
+                    return True
+                elif comment_id.status == 'deleted':
+                    _logger.warning("IGNORE_COMMENT: You can't ignore deleted comment.")
+                    return False
                 comment_id = comment_id.id
             else:
-                raise MeException("You cannot delete comment of someone else profile!")
+                _logger.warning("IGNORE_COMMENT: You can only ignore comments that posted on your own profile.")
+                return False
         try:
-            return bool(delete_comment_raw(self, int(comment_id))['status'] == 'ignored')
+            return bool(ignore_comment_raw(self, int(comment_id))['status'] == 'ignored')
         except MeApiException as err:
             if err.http_status == 400 and err.msg == 'comment_already_ignored':
                 return True
+            elif err.http_status == 400:
+                _logger.warning("IGNORE_COMMENT: You can only ignore comments that posted on your own profile.")
+                return False
             else:
                 raise err
+
+    def delete_comment(self: 'Me', comment_id: Union[str, int, comment.Comment]) -> bool:
+        """
+        Delete comment.
+            - You can only delete comments that posted on your own profile or that posted by you.
+
+        :param comment_id: Comment id from :py:func:`get_comments`. or just :py:obj:`~meapi.models.comment.Comment` object.
+        :type comment_id: ``int`` | ``str`` | :py:obj:`~meapi.models.comment.Comment`
+        :return: Is deleting success.
+        :rtype: ``bool``
+        """
+        if isinstance(comment_id, comment.Comment):
+            if comment_id._Comment__my_comment or comment_id.author.uuid == self.uuid:
+                if comment_id.status == 'deleted':
+                    _logger.info("DELETE_COMMENT: Comment already deleted.")
+                    return True
+                comment_id = comment_id.id
+            else:
+                _logger.warning("DELETE_COMMENT: You can only delete comments from your profile or comments that posted by you!")
+                return False
+        try:
+            return delete_comment_raw(self, int(comment_id))['success']
+        except MeApiException as e:
+            if e.http_status == 400:
+                return False
+            raise e
 
     def like_comment(self: 'Me', comment_id: Union[int, str, comment.Comment]) -> bool:
         """
@@ -266,12 +318,14 @@ class Social:
         if isinstance(comment_id, comment.Comment):
             if getattr(comment_id, 'comment_likes', None):
                 if self.uuid in [usr.uuid for usr in comment_id.comment_likes]:
+                    _logger.info("LIKE_COMMENT: Comment already liked.")
                     return True
             comment_id = comment_id.id
         try:
             return like_comment_raw(self, int(comment_id))['author']['uuid'] == self.uuid
         except MeApiException as err:
             if err.http_status == 404:
+                _logger.warning("LIKE_COMMENT: Comment not found or not approved.")
                 return False
             raise err
 
@@ -295,6 +349,7 @@ class Social:
             return unlike_comment_raw(self, int(comment_id))['status'] == 'approved'
         except MeApiException as err:
             if err.http_status == 404:
+                _logger.warning("UNLIKE_COMMENT: Comment not found or not approved.")
                 return False
             raise err
 
@@ -725,7 +780,7 @@ class Social:
                     if uuid.user:
                         uuids[index] = uuid.user.uuid
                     else:
-                        _logger.warning(f"Skip contact {uuid.name} with no user.")
+                        _logger.info(f"STOP_SHARING_LOCATION: Skip contact {uuid.name} with no user.")
 
         return stop_sharing_location_raw(self, uuids)['success']
 
@@ -748,7 +803,7 @@ class Social:
                     if uuid.user:
                         uuids[index] = uuid.user.uuid
                     else:
-                        _logger.warning(f"Skip contact {uuid.name} with no user.")
+                        _logger.warning(f"STOP_SHARED_LOCATION: Skip contact {uuid.name} with no user.")
 
         return stop_shared_locations_raw(self, uuids)['success']
 

@@ -309,9 +309,9 @@ def approve_comment_raw(client: 'Me', comment_id: int) -> dict:
     return client._make_request('post', f'/main/comments/approve/{comment_id}/')
 
 
-def delete_comment_raw(client: 'Me', comment_id: int) -> dict:
+def ignore_comment_raw(client: 'Me', comment_id: int) -> dict:
     """
-    Delete comment.
+    Ignore comment.
 
     :param client: :py:obj:`~meapi.Me` client object.
     :type client: :py:obj:`~meapi.Me`
@@ -345,6 +345,26 @@ def delete_comment_raw(client: 'Me', comment_id: int) -> dict:
         }
     """
     return client._make_request('delete', f'/main/comments/approve/{comment_id}/')
+
+
+def delete_comment_raw(client: 'Me', comment_id: int) -> dict:
+    """
+    Delete comment.
+
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
+    :param comment_id: Comment id.
+    :type comment_id: ``int``
+    :return: Is comment deleted.
+    :rtype: ``dict``
+
+    Example::
+
+        {
+            "success": true
+        }
+    """
+    return client._make_request('delete', f'/main/comments/remove/{comment_id}/')
 
 
 def like_comment_raw(client: 'Me', comment_id: int) -> dict:
@@ -417,6 +437,26 @@ def unlike_comment_raw(client: 'Me', comment_id: int) -> dict:
         }
     """
     return client._make_request('delete', f'/main/comments/like/{comment_id}/')
+
+
+def block_comments_raw(client: 'Me', uuid: str) -> dict:
+    """
+    Block comments from user.
+
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
+    :param uuid: User uuid.
+    :type uuid: ``str``
+    :return: Is comments blocked.
+    :rtype: ``dict``
+
+    Example::
+
+        {
+            "blocked": true
+        }
+    """
+    return client._make_request('post', f'/main/comments/block/{uuid}/')
 
 
 def get_groups_raw(client: 'Me') -> dict:

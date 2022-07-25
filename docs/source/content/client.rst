@@ -43,8 +43,10 @@
 .. automethod:: Me.get_comment
 .. automethod:: Me.publish_comment
 .. automethod:: Me.approve_comment
+.. automethod:: Me.ignore_comment
 .. automethod:: Me.delete_comment
 .. automethod:: Me.like_comment
+.. automethod:: Me.unlike_comment
 .. automethod:: Me.suggest_turn_on_comments
 
 👤 Account

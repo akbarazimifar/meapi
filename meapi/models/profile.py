@@ -97,7 +97,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
             Whether the user is allowing comments. You can ask the user to turn on comments with :py:func:`~meapi.Me.suggest_turn_on_comments`.
 
         comments_blocked (``bool``):
-            Whether the user has blocked comments.
+            Whether the user blocked you from commenting on his profile.
 
         country_code (``str``):
             The user's two-letter country code.
