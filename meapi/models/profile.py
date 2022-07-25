@@ -124,7 +124,8 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
             The user's location name.
 
         is_he_blocked_me (``bool`` *optional*):
-            Whether the user has blocked you.
+            Whether the user has blocked you from seeing his profile (``me_full_block``, See :py:func:`~meapi.Me.block_profile`).
+                - If ``True``, this profile will contain only the basic information, like ``name``, ``uuid`` and ``phone_number``.
 
         is_permanent (``bool`` *optional*):
             Whether the user is permanent.

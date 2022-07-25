@@ -18,9 +18,9 @@ class BlockedNumber(MeModel):
 
     Parameters:
         block_contact (``bool``):
-            Whether the number is blocked.
+            This contact cannot call or text you.
         me_full_block (``bool``):
-            Whether the profile is blocked by.
+            This contact cannot watch your ``Me`` profile (And neither will you be able to view his).
         phone_number (``int``):
             The phone number of the contact.
     """

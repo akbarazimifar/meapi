@@ -344,9 +344,10 @@ class Account:
         :return: :py:obj:`~meapi.models.blocked_number.BlockedNumber` object.
         :rtype: :py:obj:`~meapi.models.blocked_number.BlockedNumber`
         """
-        res = block_profile_raw(client=self, phone_number=validate_phone_number(phone_number), me_full_block=me_full_block, block_contact=block_contact)
+        body = {'phone_number': validate_phone_number(phone_number), 'block_contact': block_contact, 'me_full_block': me_full_block}
+        res = block_profile_raw(client=self, **body)
         if res['success']:
-            return blocked_number.BlockedNumber.new_from_dict(**res, _client=self)
+            return blocked_number.BlockedNumber.new_from_dict(body, _client=self)
 
     def unblock_profile(self: 'Me', phone_number: int, unblock_contact=True, me_full_unblock=True) -> bool:
         """
