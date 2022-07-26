@@ -2,6 +2,7 @@ from random import randint
 from re import match, sub
 from typing import Union, List
 from meapi.utils.exceptions import MeException
+from uuid import UUID
 
 
 def validate_contacts(contacts: List[dict]) -> List[dict]:
@@ -48,8 +49,8 @@ def validate_calls(calls: List[dict]) -> List[dict]:
 
 def validate_phone_number(phone_number: Union[str, int]) -> int:
     """
-    Check if phone number is valid and return it clean without spaces, pluses or other spacial characters.
-     - ``(972) 123-4567890``, ``+9721234567890``, ``123-456-7890`` --> ``9721234567890``.
+    Check if phone number is valid and return it clean without spaces, pluses or any other spacial characters.
+     - ``(972) 123-4567890``, ``+9721234567890``, ``972-123-456-7890`` --> ``9721234567890``.
 
     :param phone_number: phone number in global format.
     :type phone_number:  ``int`` | ``str``
@@ -62,6 +63,25 @@ def validate_phone_number(phone_number: Union[str, int]) -> int:
         if match(r"^\d{9,15}$", phone_number):
             return int(phone_number)
     raise MeException("Not a valid phone number! " + phone_number)
+
+
+def validate_uuid(uuid: str) -> str:
+    """
+    Check if the UUID is valid.
+
+    :param uuid: uuid in string format.
+    :type uuid: ``str``
+    :raises MeException: If the uuid is not valid.
+    :return: The same uuid
+    :rtype: ``str``
+    """
+    if not isinstance(uuid, str):
+        raise MeException("UUID should be a string!")
+    try:
+        UUID(uuid)
+    except ValueError:
+        raise MeException("UUID is not valid! " + uuid)
+    return uuid
 
 
 def validate_auth_response(auth_data: dict) -> dict:
@@ -80,6 +100,7 @@ def validate_auth_response(auth_data: dict) -> dict:
     if sorted(expected_keys) != sorted(auth_data.keys()):
         raise MeException(f"The auth_data should contain the following keys: {expected_keys}. Your data contains this keys: {list(auth_data.keys())}")
     validate_schema_types({key: str for key in expected_keys}, auth_data)
+    validate_uuid(auth_data['uuid'])
     return auth_data
 
 

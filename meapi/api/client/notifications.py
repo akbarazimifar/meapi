@@ -78,13 +78,15 @@ class Notifications:
         return results['count'], [Notification.new_from_dict(notification, _client=self,
                                                              **notification.pop('context')) for notification in results['results']]
 
-    def read_notification(self: 'Me', notification_id: Union[int, str]) -> bool:
+    def read_notification(self: 'Me', notification_id: Union[int, str, Notification]) -> bool:
         """
         Mark notification as read.
 
-        :param notification_id: Notification id from :py:func:`get_notifications`.
-        :type notification_id: ``int`` | ``str``
+        :param notification_id: Notification id from :py:func:`get_notifications` or :py:obj:`~meapi.models.notification.Notification` object.
+        :type notification_id: ``int`` | ``str`` | :py:obj:`~meapi.models.notification.Notification`
         :return: Is read success.
         :rtype: ``bool``
         """
+        if isinstance(notification_id, Notification):
+            notification_id = notification_id.id
         return read_notification_raw(self, int(notification_id))['is_read']

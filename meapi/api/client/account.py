@@ -1,12 +1,16 @@
 from re import match, M
 from typing import Tuple, List, Optional, TYPE_CHECKING
 from meapi.api.raw.account import *
-from meapi.utils.validations import validate_contacts, validate_calls, validate_phone_number
+from meapi.utils.validations import validate_contacts, validate_calls, validate_phone_number, validate_schema_types, \
+    validate_uuid
 from meapi.utils.exceptions import MeApiException, MeException
 from meapi.utils.helpers import generate_random_data, _register_new_account, _upload_picture
 from meapi.models import contact, profile, call, blocked_number, user
+from logging import getLogger
 if TYPE_CHECKING:  # always False at runtime.
     from meapi import Me
+
+_logger = getLogger(__name__)
 
 
 class Account:
@@ -57,10 +61,11 @@ class Account:
         if isinstance(uuid, user.User):
             uuid = uuid.uuid
         try:
-            res = get_profile_raw(self, str(uuid))
+            res = get_profile_raw(self, validate_uuid(str(uuid)))
         except MeApiException as err:
             if err.msg == 'api_profile_view_passed_limit':
                 if uuid == self.uuid:
+                    _logger.warning('You passed the profile view limit (About 500 per day in the unofficial auth method). You got the limited profile.')
                     return self.get_my_profile(only_limited_data=True)
                 err.reason = 'You passed the profile views limit (About 500 per day in the unofficial auth method).'
             raise err
@@ -99,7 +104,7 @@ class Account:
         if phone_number:  # others uuid
             res = self.phone_search(phone_number)
             if res and getattr(res, 'user', None):
-                return res.user.uuid
+                return validate_uuid(res.user.uuid)
             return None
         try:  # self uuid
             return get_my_profile_raw(self)['uuid']
@@ -354,6 +359,7 @@ class Account:
         :rtype: :py:obj:`~meapi.models.blocked_number.BlockedNumber`
         """
         body = {'phone_number': validate_phone_number(phone_number), 'block_contact': block_contact, 'me_full_block': me_full_block}
+        validate_schema_types({'phone_number': int, 'block_contact': bool, 'me_full_block': bool}, body)
         res = block_profile_raw(client=self, **body)
         if res['success']:
             return blocked_number.BlockedNumber.new_from_dict(body, _client=self)
@@ -371,23 +377,26 @@ class Account:
         :return: Is successfully unblocked.
         :rtype: ``bool``
         """
-        res = unblock_profile_raw(client=self, phone_number=validate_phone_number(phone_number), me_full_unblock=me_full_unblock, unblock_contact=unblock_contact)
+        body = {'phone_number': validate_phone_number(phone_number), 'unblock_contact': unblock_contact, 'me_full_unblock': me_full_unblock}
+        validate_schema_types({'phone_number': int, 'unblock_contact': bool, 'me_full_unblock': bool}, body)
+        res = unblock_profile_raw(client=self, **body)
         if res['success']:
             return True
         return False
 
-    def block_numbers(self: 'Me', numbers: Union[int, List[int]]) -> bool:
+    def block_numbers(self: 'Me', numbers: Union[int, str, List[Union[int, str]]]) -> bool:
         """
         Block phone numbers.
 
         :param numbers: Single or list of phone numbers in international format.
-        :type numbers: ``int`` | List[``int``]
+        :type numbers: ``int`` | ``str`` | List[``int`` | ``str``]
         :return: Is blocked success.
         :rtype: ``bool``
         """
-        if not isinstance(numbers, list) and isinstance(numbers, int):
+        if isinstance(numbers, (int, str)):
             numbers = [numbers]
-        return bool([phone['phone_number'] for phone in block_numbers_raw(self, numbers)].sort() == numbers.sort())
+        body = {'numbers': [validate_phone_number(number) for number in numbers]}
+        return bool([phone['phone_number'] for phone in block_numbers_raw(self, **body)].sort() == numbers.sort())
 
     def unblock_numbers(self: 'Me', numbers: Union[int, List[int]]) -> bool:
         """
@@ -398,9 +407,10 @@ class Account:
         :return: Is unblocking success.
         :rtype: ``bool``
         """
-        if not isinstance(numbers, list):
+        if isinstance(numbers, (int, str)):
             numbers = [numbers]
-        return unblock_numbers_raw(self, numbers)['success']
+        body = {'numbers': [validate_phone_number(number) for number in numbers]}
+        return unblock_numbers_raw(self, **body)['success']
 
     def get_blocked_numbers(self: 'Me') -> List[blocked_number.BlockedNumber]:
         """

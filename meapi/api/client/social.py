@@ -5,7 +5,7 @@ from meapi.models.profile import Profile
 from meapi.models.user import User
 from meapi.utils.exceptions import MeException, MeApiException
 from datetime import date
-from meapi.utils.validations import validate_phone_number
+from meapi.utils.validations import validate_phone_number, validate_schema_types, validate_uuid
 from meapi.models import deleter, watcher, group, social, user, comment, friendship, contact, profile
 from meapi.api.raw.social import *
 from operator import attrgetter
@@ -136,7 +136,7 @@ class Social:
                 raise MeException("In the official-auth-method mode you must to provide user uuid.")
         else:
             _my_comment = False
-        comments = get_comments_raw(self, str(uuid))['comments']
+        comments = get_comments_raw(self, validate_uuid(str(uuid)))['comments']
         return sorted([comment.Comment.new_from_dict(com, _client=self, _my_comment=_my_comment, profile_uuid=uuid)
                        for com in comments], key=lambda x: x.like_count, reverse=True)
 
@@ -169,7 +169,6 @@ class Social:
         :type your_comment: ``str``
         :param remove_credit: If ``True``, this will remove the credit from the comment. *Default:* ``False``.
         :type remove_credit: ``bool``
-        :raises MeApiException: If the user disable comments. msg: ``api_user_comments_disabled``. If the user block you from comments. msg: ``api_comment_posting_is_not_allowed``.
         :return: Optional :py:obj:`~meapi.models.comment.Comment` object.
         :rtype: :py:obj:`~meapi.models.comment.Comment` | ``None``
         """
@@ -197,7 +196,7 @@ class Social:
         if not remove_credit:
             your_comment += ' • Commented with meapi <https://github.com/david-lev/meapi>'
         try:
-            res = publish_comment_raw(self, str(uuid), str(your_comment))
+            res = publish_comment_raw(self, validate_uuid(str(uuid)), str(your_comment))
         except MeApiException as e:
             if e.msg == 'api_user_comments_disabled':
                 _logger.warning(comments_disabled)
@@ -301,6 +300,7 @@ class Social:
             return delete_comment_raw(self, int(comment_id))['success']
         except MeApiException as e:
             if e.http_status == 400:
+                _logger.warning("DELETE_COMMENT: You can only delete comments from your profile or comments that posted by you!")
                 return False
             raise e
 
@@ -343,6 +343,7 @@ class Social:
         if isinstance(comment_id, comment.Comment):
             if getattr(comment_id, 'comment_likes', None):
                 if self.uuid not in [usr.uuid for usr in comment_id.comment_likes]:
+                    _logger.info("UNLIKE_COMMENT: Comment already unliked.")
                     return True
             comment_id = comment_id.id
         try:
@@ -384,7 +385,7 @@ class Social:
         if uuid == self.uuid:
             _logger.warning("BLOCK_COMMENTS: You can not block your own comments.")
             return False
-        return block_comments_raw(self, uuid)['blocked']
+        return block_comments_raw(self, validate_uuid(str(uuid)))['blocked']
 
     def get_groups(self: 'Me', sorted_by: str = 'count') -> List[group.Group]:
         """
@@ -473,7 +474,8 @@ class Social:
             contacts_ids = [contacts_ids]
         if isinstance(contacts_ids, group.Group):
             if contacts_ids.name == new_name:
-                raise MeException("The name of the group is already the same as the suggested name.")
+                _logger.info("The name of the group is already the same as the suggested name.")
+                return True
             contacts_ids = contacts_ids.contact_ids
         return ask_group_rename_raw(self, [int(_id) for _id in contacts_ids], new_name)['success']
 
@@ -579,6 +581,7 @@ class Social:
         """
         args = locals()
         del args['self']
+        validate_schema_types({key: bool for key in args.keys()}, args)
         true_values = sum(args.values())
         if true_values < 1:
             raise MeException("You need to remove at least one social!")
@@ -621,6 +624,7 @@ class Social:
         """
         args = locals()
         del args['self']
+        validate_schema_types({key: Optional[bool] for key in args.keys()}, args)
         not_null_values = sum(True for i in args.values() if i is not None)
         if not_null_values < 1:
             raise MeException("You need to switch status to at least one social!")
@@ -667,9 +671,9 @@ class Social:
             else:
                 raise MeException("Contact has no user.")
         if uuid == self.uuid:
-            raise MeException("You can't suggest to yourself!")
-
-        return suggest_turn_on_comments_raw(self, str(uuid))['requested']
+            _logger.warning("SUGGEST_TURN_ON_COMMENTS: You can't suggest to yourself.")
+            return False
+        return suggest_turn_on_comments_raw(self, validate_uuid(str(uuid)))['requested']
 
     def suggest_turn_on_mutual(self: 'Me', uuid: Union[str, Profile, User, Contact]) -> bool:
         """
@@ -692,9 +696,9 @@ class Social:
             else:
                 raise MeException("Contact has no user.")
         if uuid == self.uuid:
-            raise MeException("You can't suggest to yourself!")
-
-        return suggest_turn_on_mutual_raw(self, str(uuid))['requested']
+            _logger.warning("SUGGEST_TURN_ON_MUTUAL: You can't suggest to yourself.")
+            return False
+        return suggest_turn_on_mutual_raw(self, validate_uuid(str(uuid)))['requested']
 
     def suggest_turn_on_location(self: 'Me', uuid: Union[str, Profile, User, Contact]) -> bool:
         """
@@ -713,9 +717,9 @@ class Social:
             else:
                 raise MeException("Contact has no user.")
         if uuid == self.uuid:
-            raise MeException("You can't suggest to yourself!")
-
-        return suggest_turn_on_location_raw(self, str(uuid))['requested']
+            _logger.warning("SUGGEST_TURN_ON_LOCATION: You can't suggest to yourself.")
+            return False
+        return suggest_turn_on_location_raw(self, validate_uuid(str(uuid)))['requested']
 
     def get_age(self: 'Me', uuid: Union[str, Profile, User, Contact] = None) -> int:
         """
@@ -756,7 +760,7 @@ class Social:
         """
         results = self.phone_search(phone_number)
         if results:
-            return results.suggested_as_spam
+            return results.suggested_as_spam or 0
         return 0
 
     def update_location(self: 'Me', latitude: float, longitude: float) -> bool:
@@ -791,8 +795,9 @@ class Social:
             else:
                 raise MeException("Contact has no user.")
         if uuid == self.uuid:
-            raise MeException("You can't share location with yourself!")
-        return share_location_raw(self, uuid)['success']
+            _logger.warning("SHARE_LOCATION: You can't share your location with yourself.")
+            return False
+        return share_location_raw(self, validate_uuid(str(uuid)))['success']
 
     def stop_sharing_location(self: 'Me', uuids: Union[str, Profile, User, Contact, List[Union[str, Profile, User, Contact]]]) -> bool:
         """
@@ -815,7 +820,7 @@ class Social:
                     else:
                         _logger.info(f"STOP_SHARING_LOCATION: Skip contact {uuid.name} with no user.")
 
-        return stop_sharing_location_raw(self, uuids)['success']
+        return stop_sharing_location_raw(self, [validate_uuid(str(uuid)) for uuid in uuids])['success']
 
     def stop_shared_location(self: 'Me', uuids: Union[str, Profile, User, Contact, List[Union[str, Profile, User, Contact]]]) -> bool:
         """
@@ -838,7 +843,7 @@ class Social:
                     else:
                         _logger.warning(f"STOP_SHARED_LOCATION: Skip contact {uuid.name} with no user.")
 
-        return stop_shared_locations_raw(self, uuids)['success']
+        return stop_shared_locations_raw(self, [validate_uuid(str(uuid)) for uuid in uuids])['success']
 
     def locations_shared_by_me(self: 'Me') -> List[user.User]:
         """
