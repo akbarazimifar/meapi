@@ -32,8 +32,9 @@ class Account:
         except MeApiException as err:
             if err.http_status == 404 and err.msg == 'Not found.':
                 return None
-            else:
-                raise err
+            elif err.msg == 'api_search_passed_limit':
+                err.reason = 'You passed the phone searches limit (About 350 per day in the unofficial auth method).'
+            raise err
         return contact.Contact.new_from_dict(response['contact'], _client=self)
 
     def get_profile(self: 'Me', uuid: Union[str, contact.Contact, user.User]) -> profile.Profile:
@@ -55,20 +56,28 @@ class Account:
                 uuid = uuid.user.uuid
         if isinstance(uuid, user.User):
             uuid = uuid.uuid
-        res = get_profile_raw(self, str(uuid))
+        try:
+            res = get_profile_raw(self, str(uuid))
+        except MeApiException as err:
+            if err.msg == 'api_profile_view_passed_limit':
+                if uuid == self.uuid:
+                    return self.get_my_profile(only_limited_data=True)
+                err.reason = 'You passed the profile views limit (About 500 per day in the unofficial auth method).'
+            raise err
         if uuid == self.uuid:
             res['_my_profile'] = True
-        extra_profile = res.pop('profile')
-        return profile.Profile.new_from_dict(res, _client=self, **extra_profile)
+        return profile.Profile.new_from_dict(res, _client=self, **res.pop('profile'))
 
-    def get_my_profile(self: 'Me') -> profile.Profile:
+    def get_my_profile(self: 'Me', only_limited_data: bool = False) -> profile.Profile:
         """
         Get your profile information.
 
+        :param only_limited_data: ``True`` to get only limited data (not included in the rate limit). *Default:* ``False``.
+        :type only_limited_data: ``bool``
         :return: :py:obj:`~meapi.models.profile.Profile` object.
         :rtype: :py:obj:`~meapi.models.profile.Profile`
         """
-        if self.uuid:
+        if self.uuid and not only_limited_data:
             res = get_profile_raw(self, self.uuid)
         else:
             res = get_my_profile_raw(self)
@@ -101,49 +110,49 @@ class Account:
                 raise err
 
     def update_profile_details(self: 'Me',
-                               first_name: str = False,
-                               last_name: str = False,
-                               email: str = False,
-                               gender: str = False,
-                               slogan: str = False,
-                               profile_picture: str = False,
-                               date_of_birth: str = False,
-                               location_name: str = False,
-                               carrier: str = False,
-                               device_type: str = False,
-                               login_type: str = False,
-                               facebook_url: str = False,
-                               google_url: str = False,
+                               first_name: Optional[str] = False,
+                               last_name: Optional[str] = False,
+                               email: Optional[str] = False,
+                               gender: Optional[str] = False,
+                               slogan: Optional[str] = False,
+                               profile_picture: Optional[str] = False,
+                               date_of_birth: Optional[str] = False,
+                               location_name: Optional[str] = False,
+                               carrier: Optional[str] = False,
+                               device_type: Optional[str] = False,
+                               login_type: Optional[str] = False,
+                               facebook_url: Union[str, int] = False,
+                               google_url: Optional[Union[str, int]] = False,
                                ) -> Tuple[bool, profile.Profile]:
         """
         Update your profile details.
             - The default of the parameters is ``False``. if you leave it ``False``, the parameter will not be updated.
 
         :param first_name: First name.
-        :type first_name: ``str``
+        :type first_name: ``str`` | ``None``
         :param last_name: Last name.
-        :type last_name: ``str``
+        :type last_name: ``str`` | ``None``
         :param email: For example: ``user@domian.com``.
-        :type email: ``str``
+        :type email: ``str`` | ``None``
         :param gender: ``M`` for male, ``F`` for female.
-        :type gender: ``str``
+        :type gender: ``str`` | ``None``
         :param profile_picture: Direct image url or local image path. for example: ``https://example.com/image.png``, ``/home/david/Downloads/my_profile.jpg``.
-        :type profile_picture: ``str``
+        :type profile_picture: ``str`` | ``None``
         :param slogan: Your bio.
-        :type slogan: ``str``
+        :type slogan: ``str`` | ``None``
         :param date_of_birth: ``YYYY-MM-DD`` format. for example: ``1997-05-15``.
-        :type date_of_birth: ``str``
+        :type date_of_birth: ``str`` | ``None``
         :param location_name: Your location, can be anything.
-        :type location_name: ``str``
+        :type location_name: ``str`` | ``None``
         :param login_type: ``email`` or ``apple``.
-        :type login_type: ``str``
+        :type login_type: ``str`` | ``None``
         :param device_type: ``android`` or ``ios``.
-        :type device_type: ``str``
+        :type device_type: ``str`` | ``None``
         :param carrier: The carrier of your phone. like ``HOT-mobile``, ``AT&T`` etc.
         :param facebook_url: facebook id, for example: ``24898745174639``.
-        :type facebook_url: ``str`` | ``int``
+        :type facebook_url: ``str`` | ``int`` | ``None``
         :param google_url: google id, for example: ``24898745174639``.
-        :type google_url: ``str`` | ``int``
+        :type google_url: ``str`` | ``int`` | ``None``
 
         :return: Tuple of: Is update success, new :py:obj:`~meapi.models.profile.Profile` object.
         :rtype: Tuple[``bool``, :py:obj:`~meapi.models.profile.Profile`]

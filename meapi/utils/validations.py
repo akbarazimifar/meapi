@@ -79,6 +79,27 @@ def validate_auth_response(auth_data: dict) -> dict:
     expected_keys = ['access', 'refresh', 'uuid', 'pwd_token']
     if sorted(expected_keys) != sorted(auth_data.keys()):
         raise MeException(f"The auth_data should contain the following keys: {expected_keys}. Your data contains this keys: {list(auth_data.keys())}")
-    if not all(isinstance(val, str) for val in auth_data.values()):
-        raise MeException("The auth_data values should be strings!")
+    validate_schema_types({key: str for key in expected_keys}, auth_data)
     return auth_data
+
+
+def validate_schema_types(schema: dict, dictionary: dict) -> bool:
+    """
+    Check if the dictionary contains the expected types for the schema.
+
+    :param schema: dict with the expected types. Example: ``{'name': str, 'phone_number': int}``
+    :type schema: dict
+    :param dictionary: dict with the values. Example: ``{'name': 'John', 'phone_number': 123456789}``
+    :type dictionary: dict
+    :return: True if the dictionary contains the expected types.
+    :rtype: bool
+    :raises MeException: If the dictionary does not valid.
+    """
+    if not isinstance(schema, dict):
+        raise MeException("schema should be a dict!")
+    if not isinstance(dictionary, dict):
+        raise MeException("dictionary should be a dict!")
+    for key, value in dictionary.items():
+        if not isinstance(value, schema[key]):
+            raise MeException(f"The value of the key '{key}' should be {schema[key]} type!")
+    return True

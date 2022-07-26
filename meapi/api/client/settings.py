@@ -2,6 +2,7 @@ from typing import Tuple
 from meapi.utils.exceptions import MeException
 from meapi.models import settings
 from meapi.api.raw.settings import *
+from meapi.utils.validations import validate_schema_types
 if TYPE_CHECKING:  # always False at runtime.
     from meapi import Me
 
@@ -81,6 +82,7 @@ class Settings:
         args = locals()
         del args['self']
         body = {setting: value for setting, value in args.items() if value is not None}
+        validate_schema_types({setting: bool if setting != 'language' else str for setting in body.keys()}, body)
         if not body:
             raise MeException("You need to change at least one setting!")
         results = change_settings_raw(self, **body)

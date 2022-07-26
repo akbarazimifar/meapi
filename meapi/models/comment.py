@@ -132,7 +132,7 @@ class Comment(MeModel):
         """
         Ignore and hide the comment.
             - You can only ignore and hide comments that posted by others on your own profile.
-            - The same as :py:func:`~meapi.Me.delete_comment`.
+            - The same as :py:func:`~meapi.Me.ignore_comment`.
 
         Returns:
             ``bool``: Is ignore success.
@@ -145,7 +145,7 @@ class Comment(MeModel):
     def delete(self) -> bool:
         """
         Delete the comment.
-            - You can only delete comments that posted by you.
+            - You can only delete comments that posted on your own profile or by you.
             - The same as :py:func:`~meapi.Me.delete_comment`.
 
         Returns:
@@ -182,7 +182,7 @@ class Comment(MeModel):
             return True
         return False
 
-    def reply(self, your_comment: str) -> 'Comment':
+    def reply(self, your_comment: str) -> Optional['Comment']:
         """
         Publish a comment in the profile of the comment author.
             - The same as :py:func:`~meapi.Me.publish_comment`.
@@ -201,6 +201,7 @@ class Comment(MeModel):
         """
         Block the author of the comment from posting comments on your profile.
             - The same as :py:func:`~meapi.Me.block_comments`.
+            - This will not delete the comment. It will just block the author from editing or posting comments on your profile.
 
         Returns:
             ``bool``: Is block success.
