@@ -10,6 +10,8 @@ class Settings(MeModel):
     """
     Manage your social, notification and app settings.
         - You can edit your settings by simply assigning a new value to the attribute.
+        - Modifiable attributes are marked with ``modifiable``.
+        - For more information about the modifiable attributes, see :py:func:`~meapi.Me.change_settings`.
 
     Example:
         >>> # Take control of your privacy:
@@ -21,51 +23,60 @@ class Settings(MeModel):
         >>> my_settings.location_enabled = False
 
     Parameters:
-        who_deleted_enabled (``bool``):
-            If `True`, other users can see if you deleted them from your contact book.
+        who_deleted_enabled (``bool`` *modifiable*):
+            If ``True``, other users can see if you deleted them from your contact book
+                - The users can see it only if they ``is_premium`` users, or by using ``meapi`` ;)
                 - Must be enabled in order to use :py:func:`~meapi.Me.who_deleted`.
 
-        who_watched_enabled (``bool``):
-            If `True`, other users can see if you watch their profile.
+        who_watched_enabled (``bool`` *modifiable*):
+            If ``True``, other users can see if you watch their profile.
+                - The users can see it only if they ``is_premium`` users, or by using ``meapi`` ;)
                 - Must be enabled in order to use :py:func:`~meapi.Me.who_watched`.
 
-        comments_enabled (``bool``):
-            Allow other users to publish comments on your profile (You always need to approve them before they are published).
+        comments_enabled (``bool`` *modifiable*):
+            Allow other users to :py:func:`~meapi.Me.publish_comment` on your profile.
+                - You always need to :py:func:`~meapi.Me.approve_comment` before they are published.
+                - You can block spesfic users from commenting on your profile with :py:func:`~meapi.Me.block_comments`.
 
-        location_enabled (``bool``):
+        location_enabled (``bool`` *modifiable*):
             Allow other users ask to see your location.
 
-        mutual_contacts_available (``bool``):
-            If `True`, other users can see your mutual contacts.
+        mutual_contacts_available (``bool`` *modifiable*):
+            If ``True``, other users can see your mutual contacts.
+                - See :py:func:`~meapi.Me.friendship` for more information.
 
-        notifications_enabled (``bool``):
+        notifications_enabled (``bool`` *modifiable*):
             Get notify on new messages.
+                - See :py:func:`~meapi.Me.get_notifications` for more information.
 
-        who_deleted_notification_enabled (``bool``):
+        who_deleted_notification_enabled (``bool`` *modifiable*):
             Get notify on who deleted you from your contact book.
+                - You will only receive notifications if ``who_deleted_enabled`` is ``True``.
 
-        who_watched_notification_enabled (``bool``):
+        who_watched_notification_enabled (``bool`` *modifiable*):
             Get notify on who watched your profile.
+                - You will only receive notifications if ``who_watched_enabled`` is ``True``.
 
-        comments_notification_enabled (``bool``):
+        comments_notification_enabled (``bool`` *modifiable*):
             Get notify on new comments, likes etc.
+                - You will only receive notifications if ``comments_enabled`` is ``True``.
 
-        birthday_notification_enabled (``bool``):
+        birthday_notification_enabled (``bool`` *modifiable*):
             Get notify on contact birthday.
 
-        distance_notification_enabled (``bool``):
+        distance_notification_enabled (``bool`` *modifiable*):
             Get notify on contacts distance.
 
-        names_notification_enabled (``bool``):
+        names_notification_enabled (``bool`` *modifiable*):
             Get notify when someone saved you in is contacts book, new joined contacts to Me, new rename approve and more.
 
-        system_notification_enabled (``bool``):
+        system_notification_enabled (``bool`` *modifiable*):
             Get notify on system messages: spam reports, mutual requests and more.
 
         contact_suspended (``bool``):
             If `True`, the contact is suspended.
 
-        language (str):
+        language (``str`` *modifiable*):
             Language of the notifications.
 
         last_backup_at (:py:obj:`~datetime.datetime` *optional*):
@@ -124,15 +135,9 @@ class Settings(MeModel):
 
     def __setattr__(self, key, value):
         if getattr(self, '_Settings__init_done', None):
-            if key not in ['spammers_count', 'last_backup_at', 'last_restore_at', 'contact_suspended']:
-                if key == 'language':
-                    if isinstance(value, str) and len(value) == 2 and value.isalpha():
-                        pass
-                if not isinstance(value, bool):
-                    raise MeException(f"{str(key)} value must be a bool type!")
-            else:
+            if key in ['spammers_count', 'last_backup_at', 'last_restore_at', 'contact_suspended']:
                 raise MeException("You can't change this setting!")
-            res = self.__client.change_settings(**{key: value})
-            if res[0] and getattr(res[1], key, None) != value:
+            is_success, new = self.__client.change_settings(**{key: value})
+            if is_success and getattr(new, key, None) != value:
                 raise MeException(f"{key} not updated!")
         return super().__setattr__(key, value)

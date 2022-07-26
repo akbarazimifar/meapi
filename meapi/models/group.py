@@ -3,7 +3,7 @@ from typing import List, Optional, TYPE_CHECKING
 from meapi.models.user import User
 from meapi.utils.exceptions import MeException
 from meapi.utils.helpers import parse_date
-from meapi.models.me_model import MeModel
+from meapi.models.me_model import MeModel, _logger
 if TYPE_CHECKING:  # always False at runtime.
     from meapi import Me
 
@@ -74,6 +74,7 @@ class Group(MeModel):
             ``bool``: ``True`` if the group was deleted, ``False`` otherwise.
         """
         if not self.is_active:
+            _logger.info(f"DELETE_GROUP: Group '{self.name}' is already deleted.")
             return True
         if self.__client.delete_group(self.contact_ids):
             self.is_active = False
@@ -90,6 +91,7 @@ class Group(MeModel):
             ``bool``: ``True`` if the group was restored, ``False`` otherwise.
         """
         if self.is_active:
+            _logger.info(f"RESTORE_GROUP: Group '{self.name}' is already restored.")
             return True
         if self.__client.restore_group(self.contact_ids):
             self.is_active = True
@@ -110,6 +112,7 @@ class Group(MeModel):
             ``bool``: ``True`` if the suggested send, ``False`` otherwise.
         """
         if not self.is_active:
+            _logger.warning(f"ASK_GROUP_RENAME: Group '{self.name}' is not active, restore it first.")
             return False
         if self.__client.ask_group_rename(self.contact_ids, new_name):
             return True
@@ -118,7 +121,7 @@ class Group(MeModel):
     def __setattr__(self, key, value):
         if getattr(self, '_Group__init_done', None):
             if key != 'is_active':
-                raise MeException("You can't change this attr!")
+                raise MeException("You can't modify this protected attr!")
         return super().__setattr__(key, value)
 
     def __repr__(self):

@@ -117,7 +117,7 @@ class Comment(MeModel):
         """
         if self.author.uuid == self.__client.uuid:
             if self.status == 'deleted':
-                _logger.warning("You can't edit deleted comment!")
+                _logger.warning("EDIT_COMMENT: You can't edit deleted comment!")
                 return False
             if self.__client.publish_comment(self.profile_uuid, new_msg, remove_credit):
                 self.message = new_msg
@@ -125,7 +125,7 @@ class Comment(MeModel):
                 return True
             return False
         else:
-            _logger.warning("You can only edit comments that posted by you.")
+            _logger.warning("EDIT_COMMENT: You can only edit comments that posted by you.")
             return False
 
     def ignore(self) -> bool:

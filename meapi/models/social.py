@@ -3,15 +3,16 @@ from datetime import datetime
 from typing import List, Optional, TYPE_CHECKING
 from meapi.utils.exceptions import MeException
 from meapi.utils.helpers import parse_date
-from meapi.models.me_model import MeModel
+from meapi.models.me_model import MeModel, _logger
+
 if TYPE_CHECKING:  # always False at runtime.
     from meapi import Me
 
 social_profile_urls = {
     'facebook': "https://facebook.com/profile.php?id={}",
     'instagram': "https://instagram.com/{}",
-    'linkedin': "https://linkedin.com/in/{}",
-    'pinterset': "https://pinterest.com/{}",
+    'linkedin': "{}",
+    'pinterset': "{}",
     'spotify': "https://open.spotify.com/user/{}",
     'twitter': "https://twitter.com/{}",
     'tiktok': "https://tiktok.com/@{}",
@@ -158,7 +159,8 @@ class SocialMediaAccount(MeModel):
             ``bool``: ``True`` if successfully added, ``False`` otherwise.
         """
         if not self.__my_social:
-            raise MeException(f"You cannot add social to another user!")
+            _logger.warning(f"You cannot add social to another user!")
+            return False
         key = f'{self.name}_url' if self.name in ['linkedin', 'pinterest'] else f'{self.name}_token'
         if self.__client.add_social(**{key: token_or_url}):
             self.__dict__ = copy.deepcopy(getattr(self.__client.get_socials(), self.name).__dict__)
@@ -174,8 +176,10 @@ class SocialMediaAccount(MeModel):
                 - You get ``True`` even if the social media account not active.
         """
         if not self.__my_social:
-            raise MeException("You cannot remove social from another user!")
+            _logger.warning(f"REMOVE_SOCIAL: You cannot remove social of another user!")
+            return False
         if not self.is_active:
+            _logger.info(f"REMOVE_SOCIAL: {self.name.capitalize()} is already not active!")
             return True
         if self.__client.remove_social(**{self.name: True}):
             self.profile_id = None
@@ -194,10 +198,13 @@ class SocialMediaAccount(MeModel):
             ``bool``: ``True`` if successfully hidden, ``False`` otherwise.
         """
         if not self.__my_social:
-            raise MeException("You cannot hide social of another user!")
+            _logger.warning(f"HIDE_SOCIAL: You cannot hide social of another user!")
+            return False
         if not self.is_active:
+            _logger.info(f"HIDE_SOCIAL: {self.name.capitalize()} account is not active!")
             return True
         if self.is_hidden:
+            _logger.info(f"HIDE_SOCIAL: {self.name.capitalize()} account is already hidden!")
             return True
         if self.__client.switch_social_status(**{self.name: False}):
             self.is_hidden = True
@@ -213,10 +220,13 @@ class SocialMediaAccount(MeModel):
             ``bool``: ``True`` if successfully unhidden, ``False`` otherwise.
         """
         if not self.__my_social:
-            raise MeException("You cannot unhide social of another user!")
+            _logger.warning(f"UNHIDE_SOCIAL: You cannot unhide social of another user!")
+            return False
         if not self.is_active:
+            _logger.warning(f"UNHIDE_SOCIAL: {self.name.capitalize()} account is not active!")
             return False
         if not self.is_hidden:
+            _logger.info(f"UNHIDE_SOCIAL: {self.name.capitalize()} account is already unhidden!")
             return True
         if self.__client.switch_social_status(**{self.name: True}):
             self.is_hidden = False
