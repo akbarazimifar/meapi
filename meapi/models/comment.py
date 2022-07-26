@@ -55,6 +55,7 @@ class Comment(MeModel):
     .. automethod:: like
     .. automethod:: unlike
     .. automethod:: reply
+    .. automethod:: block
     """
     def __init__(self,
                  _client: 'Me',
@@ -196,9 +197,22 @@ class Comment(MeModel):
         """
         return self.__client.publish_comment(self.profile_uuid, your_comment)
 
+    def block(self):
+        """
+        Block the author of the comment from posting comments on your profile.
+            - The same as :py:func:`~meapi.Me.block_comments`.
+
+        Returns:
+            ``bool``: Is block success.
+        """
+        if self.__client.block_comments(self):
+            self.comments_blocked = True
+            return True
+        return False
+
     def __setattr__(self, key, value):
         if getattr(self, '_Comment__init_done', None):
-            if key not in ['message', 'status', 'like_count', 'comment_likes']:
+            if key not in ['message', 'status', 'like_count', 'comment_likes', 'comments_blocked']:
                 raise MeException("You can't change this attr!")
         return super().__setattr__(key, value)
 

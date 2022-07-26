@@ -6,7 +6,7 @@ from meapi.models.user import User
 from meapi.utils.exceptions import MeException, MeApiException
 from datetime import date
 from meapi.utils.validations import validate_phone_number
-from meapi.models import deleter, watcher, group, social, user, comment, friendship
+from meapi.models import deleter, watcher, group, social, user, comment, friendship, contact, profile
 from meapi.api.raw.social import *
 from operator import attrgetter
 from logging import getLogger
@@ -352,6 +352,39 @@ class Social:
                 _logger.warning("UNLIKE_COMMENT: Comment not found or not approved.")
                 return False
             raise err
+
+    def block_comments(self: 'Me', uuid: Union[str, comment.Comment, Profile, User, Contact]) -> bool:
+        """
+        Block comments from user.
+            - If the user is already blocked, you get ``True`` anyway.
+            - There is no apparent way to unblock comments. Use only when you are sure!
+
+        :param uuid: ``uuid`` of the user or :py:obj:`~meapi.models.profile.Profile`, :py:obj:`~meapi.models.user.User`, :py:obj:`~meapi.models.contact.Contact` or :py:obj:`~meapi.models.comment.Comment` objects.
+        :type uuid: ``str`` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.contact.Contact` | :py:obj:`~meapi.models.comment.Comment`
+        :return: Is block success.
+        :rtype: ``bool``
+        """
+        if isinstance(uuid, comment.Comment):
+            if uuid.comments_blocked:
+                _logger.info("BLOCK_COMMENTS: User already blocked.")
+                return True
+            uuid = uuid.author.uuid
+        elif isinstance(uuid, profile.Profile):
+            if uuid.comments_blocked:
+                _logger.info("BLOCK_COMMENTS: User already blocked.")
+                return True
+            uuid = uuid.uuid
+        elif isinstance(uuid, user.User):
+            uuid = uuid.uuid
+        elif isinstance(uuid, contact.Contact):
+            if uuid.user:
+                uuid = uuid.user.uuid
+            else:
+                raise MeException("Contact has no user.")
+        if uuid == self.uuid:
+            _logger.warning("BLOCK_COMMENTS: You can not block your own comments.")
+            return False
+        return block_comments_raw(self, uuid)['blocked']
 
     def get_groups(self: 'Me', sorted_by: str = 'count') -> List[group.Group]:
         """

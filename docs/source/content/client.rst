@@ -47,6 +47,7 @@
 .. automethod:: Me.delete_comment
 .. automethod:: Me.like_comment
 .. automethod:: Me.unlike_comment
+.. automethod:: Me.block_comments
 .. automethod:: Me.suggest_turn_on_comments
 
 👤 Account
