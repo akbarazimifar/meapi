@@ -128,7 +128,7 @@ class _CommonMethodsForUserContactProfile:
         vcard_data = {'start': "BEGIN:VCARD", 'version': "VERSION:3.0"}
         full_name = ((str(prefix_name) + ' - ') if prefix_name else '') + (self.name or f'Unknown - {self.phone_number}')
         vcard_data['name'] = f"FN;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:{encode_string(full_name)}"
-        vcard_data['phone'] = f"TEL;CELL:{self.phone_number}"
+        vcard_data['phone'] = f"TEL;CELL:+{self.phone_number}"
         if dl_profile_picture and getattr(self, 'profile_picture', None):
             binary = get_img_binary_content(self.profile_picture)
             if binary:
