@@ -10,20 +10,31 @@ and the ``RedisCredentialsManager`` that stores the credentials in a redis datab
 
 ---------------------------------
 
-**Creating your own custom CredentialsManager:**
+➕ **Creating your own custom CredentialsManager:**
 
-For example, if you want to store the credentials in a database, create a new class that implements the ``CredentialsManager`` interface:
+- You must implement the methods ``get``, ``set``, ``update`` and ``delete`` in order to allow ``Me`` to store and manage the credentials.
+
+.. currentmodule:: meapi.utils.credentials_managers
+.. autoclass:: CredentialsManager()
+    :members:
+    :undoc-members:
+
+---------------------------------
+
+📄 **Examples:**
+
+Let's say you want to store the credentials in a database, create a new class that implements the ``CredentialsManager`` interface:
 
 .. code-block:: python
 
     from meapi.utils.credentials_manager import CredentialsManager
-    from typing import Union
+    from typing import Optional
 
     class DatabaseCredentialsManager(CredentialsManager):
         def __init__(self, db_connection):
             self.db_connection = db_connection
-        def get(self, phone_number: str) -> Union[dict, None]:
-            return self.db_connection.get_credentials(phone_number)  # do your thing and return the credentials in dict format
+        def get(self, phone_number: str) -> Optional[dict]:
+            return self.db_connection.get_credentials(phone_number)
         def set(self, phone_number: str, data: dict):
             self.db_connection.set_credentials(phone_number, data)
         def update(self, phone_number: str, access_token: str):
@@ -31,7 +42,6 @@ For example, if you want to store the credentials in a database, create a new cl
         def delete(self, phone_number: str):
             self.db_connection.clear_credentials(phone_number)
 
-- You must implement the methods ``get``, ``set``, ``update`` and ``delete`` in order to allow ``Me`` to store and manage the credentials.
 
 You can use the credentials manager in the following way:
 
@@ -44,7 +54,7 @@ Here is another example of how to store the credentials in redis:
 
     from json import dumps, loads
     from meapi.utils.credentials_manager import CredentialsManager
-    from typing import Union
+    from typing import Optional
 
     class RedisCredentialsManager(CredentialsManager):
     """
@@ -54,7 +64,7 @@ Here is another example of how to store the credentials in redis:
     def __init__(self, redis):
         self.redis = redis
 
-    def get(self, phone_number: str) -> Union[dict, None]:
+    def get(self, phone_number: str) -> Optional[dict]:
         data = self.redis.get(str(phone_number))
         if data:
             return loads(data)
@@ -78,3 +88,4 @@ Here is another example of how to store the credentials in redis:
     >>> from meapi.utils.credentials_managers import RedisCredentialsManager
     >>> redis = Redis(host='localhost', port=6379, db=0)
     >>> me = Me(phone_number=972123456789, credentials_manager=RedisCredentialsManager(redis))
+
