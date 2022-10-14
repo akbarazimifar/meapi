@@ -1,4 +1,5 @@
-from re import match, M
+from re import match
+from datetime import datetime, date
 from typing import Tuple, List, Optional, TYPE_CHECKING
 from meapi.api.raw.account import *
 from meapi.utils.validations import validate_contacts, validate_calls, validate_phone_number, validate_schema_types, \
@@ -121,7 +122,7 @@ class Account:
                                gender: Optional[str] = False,
                                slogan: Optional[str] = False,
                                profile_picture: Optional[str] = False,
-                               date_of_birth: Optional[str] = False,
+                               date_of_birth: Optional[Union[str, datetime, date]] = False,
                                location_name: Optional[str] = False,
                                carrier: Optional[str] = False,
                                device_type: Optional[str] = False,
@@ -132,6 +133,11 @@ class Account:
         """
         Update your profile details.
             - The default of the parameters is ``False``. if you leave it ``False``, the parameter will not be updated.
+
+        Examples:
+            >>> update_profile_details(first_name='Chandler', last_name='Bing', date_of_birth='1968-04-08')
+            >>> new_details = {'location_name': 'New York', 'gender': 'M'}
+            >>> update_profile_details(**new_details)  # dict unpacking
 
         :param first_name: First name.
         :type first_name: ``str`` | ``None``
@@ -145,8 +151,8 @@ class Account:
         :type profile_picture: ``str`` | ``None``
         :param slogan: Your bio.
         :type slogan: ``str`` | ``None``
-        :param date_of_birth: ``YYYY-MM-DD`` format. for example: ``1997-05-15``.
-        :type date_of_birth: ``str`` | ``None``
+        :param date_of_birth: date/datetime obj or string with ``YYYY-MM-DD`` format. for example: ``1994-09-22``.
+        :type date_of_birth: ``str`` | ``date`` | ``datetime`` | ``None``
         :param location_name: Your location, can be anything.
         :type location_name: ``str`` | ``None``
         :param login_type: ``email`` or ``apple``.
@@ -170,8 +176,15 @@ class Account:
                     device_types = ['android', 'ios', None]
                     if value not in device_types:
                         raise MeException(f"Device type not in the available device types ({', '.join(device_types)})!")
-                if key == 'date_of_birth' and value is not None and not match(r'^\d{4}(\-)(((0)\d)|((1)[0-2]))(\-)([0-2]\d|(3)[0-1])$', flags=M, string=str(value)):
-                    raise MeException("Birthday must be in YYYY-MM-DD format!")
+                if key == 'date_of_birth' and value is not None:
+                    date_str = str(value)
+                    if ' ' in date_str:  # datetime obj
+                        date_str = date_str.split(' ')[0]
+                    try:
+                        datetime.strptime(date_str, '%Y-%M-%d')
+                    except ValueError:
+                        raise MeException(f"Birthday must be in YYYY-MM-DD format! {value}")
+                    args[key] = date_str
                 elif key in ['facebook_url', 'google_url'] and value is not None and not match(r'^\d+$', str(value)):
                     raise MeException(f"{key} must be numbers!")
                 elif key == 'profile_picture':
