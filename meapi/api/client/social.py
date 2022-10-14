@@ -3,7 +3,7 @@ from typing import Union, Optional
 from meapi.models.contact import Contact
 from meapi.models.profile import Profile
 from meapi.models.user import User
-from meapi.utils.exceptions import MeException, MeApiException
+from meapi.utils.exceptions import MeException, MeApiException, MeApiError
 from datetime import date
 from meapi.utils.validations import validate_phone_number, validate_schema_types, validate_uuid
 from meapi.models import deleter, watcher, group, social, user, comment, friendship, contact, profile
@@ -198,10 +198,10 @@ class Social:
         try:
             res = publish_comment_raw(self, validate_uuid(str(uuid)), str(your_comment))
         except MeApiException as e:
-            if e.msg == 'api_user_comments_disabled':
+            if e.msg == MeApiError.user_comments_disabled:
                 _logger.warning(comments_disabled)
                 return None
-            elif e.msg == 'api_comment_posting_is_not_allowed':
+            elif e.msg == MeApiError.comment_posting_is_not_allowed:
                 _logger.warning(comments_blocked)
                 return None
             raise e

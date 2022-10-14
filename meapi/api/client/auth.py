@@ -4,7 +4,7 @@ from re import match
 from time import sleep
 from typing import Union, TYPE_CHECKING
 from meapi.api.raw.auth import generate_new_access_token_raw, activate_account_raw, ask_for_sms_raw, ask_for_call_raw
-from meapi.utils.exceptions import MeException, MeApiException
+from meapi.utils.exceptions import MeException, MeApiException, MeApiError
 from meapi.utils.helpers import _get_session, HEADERS
 from meapi.utils.validations import validate_auth_response
 
@@ -93,10 +93,12 @@ class Auth:
             else:
                 raise MeException(str(results))
         except MeApiException as err:
-            if err.http_status == 400 and err.msg == 'api_incorrect_activation_code':
+            if err.http_status == 400 and err.msg == MeApiError.incorrect_activation_code:
                 err.reason = "Wrong activation code!"
-            elif err.http_status == 400 and err.msg == 'api_phone_number_doesnt_exists':
+            elif err.http_status == 400 and err.msg == MeApiError.phone_number_doesnt_exists:
                 err.reason = "Not a valid phone number!"
+            elif err.msg == MeApiError.activation_code_expired:
+                err.reason = "The activation code is expired, you need to request new one!"
             raise err
 
         if access_token:
@@ -118,7 +120,7 @@ class Auth:
             elif code_method == "call":
                 return ask_for_call_raw(self, str(self.phone_number), session_token)
         except MeApiException as err:
-            if err.http_status == 400 and err.msg == 'api_blocked_max_verify_reached':
+            if err.http_status == 400 and err.msg == MeApiError.blocked_max_verify_reached:
                 print("You have reached the maximum number of attempts to verify your phone number with sms or call!")
             else:
                 print(err)
@@ -148,7 +150,7 @@ class Auth:
         try:
             auth_data = generate_new_access_token_raw(self, str(self.phone_number), existing_data['pwd_token'])
         except MeApiException as err:
-            if err.http_status == 400 and err.msg == 'api_incorrect_pwd_token':
+            if err.http_status == 400 and err.msg == MeApiError.incorrect_pwd_token:
                 err.reason = f"Your 'pwd_token' in is broken (You probably activated the account elsewhere)." \
                              f"You need to call 'client._activate_account()' or create new instance of Me() in "\
                              "order to generate a new 'pwd_token'."

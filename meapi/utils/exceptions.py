@@ -1,3 +1,19 @@
+
+class MeApiError:
+    """
+    Enum class for all api errors.
+    """
+    incorrect_pwd_token = 'api_incorrect_pwd_token'
+    phone_number_doesnt_exists = 'api_phone_number_doesnt_exists'
+    incorrect_activation_code = 'api_incorrect_activation_code'
+    blocked_max_verify_reached = 'api_blocked_max_verify_reached'
+    activation_code_expired = 'api_activation_code_expired'
+    search_passed_limit = 'api_search_passed_limit'
+    profile_view_passed_limit = 'api_profile_view_passed_limit'
+    user_comments_disabled = 'api_user_comments_disabled'
+    comment_posting_is_not_allowed = 'api_comment_posting_is_not_allowed'
+
+
 class MeApiException(Exception):
     """
     Raise this exception if http status code is bigger than ``400``.
@@ -9,7 +25,7 @@ class MeApiException(Exception):
     :param reason: Human reason to the error.
     :type reason: str
 
-    **Expected msg's:**
+    **Some of the expected msg's:**
 
     - ``api_incorrect_pwd_token``.
     - ``api_phone_number_doesnt_exists``.

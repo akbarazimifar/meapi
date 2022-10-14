@@ -4,7 +4,7 @@ from typing import Tuple, List, Optional, TYPE_CHECKING
 from meapi.api.raw.account import *
 from meapi.utils.validations import validate_contacts, validate_calls, validate_phone_number, validate_schema_types, \
     validate_uuid
-from meapi.utils.exceptions import MeApiException, MeException
+from meapi.utils.exceptions import MeApiException, MeException, MeApiError
 from meapi.utils.helpers import generate_random_data, _register_new_account, _upload_picture
 from meapi.models import contact, profile, call, blocked_number, user
 from logging import getLogger
@@ -37,7 +37,7 @@ class Account:
         except MeApiException as err:
             if err.http_status == 404 and err.msg == 'Not found.':
                 return None
-            elif err.msg == 'api_search_passed_limit':
+            elif err.msg == MeApiError.search_passed_limit:
                 err.reason = 'You passed the phone searches limit (About 350 per day in the unofficial auth method).'
             raise err
         return contact.Contact.new_from_dict(response['contact'], _client=self)
@@ -64,9 +64,10 @@ class Account:
         try:
             res = get_profile_raw(self, validate_uuid(str(uuid)))
         except MeApiException as err:
-            if err.msg == 'api_profile_view_passed_limit':
+            if err.msg == MeApiError.profile_view_passed_limit:
                 if uuid == self.uuid:
-                    _logger.warning('You passed the profile view limit (About 500 per day in the unofficial auth method). You got the limited profile.')
+                    _logger.warning('You passed the profile view limit '
+                                    '(About 500 per day in the unofficial auth method). You got the limited profile.')
                     return self.get_my_profile(only_limited_data=True)
                 err.reason = 'You passed the profile views limit (About 500 per day in the unofficial auth method).'
             raise err
