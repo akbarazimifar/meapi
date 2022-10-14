@@ -145,7 +145,7 @@ class Me(Auth, Account, Social, Settings, Notifications):
         self.__init_done = True
 
     def __repr__(self):
-        return f"<Me {('phone=' + str(self.phone_number) + ' uuid=' + self.uuid) if self.phone_number else 'access_token mode'} >"
+        return f"<Me {('phone=' + str(self.phone_number) + ' uuid=' + self.uuid) if self.phone_number else 'access_token mode'}>"
 
     def __del__(self):
         if isinstance(getattr(self, '_session', None), Session):

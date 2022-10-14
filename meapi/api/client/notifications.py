@@ -34,8 +34,8 @@ class Notifications:
         return unread_notifications_count_raw(self)['count']
 
     def get_notifications(self: 'Me',
-                          page_number: int = 1,
-                          results_limit: int = 20,
+                          page: int = 1,
+                          limit: int = 20,
                           names_filter: bool = False,
                           system_filter: bool = False,
                           comments_filter: bool = False,
@@ -47,10 +47,10 @@ class Notifications:
         """
         Get app notifications: new names, birthdays, comments, watches, deletes, location shares and system notifications.
 
-        :param page_number: :py:func:`get_notifications`.``count`` / ``page_size``. *Default:* ``1``.
-        :type page_number: ``int``
-        :param results_limit: Limit of notifications in each page. *Default:* ``20``.
-        :type results_limit: ``int``
+        :param page: :py:func:`get_notifications`.``count`` / ``page_size``. *Default:* ``1``.
+        :type page: ``int``
+        :param limit: Limit of notifications in each page. *Default:* ``20``.
+        :type limit: ``int``
         :param names_filter: New names, deletes, joined, renames, rename requests. *Default:* ``False``.
         :type names_filter: ``bool``
         :param system_filter: System notifications: spam reports, your name requests, suggestions to turn on mutual contacts. *Default:* ``False``.
@@ -73,7 +73,7 @@ class Notifications:
         for fil, val in args.items():
             if val and fil.endswith('filter'):
                 filters = [*filters, *notification_categories[fil.replace("_filter", "")]]
-        results = get_notifications_raw(self, page_number, results_limit, filters)
+        results = get_notifications_raw(self, page, limit, filters)
 
         return results['count'], [Notification.new_from_dict(notification, _client=self,
                                                              **notification.pop('context')) for notification in results['results']]

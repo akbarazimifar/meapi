@@ -108,6 +108,7 @@ class Settings(MeModel):
                  who_deleted_notification_enabled: bool = None,
                  who_watched_enabled: bool = None,
                  who_watched_notification_enabled: bool = None,
+                 caller_id_type: int = None
                  ):
         self.birthday_notification_enabled = birthday_notification_enabled
         self.comments_enabled = comments_enabled
@@ -127,6 +128,7 @@ class Settings(MeModel):
         self.who_deleted_notification_enabled = who_deleted_notification_enabled
         self.who_watched_enabled = who_watched_enabled
         self.who_watched_notification_enabled = who_watched_notification_enabled
+        self.caller_id_type = caller_id_type
         self.__client = _client
         self.__init_done = True
 

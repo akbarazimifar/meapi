@@ -185,7 +185,7 @@ class Auth:
         :rtype:  ``dict`` | ``list``
         """
         url = ME_BASE_API + endpoint
-        request_types = ['post', 'get', 'put', 'patch', 'delete']
+        request_types = ('post', 'get', 'put', 'patch', 'delete')
         if req_type not in request_types:
             raise MeException("Request type not in requests type list!!\nAvailable types: " + ", ".join(request_types))
         if headers is None:
