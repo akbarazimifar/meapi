@@ -43,7 +43,3 @@ class Watcher(MeModel):
 
     def __repr__(self):
         return f"<Watcher name={self.user.name} count={self.count}>"
-
-    def __str__(self):
-        return self.user.name
-

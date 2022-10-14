@@ -142,9 +142,6 @@ class SocialMediaAccount(MeModel):
     def __repr__(self):
         return f"<{self.name.capitalize()} profile_id={self.profile_id} is_active={self.is_active}>"
 
-    def __str__(self):
-        return str(self.name)
-
     def add(self, token_or_url: str) -> bool:
         """
         Add social media account to your Me profile.
@@ -273,6 +270,3 @@ class Post(MeModel):
 
     def __repr__(self):
         return f"<Post text={self.text_first} id={self.redirect_id}>"
-
-    def __str__(self):
-        return str(self.text_first)

@@ -81,7 +81,7 @@ class MeModel(metaclass=_ParameterReader):
         """
         Return class data in ``json`` format.
         """
-        return json.dumps(self.as_dict(), ensure_ascii=ensure_ascii, sort_keys=True)
+        return json.dumps(self.as_dict(), ensure_ascii=ensure_ascii, sort_keys=True, indent=4)
 
     @classmethod
     def new_from_dict(cls, data: dict, _client: 'Me' = None, **kwargs):

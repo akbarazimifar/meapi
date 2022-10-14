@@ -219,6 +219,3 @@ class Comment(MeModel):
 
     def __repr__(self):
         return f"<Comment id={self.id} status={self.status} msg={self.message} author={self.author}>"
-
-    def __str__(self):
-        return self.message

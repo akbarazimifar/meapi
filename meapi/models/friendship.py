@@ -72,6 +72,3 @@ class Friendship(MeModel):
 
     def __repr__(self):
         return f"<Friendship you={self.i_named} he/she={self.he_named}>"
-
-    def __str__(self):
-        return f"{self.i_named} {self.he_named}"

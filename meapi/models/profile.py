@@ -327,6 +327,3 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
 
     def __repr__(self):
         return f"<Profile name={self.name} uuid={self.uuid}>"
-
-    def __str__(self):
-        return self.name

@@ -93,6 +93,3 @@ class Contact(MeModel, _CommonMethodsForUserContactProfile):
 
     def __repr__(self):
         return f"<Contact name={self.name} phone={self.phone_number} id={self.id}>"
-
-    def __str__(self):
-        return self.name or "Not found"

@@ -34,6 +34,3 @@ class Deleter(MeModel):
 
     def __repr__(self):
         return f"<Deleter name={self.user.name}>"
-
-    def __str__(self):
-        return f"{self.user.name}"

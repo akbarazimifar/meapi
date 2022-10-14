@@ -54,7 +54,3 @@ class BlockedNumber(MeModel):
 
     def __repr__(self):
         return f"<BlockedNumber phone={self.phone_number}>"
-
-    def __str__(self):
-        return str(self.phone_number)
-

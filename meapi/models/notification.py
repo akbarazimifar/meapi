@@ -128,9 +128,6 @@ class Notification(MeModel):
     def __repr__(self):
         return f"<Notification category={self.category} id={self.id}>"
 
-    def __str__(self):
-        return str(self.id)
-
     def read(self) -> bool:
         """
         Mark the notification as read.
