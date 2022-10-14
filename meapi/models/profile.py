@@ -1,6 +1,7 @@
 from copy import deepcopy
 from datetime import date
-from typing import List, Union, TYPE_CHECKING, Optional
+from typing import List, TYPE_CHECKING, Optional
+from meapi.models.mutual_contact import MutualContact
 from meapi.utils.exceptions import MeException
 from meapi.utils.helpers import parse_date
 from meapi.models.comment import Comment
@@ -25,7 +26,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         >>> # Update your profile details.
         >>> my_profile = me.get_my_profile()
         >>> my_profile.name = "Chandler Bing"
-        >>> my_profile.date_of_birth = "1998-04-08"
+        >>> my_profile.date_of_birth = "1968-04-08"
         >>> my_profile.slogan = "Hi, I'm Chandler. I make jokes when I'm uncomfortable."
         >>> my_profile.profile_picture = "/home/chandler/Downloads/my_profile.jpg"
 
@@ -133,7 +134,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         mutual_contacts_available (``bool`` *optional*):
             Whether the user has mutual contacts available. You can ask the user to turn on this feature with :py:func:`~meapi.Me.suggest_turn_on_mutual`.
 
-        mutual_contacts (List[:py:obj:`~meapi.models.user.User`] *optional*):
+        mutual_contacts (List[:py:obj:`~meapi.models.mutual_contact.MutualContact`] *optional*):
             `For more information about mutual contacts <https://me.app/mutual-contacts/>`_.
 
         is_premium (``bool``):
@@ -216,6 +217,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
                  who_watched_enabled: bool = None,
                  who_watched: List[dict] = None,
                  friends_distance: dict = None,
+                 profile_deletes_left: bool = None,
                  _my_profile: bool = False
                  ):
         self.__client = _client
@@ -225,8 +227,8 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         self.is_shared_location = is_shared_location
         self.last_comment = Comment.new_from_dict(last_comment, _client=_client, profile_uuid=uuid)
         self.mutual_contacts_available = mutual_contacts_available
-        self.mutual_contacts: List[User] = [User.new_from_dict(mutual_contact['referenced_user']) for mutual_contact in
-                                            mutual_contacts] if mutual_contacts_available else mutual_contacts
+        self.mutual_contacts: List[MutualContact] = [MutualContact.new_from_dict(mutual_contact) for mutual_contact in
+                                                     mutual_contacts] if mutual_contacts_available else mutual_contacts
         self.share_location = share_location
         self.social: Social = Social.new_from_dict(social, _client=_client, _my_social=_my_profile) if social else social
         self.carrier = carrier
@@ -262,6 +264,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         self.who_deleted = [Deleter.new_from_dict(deleter) for deleter in who_deleted] if who_deleted else None
         self.who_watched_enabled = who_watched_enabled
         self.who_watched = [Watcher.new_from_dict(watcher) for watcher in who_watched] if who_watched else None
+        self.profile_deletes_left = profile_deletes_left
         self.__my_profile = _my_profile
 
     @property
@@ -306,11 +309,12 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
             if self.__my_profile:
                 if key == '_Profile__my_profile' or key == 'name':
                     return super().__setattr__(key, value)
-                modifiable_attrs = ['first_name', 'last_name', 'email', 'gender', 'slogan', 'profile_picture',
+                modifiable_attrs = ('first_name', 'last_name', 'email', 'gender', 'slogan', 'profile_picture',
                                     'date_of_birth', 'location_name', 'device_type', 'login_type', 'facebook_url',
-                                    'google_url', 'carrier']
+                                    'google_url', 'carrier')
                 if key not in modifiable_attrs:
-                    raise MeException(f"You can not modify this attr!\nThe modifiable attrs are: {modifiable_attrs}")
+                    raise MeException(
+                        f"You can not modify this attr!\nThe modifiable attrs are: {', '.join(modifiable_attrs)}")
                 success, new_profile = self.__client.update_profile_details(**{key: value})
                 if (success and str(getattr(new_profile, key, None)) == str(value)) or key == 'profile_picture':
                     # Can't check if profile picture updated because Me convert's it to their own url.

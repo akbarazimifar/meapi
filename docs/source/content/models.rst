@@ -90,8 +90,8 @@
 .. currentmodule:: meapi.models.blocked_number
 .. autoclass:: BlockedNumber()
 
-📞 Call model
---------------
+🖖 MutualContact model
+-----------------------
 
-.. currentmodule:: meapi.models.call
-.. autoclass:: Call()
+.. currentmodule:: meapi.models.mutual_contact
+.. autoclass:: MutualContact()
