@@ -31,12 +31,12 @@ class MeModel(metaclass=_ParameterReader):
     Base class for all models.
         - Allow instances to be comparable, subscript, hashable, immutable (In some cases), and json serializable.
 
-    Example:
+    Examples:
 
         >>> my_profile = me.get_my_profile() # Get your profile.
         >>> my_profile.name # regular access
         >>> my_profile['name'] # subscript access
-        >>> my_profile.get('name', default='') # get access
+        >>> my_profile.get('name', default='') # safe access
         >>> my_profile.as_dict() # get all data as dict
         >>> my_profile.as_json() # get all data as json string
         >>> my_profile == other_profile # compare two objects
@@ -105,7 +105,7 @@ class MeModel(metaclass=_ParameterReader):
                     msg = f"- {cls.__name__}: The key '{key}' with the value of '{json_data[key]}' just skipped. " \
                           f"Try to update meapi to the latest version (pip3 install -U meapi) " \
                           f"If it's still skipping, open issue in github: <https://github.com/david-lev/meapi/issues>"
-                    _logger.warning(msg)
+                    _logger.debug(msg)
                 del json_data[key]
         c = cls(**json_data)
         return c
@@ -115,7 +115,21 @@ class MeModel(metaclass=_ParameterReader):
         Return the value of the attribute with the given name.
             - Example: ``obj['id']``
         """
-        return getattr(self, item)
+
+        try:
+            return getattr(self, item)
+        except AttributeError:
+            raise KeyError(item)
+
+    def __setitem__(self, key, value):
+        """
+        Set the value of the attribute with the given name.
+            - Example: ``obj['id'] = 123``
+        """
+        try:
+            setattr(self, key, value)
+        except AttributeError:
+            raise KeyError(key)
 
     def get(self, item, default=None):
         """
@@ -159,12 +173,3 @@ class MeModel(metaclass=_ParameterReader):
         Return True if the two objects are not equal.
         """
         return not self.__eq__(other)
-
-    def __hash__(self) -> int:
-        """
-        Return the id of the object, if exists.
-        """
-        if hasattr(self, 'id'):
-            return hash(self.id)
-        else:
-            raise TypeError('unhashable type: {} (no id attribute)'.format(type(self)))
