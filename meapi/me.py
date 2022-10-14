@@ -56,8 +56,6 @@ class Me(MeModel, Auth, Account, Social, Settings, Notifications):
     :type config_file: ``str`` | ``None``
     :param session: requests Session object. Default: ``None``.
     :type session: ``requests.Session`` | ``None``
-    :param proxies: Dict with proxy configuration. Default: ``None``.
-    :type proxies: ``dict`` | ``None``
 
     Example for ``account_details``::
 

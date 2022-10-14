@@ -77,11 +77,11 @@ class MeModel(metaclass=_ParameterReader):
                 data[key] = getattr(self, key, None)
         return data
 
-    def as_json(self, ensure_ascii=True) -> str:
+    def as_json(self, ensure_ascii=False) -> str:
         """
         Return class data in ``json`` format.
         """
-        return json.dumps(self.as_dict(), ensure_ascii=ensure_ascii, sort_keys=True, indent=4)
+        return json.dumps(self.as_dict(), ensure_ascii=ensure_ascii, sort_keys=True, indent=4).encode('utf8').decode()
 
     @classmethod
     def new_from_dict(cls, data: dict, _client: 'Me' = None, **kwargs):
