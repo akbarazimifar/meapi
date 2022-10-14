@@ -227,7 +227,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
         self.is_shared_location = is_shared_location
         self.last_comment = Comment.new_from_dict(last_comment, _client=_client, profile_uuid=uuid)
         self.mutual_contacts_available = mutual_contacts_available
-        self.mutual_contacts: List[MutualContact] = [MutualContact.new_from_dict(mutual_contact) for mutual_contact in
+        self.mutual_contacts: List[MutualContact] = [MutualContact.new_from_dict(mutual_contact, _client=_client) for mutual_contact in
                                                      mutual_contacts] if mutual_contacts_available else mutual_contacts
         self.share_location = share_location
         self.social: Social = Social.new_from_dict(social, _client=_client, _my_social=_my_profile) if social else social

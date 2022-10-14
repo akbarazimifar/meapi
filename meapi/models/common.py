@@ -7,29 +7,29 @@ if TYPE_CHECKING:  # always False at runtime.
     from meapi.models.profile import Profile
     from meapi.models.user import User
     from meapi.models.contact import Contact
+    from meapi.models.mutual_contact import MutualContact
 
 
 class _CommonMethodsForUserContactProfile:
     """
     Common methods for :py:obj:`~meapi.models.profile.Profile`, :py:obj:`~meapi.models.user.User` and :py:obj:`~meapi.models.contact.Contact`.
     """
-    def get_profile(self: Union['Profile', 'User', 'Contact']) -> Union['Profile', None]:
+    def get_profile(self: Union['Profile', 'User', 'Contact', 'MutualContact']) -> Union['Profile', None]:
         """
         Returns the profile of the contact.
 
         Returns:
             :py:obj:`~meapi.models.profile.Profile` | ``None``: The profile of the contact or ``None`` if the contact has no user.
         """
+        uuid = None
         if hasattr(self, 'user'):
             if getattr(self, 'user', None):
                 uuid = self.user.uuid
-            else:
-                return None
         else:
             uuid = self.uuid
-        return getattr(self, f'_{self.__class__.__name__}__client').get_profile(uuid)
+        return getattr(self, f'_{self.__class__.__name__}__client').get_profile(uuid) if uuid is not None else uuid
 
-    def block(self: Union['Profile', 'User', 'Contact'], block_contact=True, me_full_block=True) -> bool:
+    def block(self: Union['Profile', 'User', 'Contact', 'MutualContact'], block_contact=True, me_full_block=True) -> bool:
         """
         Block a contact.
 
@@ -44,7 +44,8 @@ class _CommonMethodsForUserContactProfile:
         """
         if getattr(self, f'_{self.__class__.__name__}__my_profile', None):
             raise MeException("you can't block yourself!")
-        return getattr(self, f'_{self.__class__.__name__}__client').block_profile(phone_number=self.phone_number, block_contact=block_contact, me_full_block=me_full_block)
+        return getattr(self, f'_{self.__class__.__name__}__client').block_profile(
+            phone_number=self.phone_number, block_contact=block_contact, me_full_block=me_full_block)
 
     def unblock(self: Union['Profile', 'User', 'Contact'], unblock_contact=True, me_full_unblock=True) -> bool:
         """
@@ -61,7 +62,8 @@ class _CommonMethodsForUserContactProfile:
         """
         if getattr(self, f'_{self.__class__.__name__}__my_profile', None):
             raise MeException("you can't unblock yourself!")
-        return getattr(self, f'_{self.__class__.__name__}__client').unblock_profile(phone_number=self.phone_number, unblock_contact=unblock_contact, me_full_unblock=me_full_unblock)
+        return getattr(self, f'_{self.__class__.__name__}__client').unblock_profile(
+            phone_number=self.phone_number, unblock_contact=unblock_contact, me_full_unblock=me_full_unblock)
 
     def report_spam(self: Union['Profile', 'User', 'Contact'], spam_name: str, country_code: str) -> bool:
         """
@@ -77,9 +79,11 @@ class _CommonMethodsForUserContactProfile:
         Returns:
             ``bool``: ``True`` if the contact was reported successfully, else ``False``.
         """
-        return getattr(self, f'_{self.__class__.__name__}__client').report_spam(phone_number=self.phone_number, spam_name=spam_name, country_code=country_code)
+        return getattr(self, f'_{self.__class__.__name__}__client').report_spam(
+            phone_number=self.phone_number, spam_name=spam_name, country_code=country_code)
 
-    def as_vcard(self: Union['Profile', 'User', 'Contact'], prefix_name: str = "", dl_profile_picture: bool = True, **kwargs) -> str:
+    def as_vcard(self: Union['Profile', 'User', 'Contact', 'MutualContact'],
+                 prefix_name: str = "", dl_profile_picture: bool = False, **kwargs) -> str:
         """
         Get contact data in vcard format in order to add it to your contacts book.
 
@@ -102,7 +106,7 @@ class _CommonMethodsForUserContactProfile:
             prefix_name: (``str``):
                 If you want to add prefix to the name of the contact, like ``Mr.``, ``Mrs.``, ``Imported`` etc. *Default:* empty string ``""``.
             dl_profile_picture: (``bool``):
-                If you want to download and add profile picture to the vcard (if available). *Default:* ``True``.
+                If you want to download and add profile picture to the vcard (if available). *Default:* ``False``.
             kwargs:
                 Add any other data to the ``notes`` field of the vcard. The key must be, of course, exists in the object as attr eith value of ``str`` or ``int``.
                     - For example, if you want to add a gender information to the contact, you can pass the parameter ``gender='gender'``
@@ -151,4 +155,3 @@ class _CommonMethodsForUserContactProfile:
         vcard_data['end'] = "END:VCARD"
 
         return "\n".join([val for val in vcard_data.values()])
-

@@ -1,10 +1,13 @@
 from datetime import date
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+from meapi.models.common import _CommonMethodsForUserContactProfile
 from meapi.models.me_model import MeModel
 from meapi.utils.helpers import parse_date
+if TYPE_CHECKING:  # always False at runtime.
+    from meapi import Me
 
 
-class MutualContact(MeModel):
+class MutualContact(MeModel, _CommonMethodsForUserContactProfile):
     """
     Represents a Mutual contact between you and another user.
 
@@ -18,8 +21,16 @@ class MutualContact(MeModel):
             The user's date of birth.
         uuid (``str`` *optional*):
             The user's unique ID.
+
+    Methods:
+
+        Get the contact as Vcard: :py:func:`~meapi.models.common._CommonMethodsForUserContactProfile.as_vcard`.
+        Block this contact: :py:func:`~meapi.models.common._CommonMethodsForUserContactProfile.block`.
+        Unblock this contact: :py:func:`~meapi.models.common._CommonMethodsForUserContactProfile.unblock`.
+        Report this contact as spam: :py:func:`~meapi.models.common._CommonMethodsForUserContactProfile.report_spam`.
     """
     def __init__(self,
+                 _client: 'Me',
                  name: str,
                  phone_number: int,
                  date_of_birth: str,
@@ -33,6 +44,7 @@ class MutualContact(MeModel):
             self.uuid = referenced_user.get('uuid')
         else:
             self.uuid = None
+        self.__client = _client
         super().__init__()
 
     def __repr__(self):
