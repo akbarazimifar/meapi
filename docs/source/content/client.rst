@@ -1,6 +1,22 @@
 ☎️ Client
 =========
 
+This page is about the client methods.
+
+- All the methods here are bound to to a ``Me`` instance.
+
+.. code-block:: python
+
+    from meapi import Me
+
+    me = Me(972123456789) # initialize the client
+    me.phone_search(972987654321)
+    me.get_profile('fdsfs-fdsfs-fdsfs-fdsfs')
+    me.get_socials()
+    me.get_settings()
+    me.get_groups()
+
+
 .. currentmodule:: meapi
 
 🔎 Search
