@@ -52,21 +52,8 @@ class Notification(MeModel):
             Subject of the notification.
         message_body (``str`` *optional*):
             Body of the notification.
-        - CONTEXT -
-        phone_number (``int`` *optional*):
-            Phone number of the message context.
-        name (``str`` *optional*):
-            Name of the subject.
-        uuid (``str`` *optional*):
-            UUID of the message context.
-        new_name (``str`` *optional*):
-            New name of the message context.
-        profile_picture (``str`` *optional*):
-            Profile picture of the message context.
-        tag (``str`` *optional*):
-            Tag of the message context.
-        profile_view_count (``int`` *optional*):
-            Number of views of the profile watcher.
+        context (``dict`` *optional*):
+            The context of the notification: name, uuid, new_name, tag, profile_picture and more.
 
     Methods:
 
@@ -87,17 +74,10 @@ class Notification(MeModel):
                  message_body: str,
                  message_lang: str,
                  category: str,
-                 phone_number: int = None,
-                 name: str = None,
-                 uuid: str = None,
-                 new_name: str = None,
-                 notification_id: int = None,
-                 profile_picture: str = None,
-                 tag: str = None,
-                 profile_view_count: int = None,
+                 context: dict = None
                  ):
         self.__client = _client
-        self.id = id or notification_id
+        self.id = id
         self.created_at: datetime = parse_date(created_at)
         self.modified_at: datetime = parse_date(modified_at)
         self.is_read = is_read
@@ -109,14 +89,7 @@ class Notification(MeModel):
         self.category = message_category or category
         self.message_body = message_body
         self.message_lang = message_lang
-        # context:
-        self.name = name
-        self.uuid = uuid
-        self.new_name = new_name
-        self.phone_number = phone_number
-        self.profile_picture = profile_picture
-        self.tag = tag
-        self.profile_view_count = profile_view_count
+        self.context = context
         self.__init_done = True
 
     def __setattr__(self, key, value):
