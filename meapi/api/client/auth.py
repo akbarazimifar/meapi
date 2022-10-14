@@ -6,14 +6,15 @@ from typing import Union, TYPE_CHECKING
 from meapi.api.raw.auth import generate_new_access_token_raw, activate_account_raw, ask_for_sms_raw, ask_for_call_raw
 from meapi.utils.exceptions import MeException, MeApiException, MeApiError
 from meapi.utils.helpers import _get_session, HEADERS
-from meapi.utils.validations import validate_auth_response
+from meapi.utils.validations import validate_schema_types
 
 if TYPE_CHECKING:  # always False at runtime.
     from meapi import Me
 
 ME_BASE_API = 'https://app.mobile.me.app'
-wa_auth_url = "https://wa.me/972543229534?text=Connectme"
-tg_auth_url = "http://t.me/Meofficialbot?start=__iw__{}"
+WA_AUTH_URL = "https://wa.me/972543229534?text=Connectme"
+TG_AUTH_URL = "http://t.me/Meofficialbot?start=__iw__{}"
+AUTH_SCHEMA = {key: str for key in ('access', 'refresh', 'uuid', 'pwd_token')}
 
 
 class Auth:
@@ -50,7 +51,7 @@ class Auth:
             anti_session_key = environ.get('ANTI_SESSION_BOT_KEY', None)
             print("To get access token you need to authorize yourself:\n")
             if not anti_session_key:
-                msg = f"* WhatsApp (Recommended): {wa_auth_url}\n* Telegram: {tg_auth_url.format(self.phone_number)}\n"
+                msg = f"* WhatsApp (Recommended): {WA_AUTH_URL}\n* Telegram: {TG_AUTH_URL.format(self.phone_number)}\n"
                 print(msg)
             else:
                 print("You need to choose an authorization method:\n# 1: WhatsApp or Telegram\n# 2: SMS\n# 3: Call")
@@ -67,7 +68,7 @@ class Auth:
                               "You can only verify at this time using WhatsApp or Telegram."
                     if method == methods[1]:
                         print(
-                            f"* WhatsApp (Recommended): {wa_auth_url}\n* Telegram: {tg_auth_url.format(self.phone_number)}\n")
+                            f"* WhatsApp (Recommended): {WA_AUTH_URL}\n* Telegram: {TG_AUTH_URL.format(self.phone_number)}\n")
                         break
                     elif method == methods[2]:
                         if self._ask_for_sms():
@@ -104,7 +105,8 @@ class Auth:
         if access_token:
             self._access_token = access_token  # in order to get the uuid.
             self.uuid = results['uuid'] = self.get_uuid()  # if this is a new account, you will need to create one.
-            self._credentials_manager.set(str(self.phone_number), validate_auth_response(results))
+            validate_schema_types(AUTH_SCHEMA, results, enforce=True)
+            self._credentials_manager.set(str(self.phone_number), results)
             return True
         return False
 
@@ -141,12 +143,13 @@ class Auth:
         :return: Is success.
         :type: ``bool``
         """
-        existing_data = validate_auth_response(self._credentials_manager.get(str(self.phone_number)))
-        if not existing_data:
+        existing_data = self._credentials_manager.get(str(self.phone_number))
+        if existing_data is None:
             if self._activate_account():
                 return True
             else:
                 raise MeException("Failed to generate access token!")
+        validate_schema_types(AUTH_SCHEMA, existing_data, enforce=True)
         try:
             auth_data = generate_new_access_token_raw(self, str(self.phone_number), existing_data['pwd_token'])
         except MeApiException as err:
@@ -196,14 +199,16 @@ class Auth:
         while max_rounds != 0:
             max_rounds -= 1
             headers['authorization'] = self._access_token
-            response = getattr(self._session, req_type)(url=url, json=body, files=files, headers=headers, proxies=self._proxies)
+            response = getattr(self._session, req_type)(url=url, json=body, files=files, headers=headers)
             try:
                 response_text = loads(response.text)
             except JSONDecodeError:
                 raise MeException(f"The response (Status code: {response.status_code}) received does not contain a valid JSON:\n" + str(response.text))
             if response.status_code == 403 and self.phone_number:
                 if self._generate_access_token():
-                    self._access_token = validate_auth_response(self._credentials_manager.get(str(self.phone_number))).get('access')
+                    res = self._credentials_manager.get(str(self.phone_number))
+                    validate_schema_types(AUTH_SCHEMA, res, enforce=True)
+                    self._access_token = res.get('access')
                     continue
                 raise MeException("Cannot generate new access token!")
 

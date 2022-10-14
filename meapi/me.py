@@ -1,20 +1,21 @@
 from re import match
-from typing import Union
+from typing import Union, Optional
+from meapi.models.me_model import MeModel
 from requests import Session
 from meapi.api.client.account import Account
 from meapi.api.client.notifications import Notifications
 from meapi.api.client.settings import Settings
 from meapi.api.client.social import Social
-from meapi.api.client.auth import Auth
+from meapi.api.client.auth import Auth, AUTH_SCHEMA
 from meapi.utils.credentials_managers import CredentialsManager, JsonFileCredentialsManager
 from meapi.utils.exceptions import MeException
-from meapi.utils.validations import validate_phone_number, validate_auth_response
+from meapi.utils.validations import validate_phone_number, validate_schema_types
 from logging import getLogger
 
 _logger = getLogger(__name__)
 
 
-class Me(Auth, Account, Social, Settings, Notifications):
+class Me(MeModel, Auth, Account, Social, Settings, Notifications):
     """
     The ``Me`` Client. Used to interact with MeAPI.
         - See `Authentication <https://meapi.readthedocs.io/en/latest/content/setup.html#authentication>`_ for more information.
@@ -24,9 +25,9 @@ class Me(Auth, Account, Social, Settings, Notifications):
         >>> from meapi import Me
         >>> me = Me(phone_number=972123456789) # Unofficial method, phone number is required
         >>> me = Me(phone_number=972123456789, activation_code='123456') # Unofficial method with pre-provided activation code
-        >>> me = Me(access_token='access_token') # Official method, access token is required
-        >>> me = Me(phone_number=972123456789, credentials_manager=JsonFileCredentialsManager('config.json')) # With credentials manager
-        >>> me = Me(phone_number=972123456789, session=my_custom_session, proxies={'http': 'http://proxy.com:8080'}) # With session and proxies
+        >>> me = Me(access_token='xxxxxxxxxxxx') # Official method, access token is required
+        >>> me = Me(phone_number=972123456789, credentials_manager=RedisCredentialsManager(redis_con)) # With credentials manager
+        >>> me = Me(phone_number=972123456789, session=my_custom_session) # With custom session
         >>> me = Me(account_details={'phone_number': 972123456789, 'activation_code': '123456'...}) # New account registration
 
 
@@ -69,7 +70,6 @@ class Me(Auth, Account, Social, Settings, Notifications):
             'upload_random_data': True, # Recommended for first account registration. Default: True
             'credentials_manager': None, # Optional. Default: JsonFileCredentialsManager('config.json')
             'session': None, # Optional. Default: new requests.Session()
-            'proxies': None, # Optional. Default: None
         }
     """
     def __init__(self,
@@ -79,16 +79,24 @@ class Me(Auth, Account, Social, Settings, Notifications):
                  account_details: dict = None,
                  credentials_manager: CredentialsManager = None,
                  config_file: str = 'config.json',
-                 session: Session = None,
-                 proxies: dict = None):
+                 session: Session = None
+                 ):
+        # Parse account details
         if account_details:
-            if not isinstance(account_details, dict):
-                raise MeException("Account details must be in dict format")
+            account_details_schema = {
+                'phone_number': Union[int, str],
+                'activation_code': Optional[str],
+                'first_name': Optional[str],
+                'last_name': Optional[str],
+                'email': Optional[str],
+                'upload_random_data': Optional[bool],
+                'credentials_manager': Optional[CredentialsManager],
+                'session': Optional[Session]
+            }
+            validate_schema_types(account_details_schema, account_details)
 
             if account_details.get('session'):
                 session = account_details['session']
-            if account_details.get('proxies'):
-                proxies = account_details['proxies']
             if account_details.get('credentials_manager'):
                 credentials_manager = account_details['credentials_manager']
             if account_details.get('phone_number'):
@@ -121,7 +129,6 @@ class Me(Auth, Account, Social, Settings, Notifications):
         self.uuid = None
         self._access_token = access_token
         self._account_details = account_details
-        self._proxies = proxies
         self._session: Session = session or Session()  # create new session if not provided
 
         # if access_token not provided, try to get it from the credentials manager, if not found, activate the account.
@@ -138,7 +145,7 @@ class Me(Auth, Account, Social, Settings, Notifications):
                     else:
                         raise MeException("Failed to activate the account!")
 
-            validate_auth_response(auth_data)
+            validate_schema_types(AUTH_SCHEMA, auth_data, enforce=True)
             self._access_token = auth_data['access']
             self.uuid = auth_data['uuid']
 
@@ -156,6 +163,6 @@ class Me(Auth, Account, Social, Settings, Notifications):
         Prevent attr changes after the init in protected data classes
         """
         if getattr(self, '_Me__init_done', None):
-            if key in ['phone_number', 'uuid', '_activation_code', '_account_details']:
+            if key in ('phone_number', 'uuid', '_activation_code', '_account_details'):
                 raise MeException(f"You cannot modify this protected attr '{key}'!")
         return super().__setattr__(key, value)

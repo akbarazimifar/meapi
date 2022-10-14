@@ -84,27 +84,7 @@ def validate_uuid(uuid: str) -> str:
     return uuid
 
 
-def validate_auth_response(auth_data: dict) -> dict:
-    """
-    Check if the CredentialsManager gets or return the expected data format
-
-    :param auth_data: dict with ``access``, ``refresh``, ``uuid``, and ``pwd_token``.
-    :type auth_data: dict
-    :return: The same information he received.
-    :rtype: dict
-    :raises MeException: If the data does not valid.
-    """
-    if not isinstance(auth_data, dict):
-        raise MeException("auth_data should be a dict!")
-    expected_keys = ['access', 'refresh', 'uuid', 'pwd_token']
-    if sorted(expected_keys) != sorted(auth_data.keys()):
-        raise MeException(f"The auth_data should contain the following keys: {expected_keys}. Your data contains this keys: {list(auth_data.keys())}")
-    validate_schema_types({key: str for key in expected_keys}, auth_data)
-    validate_uuid(auth_data['uuid'])
-    return auth_data
-
-
-def validate_schema_types(schema: dict, dictionary: dict) -> bool:
+def validate_schema_types(schema: dict, dictionary: dict, enforce=False) -> bool:
     """
     Check if the dictionary contains the expected types for the schema.
 
@@ -114,13 +94,17 @@ def validate_schema_types(schema: dict, dictionary: dict) -> bool:
     :type dictionary: dict
     :return: True if the dictionary contains the expected types.
     :rtype: bool
+    :param enforce: enforce all the keys in the schema to be in the dict.
+    :type enforce: bool
     :raises MeException: If the dictionary does not valid.
     """
-    if not isinstance(schema, dict):
-        raise MeException("schema should be a dict!")
-    if not isinstance(dictionary, dict):
-        raise MeException("dictionary should be a dict!")
+    if enforce:
+        if not all(key in dictionary for key in schema):
+            raise MeException(f"The dictionary is not contains all the schema keys!"
+                              f"\n\tSCHEMA: {schema}\n\tDICT: {dictionary}")
     for key, value in dictionary.items():
+        if key not in schema:
+            raise MeException(f"The dictionary contains the key '{key}' which is not expected!")
         if not isinstance(value, schema[key]):
             raise MeException(f"The value of the key '{key}' should be {schema[key]} type!")
     return True
