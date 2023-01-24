@@ -3,8 +3,13 @@
 
 **The credentials manager allows you to store your credentials in your own way.**
 
-There are two built-in credentials managers: ``JsonFileCredentialsManager`` (Used by default) that stores the credentials in a json file (``config.json`` by default),
-and the ``RedisCredentialsManager`` that stores the credentials in a redis database.
+There are number of credentials managers that are already implemented in the project:
+
+- ``JsonFileCredentialsManager`` (Used by default) that stores the credentials in a json file (``config.json`` by default),
+- ``RedisCredentialsManager`` that stores the credentials in a redis database.
+- ``MemoryCredentialsManager`` that stores the credentials in memory.
+- ``FlaskSessionCredentialsManager`` that stores the credentials in a flask session.
+
 
 * You are more than welcome to create your own credentials manager and open a pull request to add it to the project.
 
@@ -14,7 +19,7 @@ and the ``RedisCredentialsManager`` that stores the credentials in a redis datab
 
 - You must implement the methods ``get``, ``set``, ``update`` and ``delete`` in order to allow ``Me`` to store and manage the credentials.
 
-.. currentmodule:: meapi.utils.credentials_managers
+.. currentmodule:: meapi.credentials_managers
 .. autoclass:: CredentialsManager()
     :members:
     :undoc-members:
@@ -27,7 +32,7 @@ Let's say you want to store the credentials in a database, create a new class th
 
 .. code-block:: python
 
-    from meapi.utils.credentials_manager import CredentialsManager
+    from meapi.credentials_manager import CredentialsManager
     from typing import Optional
 
     class DatabaseCredentialsManager(CredentialsManager):
@@ -50,36 +55,9 @@ You can use the credentials manager in the following way:
 
 Here is another example of how to store the credentials in redis:
 
-.. code-block:: python
+.. literalinclude:: ../../../meapi/credentials_managers/redis.py
+    :language: python
 
-    from json import dumps, loads
-    from meapi.utils.credentials_manager import CredentialsManager
-    from typing import Optional
-
-    class RedisCredentialsManager(CredentialsManager):
-    """
-    Redis Credentials Manager.
-        - This class is used to store the credentials in a redis cache.
-    """
-    def __init__(self, redis):
-        self.redis = redis
-
-    def get(self, phone_number: str) -> Optional[dict]:
-        data = self.redis.get(str(phone_number))
-        if data:
-            return loads(data)
-        return None
-
-    def set(self, phone_number: str, data: dict):
-        self.redis.set(str(phone_number), dumps(data))
-
-    def update(self, phone_number: str, access_token: str):
-        existing_content = loads(self.redis.get(str(phone_number)))
-        existing_content['access'] = access_token
-        self.redis.set(str(phone_number), dumps(existing_content))
-
-    def delete(self, phone_number: str):
-        self.redis.delete(str(phone_number))
 
 - And this is how you can use it:
 

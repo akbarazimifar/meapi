@@ -11,6 +11,7 @@ from meapi.utils.credentials_managers import CredentialsManager, JsonFileCredent
 from meapi.utils.exceptions import MeException
 from meapi.utils.validations import validate_phone_number, validate_schema_types
 from logging import getLogger
+from meapi.credentials_managers import CredentialsManager, JsonFileCredentialsManager, RedisCredentialsManager
 
 _logger = getLogger(__name__)
 
@@ -41,7 +42,7 @@ class Me(MeModel, Auth, Account, Social, Settings, Notifications):
 
         - Required on the `Official method <https://meapi.readthedocs.io/en/latest/content/setup.html#official-method>`_
     :type access_token: ``str`` | ``None``
-    :param credentials_manager: Credentials manager to use in order to store and manage the credentials. *Default:* :py:obj:`~meapi.utils.credentials_managers.JsonFileCredentialsManager`.
+    :param credentials_manager: Credentials manager to use in order to store and manage the credentials. *Default:* :py:obj:`~meapi.credentials_managers.json.JsonFileCredentialsManager`.
 
         - See `Credentials Manager <https://meapi.readthedocs.io/en/latest/content/credentials_manager.html>`_.
     :type credentials_manager: :py:obj:`~meapi.utils.credentials_managers.CredentialsManager` | ``None``
