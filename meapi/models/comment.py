@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, TYPE_CHECKING
-from meapi.utils.exceptions import MeException
+from meapi.utils.exceptions import FrozenInstance
 from meapi.utils.helpers import parse_date
 from meapi.models.me_model import MeModel, _logger
 from meapi.models.user import User
@@ -213,9 +213,6 @@ class Comment(MeModel):
 
     def __setattr__(self, key, value):
         if getattr(self, '_Comment__init_done', None):
-            if key not in ['message', 'status', 'like_count', 'comment_likes', 'comments_blocked']:
-                raise MeException("You can't change this attr!")
+            if key not in ('message', 'status', 'like_count', 'comment_likes', 'comments_blocked'):
+                raise FrozenInstance(self, key)
         return super().__setattr__(key, value)
-
-    def __repr__(self):
-        return f"<Comment id={self.id} status={self.status} msg={self.message} author={self.author}>"

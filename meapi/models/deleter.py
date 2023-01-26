@@ -14,7 +14,7 @@ class Deleter(MeModel):
         >>> deleter = my_deleters[0]
         >>> deleter.user.name
         'Janine Lecroix'
-        >>> me.publish_comment(uuid=deleter.user, your_comment="How You Doin'?")
+        >>> me.publish_comment(uuid=deleter.user,your_comment="How You Doin'?")
         <Comment id=456 status=waiting msg=How You Doin'? author=Joey Tribbiani>
 
 
@@ -31,6 +31,3 @@ class Deleter(MeModel):
         self.created_at: datetime = parse_date(created_at)
         self.user = User.new_from_dict(user)
         super().__init__()
-
-    def __repr__(self):
-        return f"<Deleter name={self.user.name}>"

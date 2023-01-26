@@ -90,6 +90,3 @@ class Contact(MeModel, _CommonMethodsForUserContactProfile):
         self.modified_at: Optional[datetime] = parse_date(modified_at)
         self.in_contact_list = in_contact_list or is_my_contact
         super().__init__()
-
-    def __repr__(self):
-        return f"<Contact name={self.name} phone={self.phone_number} id={self.id}>"

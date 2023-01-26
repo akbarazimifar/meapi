@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 from meapi.models.me_model import MeModel
-from meapi.utils.exceptions import MeException
+from meapi.utils.exceptions import FrozenInstance
+
 if TYPE_CHECKING:  # always False at runtime.
     from meapi import Me
 
@@ -49,7 +50,7 @@ class BlockedNumber(MeModel):
 
     def __setattr__(self, key, value):
         if getattr(self, '_BlockedNumber__init_done', None) and key != "phone_number":
-            raise MeException(f"{key} cannot be changed!")
+            raise FrozenInstance(self, key)
         super().__setattr__(key, value)
 
     def __repr__(self):

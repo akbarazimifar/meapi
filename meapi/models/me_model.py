@@ -1,7 +1,7 @@
 import inspect
 import json
 from abc import ABCMeta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from datetime import datetime, date
 from meapi.utils.exceptions import FrozenInstance
 from logging import getLogger
@@ -102,10 +102,11 @@ class MeModel(metaclass=_ParameterReader):
             if key not in cls_attrs:
                 if key not in IGNORED_KEYS and not key.startswith('_'):
                     IGNORED_KEYS.append(key)
-                    msg = f"- {cls.__name__}: The key '{key}' with the value of '{json_data[key]}' just skipped. " \
-                          f"Try to update meapi to the latest version (pip3 install -U meapi) " \
-                          f"If it's still skipping, open issue in github: <https://github.com/david-lev/meapi/issues>"
-                    _logger.debug(msg)
+                    _logger.debug(
+                        f"- {cls.__name__}: The key '{key}' with the value of '{json_data[key]}' just skipped. "
+                        f"Try to update meapi to the latest version (pip3 install -U meapi) "
+                        f"If it's still skipping, open issue in github: <https://github.com/david-lev/meapi/issues>"
+                        )
                 del json_data[key]
         c = cls(**json_data)
         return c
@@ -121,17 +122,14 @@ class MeModel(metaclass=_ParameterReader):
         except AttributeError:
             raise KeyError(item)
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: str, value: Any):
         """
         Set the value of the attribute with the given name.
             - Example: ``obj['id'] = 123``
         """
-        try:
-            setattr(self, key, value)
-        except AttributeError:
-            raise KeyError(key)
+        setattr(self, key, value)
 
-    def get(self, item, default=None):
+    def get(self, item: str, default: Any = None):
         """
         Return the value of the attribute with the given name.
             - Example: ``obj.get('id')``
@@ -148,7 +146,7 @@ class MeModel(metaclass=_ParameterReader):
         """
         return getattr(self, item, default)
 
-    def __setattr__(self, key, value):
+    def __setattr__(self, key: str, value: Any):
         """
         Prevent attr changes after the init in protected data classes
         """
@@ -161,6 +159,10 @@ class MeModel(metaclass=_ParameterReader):
         Return class data in json format
         """
         return self.as_json()
+
+    def __repr__(self):
+        """Return a string representation of the object in ``ClassName(attr1='Test', attr2=123)`` format."""
+        return f"{self.__class__.__name__}({', '.join(f'{k}={v!r}' for k, v in self.as_dict().items())})"
 
     def __eq__(self, other) -> bool:
         """

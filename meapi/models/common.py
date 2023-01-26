@@ -1,6 +1,5 @@
 from functools import reduce
 from typing import TYPE_CHECKING, Union
-from meapi.utils.exceptions import MeException
 from meapi.utils.helpers import get_img_binary_content, encode_string
 
 if TYPE_CHECKING:  # always False at runtime.
@@ -41,9 +40,12 @@ class _CommonMethodsForUserContactProfile:
 
         Returns:
             ``bool``: ``True`` if the contact was blocked successfully, else ``False``.
+
+        Raises:
+            TypeError: If you try to block yourself.
         """
         if getattr(self, f'_{self.__class__.__name__}__my_profile', None):
-            raise MeException("you can't block yourself!")
+            raise TypeError("you can't block yourself!")
         return getattr(self, f'_{self.__class__.__name__}__client').block_profile(
             phone_number=self.phone_number, block_contact=block_contact, me_full_block=me_full_block)
 
@@ -59,9 +61,12 @@ class _CommonMethodsForUserContactProfile:
 
         Returns:
             ``bool``: ``True`` if the contact was unblocked successfully, else ``False``.
+
+        Raises:
+            TypeError: If you try to unblock yourself.
         """
         if getattr(self, f'_{self.__class__.__name__}__my_profile', None):
-            raise MeException("you can't unblock yourself!")
+            raise TypeError("you can't unblock yourself!")
         return getattr(self, f'_{self.__class__.__name__}__client').unblock_profile(
             phone_number=self.phone_number, unblock_contact=unblock_contact, me_full_unblock=me_full_unblock)
 
