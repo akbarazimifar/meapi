@@ -23,9 +23,25 @@ setup(
         "Documentation": "https://meapi.readthedocs.io",
         "Issue Tracker": "https://github.com/david-lev/meapi/issues",
         "Source Code": "https://github.com/david-lev/meapi",
+        "Funding": "https://github.com/sponsors/david-lev"
     },
-    download_url="https://pypi.org/project/meapi/",
     author='David Lev',
     license='MIT',
     install_requires=['requests'],
+    keywords='me, caller id, spam blocker, meapi',
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+
+        'Intended Audience :: Developers',
+        'Topic :: Communications :: Telephony'
+
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3 :: Only',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
+    ],
 )
