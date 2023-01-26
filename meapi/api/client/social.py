@@ -1,12 +1,18 @@
 from re import match, sub
-from typing import Union, Optional
+from typing import Union, Optional, List, TYPE_CHECKING
+from meapi.utils.exceptions import MeApiException, UserCommentsDisabled, \
+    UserCommentsPostingIsNotAllowed, ContactHasNoUser, CommentAlreadyApproved, CommentAlreadyIgnored
+from datetime import date
+from meapi.utils.validators import validate_phone_number, validate_schema_types, validate_uuid
+from meapi.models.deleter import Deleter
+from meapi.models.watcher import Watcher
+from meapi.models.group import Group
+from meapi.models.social import Social
+from meapi.models.user import User
+from meapi.models.comment import Comment
+from meapi.models.friendship import Friendship
 from meapi.models.contact import Contact
 from meapi.models.profile import Profile
-from meapi.models.user import User
-from meapi.utils.exceptions import MeException, MeApiException, MeApiError
-from datetime import date
-from meapi.utils.validations import validate_phone_number, validate_schema_types, validate_uuid
-from meapi.models import deleter, watcher, group, social, user, comment, friendship, contact, profile
 from meapi.api.raw.social import *
 from operator import attrgetter
 from logging import getLogger
@@ -16,16 +22,30 @@ if TYPE_CHECKING:  # always False at runtime.
 _logger = getLogger(__name__)
 
 
-class Social:
+class SocialMethods:
     """
     This class is not intended to create an instance's but only to be inherited by ``Me``.
     The separation is for order purposes only.
     """
 
     def __init__(self: 'Me'):
-        raise MeException("Social class is not intended to create an instance's but only to be inherited by Me class.")
+        raise TypeError(
+            "Social class is not intended to create an instance's but only to be inherited by Me class."
+        )
 
-    def friendship(self: 'Me', phone_number: Union[int, str]) -> friendship.Friendship:
+    @staticmethod
+    def _extract_uuid_from_obj(obj: Union[Profile, Contact,  User, str]) -> str:
+        if isinstance(obj, str):
+            return obj
+        elif isinstance(obj, (User, Profile)):
+            return obj.uuid
+        elif isinstance(obj, Contact):
+            if obj.user:
+                return obj.user.uuid
+            else:
+                raise ContactHasNoUser()
+
+    def friendship(self: 'Me', phone_number: Union[int, str]) -> Friendship:
         """
         Get friendship information between you and another number.
         like count mutual friends, total calls duration, how do you name each other, calls count, your watches, comments, and more.
@@ -35,7 +55,7 @@ class Social:
         :return: :py:obj:`~meapi.models.friendship.Friendship` object.
         :rtype: :py:obj:`~meapi.models.friendship.Friendship`
         """
-        return friendship.Friendship.new_from_dict(friendship_raw(self, validate_phone_number(phone_number)))
+        return Friendship.new_from_dict(friendship_raw(client=self, phone_number=validate_phone_number(phone_number)))
 
     def report_spam(self: 'Me', country_code: str, spam_name: str, phone_number: Union[str, int]) -> bool:
         """
@@ -51,13 +71,19 @@ class Social:
         :return: Is report success
         :rtype: ``bool``
         """
-        return report_spam_raw(self, country_code.upper(), str(validate_phone_number(phone_number)), spam_name)['success']
+        return report_spam_raw(
+            client=self,
+            country_code=country_code.upper(),
+            phone_number=str(validate_phone_number(phone_number)),
+            spam_name=spam_name
+        )['success']
 
-    def who_deleted(self: 'Me', incognito: bool = False, sorted_by: Optional[str] = 'created_at') -> List[deleter.Deleter]:
+    def who_deleted(self: 'Me', incognito: bool = False, sorted_by: Optional[str] = 'created_at') -> List[Deleter]:
         """
         Get list of users who deleted you from their contacts.
 
-         The ``who_deleted_enabled`` setting must be ``True`` in your settings account in order to see who deleted you. See :py:func:`change_settings`.
+         The ``who_deleted_enabled`` setting must be ``True`` in your settings account in order
+         to see who deleted you. See :py:func:`change_settings`.
          You can use ``incognito=True`` to automatically enable and disable before and after (Required two more API calls).
 
         :param incognito: If ``True``, this automatically enables and disables ``who_deleted_enabled``. *Default:* ``False``.
@@ -66,22 +92,24 @@ class Social:
         :type sorted_by: ``str``
         :return: List of Deleter objects sorted by their creation time.
         :rtype: List[:py:obj:`~meapi.models.deleter.Deleter`]
+        :raises ValueError: If ``sorted_by`` is not ``created_at`` or ``None``.
         """
         if sorted_by not in ['created_at', None]:
-            raise MeException("sorted_by must be 'created_at' or None.")
+            raise ValueError("sorted_by must be 'created_at' or None.")
         if incognito:
             self.change_settings(who_deleted_enabled=True)
-        res = who_deleted_raw(self)
+        res = who_deleted_raw(client=self)
         if incognito:
             self.change_settings(who_deleted_enabled=False)
-        deleters = [deleter.Deleter.new_from_dict(dlt) for dlt in res]
+        deleters = [Deleter.new_from_dict(dlt) for dlt in res]
         return sorted(deleters, key=attrgetter(sorted_by), reverse=True) if sorted_by else deleters
 
-    def who_watched(self: 'Me', incognito: bool = False, sorted_by: str = 'count') -> List[watcher.Watcher]:
+    def who_watched(self: 'Me', incognito: bool = False, sorted_by: str = 'count') -> List[Watcher]:
         """
         Get list of users who watched your profile.
 
-         The ``who_watched_enabled`` setting must be ``True`` in your settings account in order to see who watched your profile. See :py:func:`change_settings`.
+         The ``who_watched_enabled`` setting must be ``True`` in your settings account in order to see who watched your
+         profile. See :py:func:`change_settings`.
          You can use ``incognito=True`` to automatically enable and disable before and after (Required two more API calls).
 
         :param incognito: If ``True``, this automatically enables and disables ``who_watched_enabled``. *Default:* ``False``.
@@ -90,57 +118,51 @@ class Social:
         :type sorted_by: ``str``
         :return: List of Watcher objects sorted by watch count (By default) or by last view.
         :rtype: List[:py:obj:`~meapi.models.watcher.Watcher`]
+        :raises ValueError: If ``sorted_by`` is not ``count`` or ``last_view``.
         """
-        if sorted_by not in ['count', 'last_view']:
-            raise MeException("sorted_by must be 'count' or 'last_view'.")
+        if sorted_by not in ('count', 'last_view'):
+            raise ValueError("sorted_by must be 'count' or 'last_view'.")
         if incognito:
             self.change_settings(who_watched_enabled=True)
-        res = who_watched_raw(self)
+        res = who_watched_raw(client=self)
         if incognito:
             self.change_settings(who_watched_enabled=False)
-        return sorted([watcher.Watcher.new_from_dict(watch) for watch in
+        return sorted([Watcher.new_from_dict(watch) for watch in
                        res], key=attrgetter(sorted_by), reverse=True)
 
-    def get_comments(self: 'Me', uuid: Union[str, Profile, User, Contact] = None) -> List[comment.Comment]:
+    def get_comments(self: 'Me', uuid: Union[str, Profile, User, Contact] = None) -> List[Comment]:
         """
         Get comments in user's profile.
             - Call the method with no parameters to get comments in your profile.
 
         Example:
-            .. code-block:: python
 
-                # By uuid
-                comments = me.get_comments('xx-yy-zz')
-                # By User object
-                search = me.phone_search('+1234567890')
-                if getattr(search, 'user', None): # search can be None if no user found
-                    comments = me.get_comments(search.user)
+
+            >>> comments = me.get_comments('xx-yy-zz') # By uuid
+            >>> search = me.phone_search('+1234567890') # By User object
+            >>> if getattr(search, 'user', None): comments = me.get_comments(search.user) # search can be None if no user found
 
         :param uuid: ``uuid`` of the user or :py:obj:`~meapi.models.profile.Profile`, :py:obj:`~meapi.models.user.User`, or :py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
         :type uuid: ``str`` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.contact.Contact`
         :return: List of :py:obj:`~meapi.models.comment.Comment` objects sorted by their like count.
         :rtype: List[:py:obj:`~meapi.models.comment.Comment`]
+        :raises ValueError: In the official-auth-method mode you must to provide user uuid if you want to get your comments.
+        :raises ContactHasNoUser: If you provide a contact object without user.
         """
-        if isinstance(uuid, (User, Profile)):
-            uuid = uuid.uuid
-        if isinstance(uuid, Contact):
-            if uuid.user:
-                uuid = uuid.user.uuid
-            else:
-                raise MeException("Contact has no user.")
+        uuid = self._extract_uuid_from_obj(uuid)
         if not uuid or uuid == self.uuid:
             if self.phone_number:
                 _my_comment = True
                 uuid = self.uuid
             else:
-                raise MeException("In the official-auth-method mode you must to provide user uuid.")
+                raise ValueError("In the official-auth-method mode you must to provide user uuid.")
         else:
             _my_comment = False
         comments = get_comments_raw(self, validate_uuid(str(uuid)))['comments']
-        return sorted([comment.Comment.new_from_dict(com, _client=self, _my_comment=_my_comment, profile_uuid=uuid)
+        return sorted([Comment.new_from_dict(com, _client=self, _my_comment=_my_comment, profile_uuid=uuid)
                        for com in comments], key=lambda x: x.like_count, reverse=True)
 
-    def get_comment(self: 'Me', comment_id: Union[int, str]) -> comment.Comment:
+    def get_comment(self: 'Me', comment_id: Union[int, str]) -> Comment:
         """
         Get comment details, comment text, who and how many liked, create time and more.
             - This methods return :py:obj:`~meapi.models.comment.Comment` object with just ``message``, ``like_count`` and ``comment_likes`` atrrs.
@@ -150,11 +172,16 @@ class Social:
         :return: :py:obj:`~meapi.models.comment.Comment` object.
         :rtype: :py:obj:`~meapi.models.comment.Comment`
         """
-        if isinstance(comment_id, comment.Comment):
+        if isinstance(comment_id, Comment):
             comment_id = comment_id.id
-        return comment.Comment.new_from_dict(get_comment_raw(self, int(comment_id)), _client=self, id=int(comment_id))
+        return Comment.new_from_dict(get_comment_raw(self, int(comment_id)), _client=self, id=int(comment_id))
 
-    def publish_comment(self: 'Me', uuid: Union[str, Profile, User, Contact] = None, your_comment: str = None, remove_credit: bool = False) -> Optional[comment.Comment]:
+    def publish_comment(
+            self: 'Me',
+            your_comment: str,
+            uuid: Union[str, Profile, User, Contact] = None,
+            add_credit: bool = False
+    ) -> Optional[Comment]:
         """
         Publish comment in user's profile.
             - You can publish comment on your own profile or on someone else's profile.
@@ -163,21 +190,21 @@ class Social:
             - You can ask the user to enable comments in his profile with :py:func:`~meapi.Me.suggest_turn_on_comments`.
             - If the user doesn't enable comments (``comments_enabled``), or if he blocked you from comments (``comments_blocked``), you will get ``None``. You can get this info with :py:func:`~meapi.Me.get_profile`.
 
-        :param uuid: ``uuid`` of the user or :py:obj:`~meapi.models.profile.Profile`, :py:obj:`~meapi.models.user.User`, or :py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
-        :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`
         :param your_comment: Your comment.
         :type your_comment: ``str``
-        :param remove_credit: If ``True``, this will remove the credit from the comment. *Default:* ``False``.
-        :type remove_credit: ``bool``
+        :param uuid: ``uuid`` of the user or :py:obj:`~meapi.models.profile.Profile`, :py:obj:`~meapi.models.user.User`, or :py:obj:`~meapi.models.contact.Contact` objects. *Default:* Your uuid.
+        :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`
+        :param add_credit: If ``True``, this will add credit to the comment. *Default:* ``False``.
+        :type add_credit: ``bool``
         :return: Optional :py:obj:`~meapi.models.comment.Comment` object.
         :rtype: :py:obj:`~meapi.models.comment.Comment` | ``None``
+        :raises ContactHasNoUser: If you provide a contact object without user.
         """
-        comments_disabled = "User disable comments. you can ask the user to enable comments in his profile with client.suggest_turn_on_comments()."
+        comments_disabled = "User disable comments. you can ask the user to enable comments in his " \
+                            "profile with client.suggest_turn_on_comments()."
         comments_blocked = "User block you from comments."
         if not uuid:
             uuid = self.uuid  # publish on your own profile
-        if not your_comment:
-            raise MeException("You must to provide comment.")
         if isinstance(uuid, Profile):
             if uuid.comments_enabled is False:  # can be None
                 _logger.warning(comments_disabled)
@@ -186,28 +213,25 @@ class Social:
                 _logger.warning(comments_blocked)
                 return None
             uuid = uuid.uuid
-        if isinstance(uuid, User):
-            uuid = uuid.uuid
-        if isinstance(uuid, Contact):
-            if uuid.user:
-                uuid = uuid.user.uuid
-            else:
-                raise MeException("Contact has no user.")
-        if not remove_credit:
+        else:
+            uuid = self._extract_uuid_from_obj(uuid)
+        if add_credit:
             your_comment += ' • Commented with meapi <https://github.com/david-lev/meapi>'
         try:
-            res = publish_comment_raw(self, validate_uuid(str(uuid)), str(your_comment))
+            res = publish_comment_raw(client=self, uuid=validate_uuid(str(uuid)), your_comment=str(your_comment))
         except MeApiException as e:
-            if e.msg == MeApiError.user_comments_disabled:
+            if isinstance(e, UserCommentsDisabled):
                 _logger.warning(comments_disabled)
                 return None
-            elif e.msg == MeApiError.comment_posting_is_not_allowed:
+            elif isinstance(e, UserCommentsPostingIsNotAllowed):
                 _logger.warning(comments_blocked)
                 return None
             raise e
-        return comment.Comment.new_from_dict(res, _client=self, profile_uuid=uuid, _my_comment=True if self.uuid == uuid else False)
+        return Comment.new_from_dict(
+            res, _client=self, profile_uuid=uuid, _my_comment=True if self.uuid == uuid else False
+        )
 
-    def approve_comment(self: 'Me', comment_id: Union[str, int, comment.Comment]) -> bool:
+    def approve_comment(self: 'Me', comment_id: Union[str, int, Comment]) -> bool:
         """
         Approve comment. the comment will be visible in your profile.
             - You can only approve comments that posted on your own profile.
@@ -220,7 +244,7 @@ class Social:
         :return: Is approve success.
         :rtype: ``bool``
         """
-        if isinstance(comment_id, comment.Comment):
+        if isinstance(comment_id, Comment):
             if comment_id._Comment__my_comment:
                 if comment_id.status == 'approved':
                     _logger.info("APPROVE_COMMENT: Comment already approved.")
@@ -233,17 +257,17 @@ class Social:
                 _logger.warning("APPROVE_COMMENT: You can only approve comments that posted on your own profile.")
                 return False
         try:
-            return bool(approve_comment_raw(self, int(comment_id))['status'] == 'approved')
+            return bool(approve_comment_raw(client=self, comment_id=int(comment_id))['status'] == 'approved')
         except MeApiException as err:
-            if err.http_status == 400 and err.msg == 'comment_already_approved':
-                _logger.info("APPROVE_COMMENT: Comment already approved.")
+            if isinstance(err, CommentAlreadyApproved):
+                _logger.info(f"APPROVE_COMMENT: {str(err)}")
                 return True
             elif err.http_status == 400:
                 _logger.warning("APPROVE_COMMENT: You can only approve comments that posted on your own profile.")
                 return False
             raise err
 
-    def ignore_comment(self: 'Me', comment_id: Union[str, int, comment.Comment]) -> bool:
+    def ignore_comment(self: 'Me', comment_id: Union[str, int, Comment]) -> bool:
         """
         Ignore comment. the comment will not be visible in your profile.
             - you can always approve it with :py:func:`approve_comment`.)
@@ -254,7 +278,7 @@ class Social:
         :return: Is deleting success.
         :rtype: ``bool``
         """
-        if isinstance(comment_id, comment.Comment):
+        if isinstance(comment_id, Comment):
             if comment_id._Comment__my_comment:
                 if comment_id.status == 'ignored':
                     _logger.info("IGNORE_COMMENT: Comment already ignored.")
@@ -267,17 +291,16 @@ class Social:
                 _logger.warning("IGNORE_COMMENT: You can only ignore comments that posted on your own profile.")
                 return False
         try:
-            return bool(ignore_comment_raw(self, int(comment_id))['status'] == 'ignored')
+            return bool(ignore_comment_raw(client=self, comment_id=int(comment_id))['status'] == 'ignored')
         except MeApiException as err:
-            if err.http_status == 400 and err.msg == 'comment_already_ignored':
+            if isinstance(err, CommentAlreadyIgnored):
                 return True
             elif err.http_status == 400:
                 _logger.warning("IGNORE_COMMENT: You can only ignore comments that posted on your own profile.")
                 return False
-            else:
-                raise err
+            raise err
 
-    def delete_comment(self: 'Me', comment_id: Union[str, int, comment.Comment]) -> bool:
+    def delete_comment(self: 'Me', comment_id: Union[str, int, Comment]) -> bool:
         """
         Delete comment.
             - You can only delete comments that posted on your own profile or that posted by you.
@@ -287,7 +310,7 @@ class Social:
         :return: Is deleting success.
         :rtype: ``bool``
         """
-        if isinstance(comment_id, comment.Comment):
+        if isinstance(comment_id, Comment):
             if comment_id._Comment__my_comment or comment_id.author.uuid == self.uuid:
                 if comment_id.status == 'deleted':
                     _logger.info("DELETE_COMMENT: Comment already deleted.")
@@ -297,14 +320,14 @@ class Social:
                 _logger.warning("DELETE_COMMENT: You can only delete comments from your profile or comments that posted by you!")
                 return False
         try:
-            return delete_comment_raw(self, int(comment_id))['success']
+            return delete_comment_raw(client=self, comment_id=int(comment_id))['success']
         except MeApiException as e:
             if e.http_status == 400:
                 _logger.warning("DELETE_COMMENT: You can only delete comments from your profile or comments that posted by you!")
                 return False
             raise e
 
-    def like_comment(self: 'Me', comment_id: Union[int, str, comment.Comment]) -> bool:
+    def like_comment(self: 'Me', comment_id: Union[int, str, Comment]) -> bool:
         """
         Like comment.
             - If the comment is already liked, you get ``True`` anyway.
@@ -315,21 +338,21 @@ class Social:
         :return: Is like success.
         :rtype: ``bool``
         """
-        if isinstance(comment_id, comment.Comment):
+        if isinstance(comment_id, Comment):
             if getattr(comment_id, 'comment_likes', None):
                 if self.uuid in [usr.uuid for usr in comment_id.comment_likes]:
                     _logger.info("LIKE_COMMENT: Comment already liked.")
                     return True
             comment_id = comment_id.id
         try:
-            return like_comment_raw(self, int(comment_id))['author']['uuid'] == self.uuid
+            return like_comment_raw(client=self, comment_id=int(comment_id))['author']['uuid'] == self.uuid
         except MeApiException as err:
             if err.http_status == 404:
                 _logger.warning("LIKE_COMMENT: Comment not found or not approved.")
                 return False
             raise err
 
-    def unlike_comment(self: 'Me', comment_id: Union[int, str, comment.Comment]) -> bool:
+    def unlike_comment(self: 'Me', comment_id: Union[int, str, Comment]) -> bool:
         """
         Unlike comment.
             - If the comment is already unliked, you get ``True`` anyway.
@@ -340,21 +363,21 @@ class Social:
         :return: Is unlike success.
         :rtype: ``bool``
         """
-        if isinstance(comment_id, comment.Comment):
+        if isinstance(comment_id, Comment):
             if getattr(comment_id, 'comment_likes', None):
                 if self.uuid not in [usr.uuid for usr in comment_id.comment_likes]:
                     _logger.info("UNLIKE_COMMENT: Comment already unliked.")
                     return True
             comment_id = comment_id.id
         try:
-            return unlike_comment_raw(self, int(comment_id))['status'] == 'approved'
+            return unlike_comment_raw(client=self, comment_id=int(comment_id))['status'] == 'approved'
         except MeApiException as err:
             if err.http_status == 404:
                 _logger.warning("UNLIKE_COMMENT: Comment not found or not approved.")
                 return False
             raise err
 
-    def block_comments(self: 'Me', uuid: Union[str, comment.Comment, Profile, User, Contact]) -> bool:
+    def block_comments(self: 'Me', uuid: Union[str, Comment, Profile, User, Contact]) -> bool:
         """
         Block comments from user.
             - If the user is already blocked, you get ``True`` anyway.
@@ -364,30 +387,26 @@ class Social:
         :type uuid: ``str`` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.contact.Contact` | :py:obj:`~meapi.models.comment.Comment`
         :return: Is block success.
         :rtype: ``bool``
+        :raises ContactHasNoUser: If the contact object has no user.
         """
-        if isinstance(uuid, comment.Comment):
+        if isinstance(uuid, Comment):
             if uuid.comments_blocked:
                 _logger.info("BLOCK_COMMENTS: User already blocked.")
                 return True
             uuid = uuid.author.uuid
-        elif isinstance(uuid, profile.Profile):
+        elif isinstance(uuid, Profile):
             if uuid.comments_blocked:
                 _logger.info("BLOCK_COMMENTS: User already blocked.")
                 return True
             uuid = uuid.uuid
-        elif isinstance(uuid, user.User):
-            uuid = uuid.uuid
-        elif isinstance(uuid, contact.Contact):
-            if uuid.user:
-                uuid = uuid.user.uuid
-            else:
-                raise MeException("Contact has no user.")
+        else:
+            uuid = self._extract_uuid_from_obj(uuid)
         if uuid == self.uuid:
             _logger.warning("BLOCK_COMMENTS: You can not block your own comments.")
             return False
         return block_comments_raw(self, validate_uuid(str(uuid)))['blocked']
 
-    def get_groups(self: 'Me', sorted_by: str = 'count') -> List[group.Group]:
+    def get_groups(self: 'Me', sorted_by: str = 'count') -> List[Group]:
         """
         Get groups of names and see how people named you.
             - `For more information about Group <https://me.app/who-saved-my-number/>`_
@@ -396,14 +415,15 @@ class Social:
         :type sorted_by: ``str``
         :return: List of :py:obj:`~meapi.models.group.Group` objects.
         :rtype: List[:py:obj:`~meapi.models.group.Group`]
+        :raises ValueError: If ``sorted_by`` is not ``count`` or ``last_contact_at``.
         """
-        if sorted_by not in ['count', 'last_contact_at']:
-            raise MeException("sorted_by must be one of 'count' or 'last_contact_at'.")
-        return sorted([group.Group.new_from_dict(grp, _client=self, is_active=True) for grp in
+        if sorted_by not in ('count', 'last_contact_at'):
+            raise ValueError("sorted_by must be one of 'count' or 'last_contact_at'.")
+        return sorted([Group.new_from_dict(grp, _client=self, is_active=True) for grp in
                        get_groups_raw(self)['groups']],
                       key=attrgetter(sorted_by), reverse=True)
 
-    def get_deleted_groups(self: 'Me') -> List[group.Group]:
+    def get_deleted_groups(self: 'Me') -> List[Group]:
         """
         Get group names that you deleted.
 
@@ -421,10 +441,10 @@ class Social:
                                                          'in_contact_list': name['in_contact_list']})
             groups[name['name']]['name'] = name['name']
 
-        return sorted([group.Group.new_from_dict(grp, _client=self, is_active=False, count=len(grp['contact_ids']))
+        return sorted([Group.new_from_dict(grp, _client=self, is_active=False, count=len(grp['contact_ids']))
                        for grp in groups.values()], key=lambda x: x.count, reverse=True)
 
-    def delete_group(self: 'Me', contacts_ids: Union[group.Group, int, str, List[Union[int, str]]]) -> bool:
+    def delete_group(self: 'Me', contacts_ids: Union[Group, int, str, List[Union[int, str]]]) -> bool:
         """
         Delete group name.
             - You can restore deleted group with :py:func:`restore_name`.
@@ -435,7 +455,7 @@ class Social:
         :return: Is delete success.
         :rtype: ``bool``
         """
-        if isinstance(contacts_ids, group.Group):
+        if isinstance(contacts_ids, Group):
             contacts_ids = contacts_ids.contact_ids
         if isinstance(contacts_ids, (int, str)):
             contacts_ids = [contacts_ids]
@@ -451,13 +471,17 @@ class Social:
         :return: Is delete success.
         :rtype: ``bool``
         """
-        if isinstance(contacts_ids, group.Group):
+        if isinstance(contacts_ids, Group):
             contacts_ids = contacts_ids.contact_ids
         if isinstance(contacts_ids, (int, str)):
             contacts_ids = [contacts_ids]
         return restore_group_raw(self, [int(_id) for _id in contacts_ids])['success']
 
-    def ask_group_rename(self: 'Me', contacts_ids: Union[group.Group, int, str, List[Union[int, str]]], new_name: Optional[str] = None) -> bool:
+    def ask_group_rename(
+            self: 'Me',
+            contacts_ids: Union[Group, int, str, List[Union[int, str]]],
+            new_name: Optional[str] = None
+    ) -> bool:
         """
         Suggest new name to group of people and ask them to rename you in their contacts book.
 
@@ -472,14 +496,16 @@ class Social:
             new_name = self.get_my_profile().name
         if isinstance(contacts_ids, (int, str)):
             contacts_ids = [contacts_ids]
-        if isinstance(contacts_ids, group.Group):
+        if isinstance(contacts_ids, Group):
             if contacts_ids.name == new_name:
                 _logger.info("The name of the group is already the same as the suggested name.")
                 return True
             contacts_ids = contacts_ids.contact_ids
-        return ask_group_rename_raw(self, [int(_id) for _id in contacts_ids], new_name)['success']
+        return ask_group_rename_raw(
+            client=self, contact_ids=[int(_id) for _id in contacts_ids], new_name=new_name
+        )['success']
 
-    def get_socials(self: 'Me', uuid: Union[str, Profile, User, Contact] = None) -> social.Social:
+    def get_socials(self: 'Me', uuid: Union[str, Profile, User, Contact] = None) -> Social:
         """
         Get connected social networks to ``Me`` account.
 
@@ -487,16 +513,11 @@ class Social:
         :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`
         :return: :py:obj:`~meapi.models.social.Social` object with social media accounts.
         :rtype: :py:obj:`~meapi.models.social.Social`
+        :raises ContactHasNoUser: If the contact has no user.
         """
-        if isinstance(uuid, (User, Profile)):
-            uuid = uuid.uuid
-        if isinstance(uuid, Contact):
-            if uuid.user:
-                uuid = uuid.user.uuid
-            else:
-                raise MeException("Contact has no user.")
+        uuid = self._extract_uuid_from_obj(uuid)
         if not uuid:
-            return social.Social.new_from_dict(get_my_social_raw(self), _client=self, _my_social=True)
+            return Social.new_from_dict(get_my_social_raw(client=self), _client=self, _my_social=True)
         return self.get_profile(uuid).social
 
     def add_social(self: 'Me',
@@ -506,7 +527,8 @@ class Social:
                    facebook_token: str = None,
                    tiktok_token: str = None,
                    pinterest_url: str = None,
-                   linkedin_url: str = None, ) -> bool:
+                   linkedin_url: str = None
+                   ) -> bool:
         """
         Connect social network to your me account.
             - If you have at least ``2`` socials, you get ``is_verified=True`` in your profile (Blue check).
@@ -527,12 +549,14 @@ class Social:
         :type linkedin_url: ``str``
         :return: Is connected successfully.
         :rtype: ``bool``
+        :raises TypeError: If you don't provide any social.
+        :raises ValueError: If you provide an invalid url.
         """
         args = locals()
         del args['self']
         not_null_values = sum(bool(i) for i in args.values())
         if not_null_values < 1:
-            raise MeException("You need to provide at least one social!")
+            raise TypeError("You need to provide at least one social!")
         successes = 0
         for soc, token_or_url in args.items():
             if token_or_url is not None:
@@ -540,11 +564,13 @@ class Social:
                     if match(r"^https?:\/\/.*{domain}.*$".format(domain=soc.replace('_url', '')), token_or_url):
                         is_token = False
                     else:
-                        raise MeException(f"You must provide a valid link to the {soc.replace('_url', '').capitalize()} profile!")
+                        raise ValueError(f"You must provide a valid link to the"
+                                         f" {soc.replace('_url', '').capitalize()} profile!")
                 else:
                     is_token = True
                 social_name = sub(r'_(token|url)$', '', soc)
-                results = add_social_token_raw(self, social_name, token_or_url) if is_token else add_social_url_raw(self, social_name, token_or_url)
+                results = add_social_token_raw(client=self, social_name=social_name, token=token_or_url) if is_token \
+                    else add_social_url_raw(client=self, social_name=social_name, url=token_or_url)
                 if results['success'] if is_token else bool(results[social_name]['profile_id'] == token_or_url):
                     successes += 1
         return bool(successes == not_null_values)
@@ -578,17 +604,18 @@ class Social:
         :type tiktok: ``bool``
         :return: Is removal success.
         :rtype: ``bool``
+        :raises TypeError: If you don't provide any social.
         """
         args = locals()
         del args['self']
         validate_schema_types({key: bool for key in args.keys()}, args)
         true_values = sum(args.values())
         if true_values < 1:
-            raise MeException("You need to remove at least one social!")
+            raise TypeError("You need to remove at least one social!")
         successes = 0
         for soc, value in args.items():
             if value is True:
-                if remove_social_raw(self, str(soc))['success']:
+                if remove_social_raw(client=self, social_name=str(soc))['success']:
                     successes += 1
         return bool(true_values == successes)
 
@@ -621,13 +648,14 @@ class Social:
         :type linkedin: ``bool``
         :return: is switch success (you get ``True`` even if social active or was un/hidden before).
         :rtype: ``bool``
+        :raises TypeError: If you don't provide any social.
         """
         args = locals()
         del args['self']
         validate_schema_types({key: Optional[bool] for key in args.keys()}, args)
         not_null_values = sum(True for i in args.values() if i is not None)
         if not_null_values < 1:
-            raise MeException("You need to switch status to at least one social!")
+            raise TypeError("You need to switch status to at least one social!")
         successes = 0
         my_socials = self.get_socials()
         for soc, status in args.items():
@@ -637,7 +665,7 @@ class Social:
                     successes += 1
                     continue
                 else:
-                    if status != switch_social_status_raw(self, str(soc))['is_hidden']:
+                    if status != switch_social_status_raw(client=self, social_name=str(soc))['is_hidden']:
                         successes += 1
         return bool(not_null_values == successes)
 
@@ -658,22 +686,18 @@ class Social:
         :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`
         :return: Is request success.
         :rtype: ``bool``
+        :raises ContactHasNoUser: If you provide :py:obj:`~meapi.models.contact.Contact` without user.
         """
         if isinstance(uuid, Profile):
             if uuid.comments_enabled:
                 return True
             uuid = uuid.uuid
-        if isinstance(uuid, User):
-            uuid = uuid.uuid
-        if isinstance(uuid, Contact):
-            if uuid.user:
-                uuid = uuid.user.uuid
-            else:
-                raise MeException("Contact has no user.")
+        else:
+            uuid = self._extract_uuid_from_obj(uuid)
         if uuid == self.uuid:
             _logger.warning("SUGGEST_TURN_ON_COMMENTS: You can't suggest to yourself.")
             return False
-        return suggest_turn_on_comments_raw(self, validate_uuid(str(uuid)))['requested']
+        return suggest_turn_on_comments_raw(client=self, uuid=validate_uuid(str(uuid)))['requested']
 
     def suggest_turn_on_mutual(self: 'Me', uuid: Union[str, Profile, User, Contact]) -> bool:
         """
@@ -683,22 +707,18 @@ class Social:
         :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`
         :return: Is request success.
         :rtype: ``bool``
+        :raises ContactHasNoUser: If you provide :py:obj:`~meapi.models.contact.Contact` without user.
         """
         if isinstance(uuid, Profile):
             if uuid.mutual_contacts_available:
                 return True
             uuid = uuid.uuid
-        if isinstance(uuid, User):
-            uuid = uuid.uuid
-        if isinstance(uuid, Contact):
-            if uuid.user:
-                uuid = uuid.user.uuid
-            else:
-                raise MeException("Contact has no user.")
+        else:
+            uuid = self._extract_uuid_from_obj(uuid)
         if uuid == self.uuid:
             _logger.warning("SUGGEST_TURN_ON_MUTUAL: You can't suggest to yourself.")
             return False
-        return suggest_turn_on_mutual_raw(self, validate_uuid(str(uuid)))['requested']
+        return suggest_turn_on_mutual_raw(client=self, uuid=validate_uuid(str(uuid)))['requested']
 
     def suggest_turn_on_location(self: 'Me', uuid: Union[str, Profile, User, Contact]) -> bool:
         """
@@ -708,18 +728,13 @@ class Social:
         :type uuid: ``str`` | :py:obj:`~meapi.models.profile.Profile` | :py:obj:`~meapi.models.user.User` | :py:obj:`~meapi.models.contact.Contact`
         :return: Is request success.
         :rtype: ``bool``
+        :raises ContactHasNoUser: If you provide :py:obj:`~meapi.models.contact.Contact` without user.
         """
-        if isinstance(uuid, (Profile, User)):
-            uuid = uuid.uuid
-        if isinstance(uuid, Contact):
-            if uuid.user:
-                uuid = uuid.user.uuid
-            else:
-                raise MeException("Contact has no user.")
+        uuid = self._extract_uuid_from_obj(uuid)
         if uuid == self.uuid:
             _logger.warning("SUGGEST_TURN_ON_LOCATION: You can't suggest to yourself.")
             return False
-        return suggest_turn_on_location_raw(self, validate_uuid(str(uuid)))['requested']
+        return suggest_turn_on_location_raw(client=self, uuid=validate_uuid(str(uuid)))['requested']
 
     def get_age(self: 'Me', uuid: Union[str, Profile, User, Contact] = None) -> int:
         """
@@ -732,21 +747,16 @@ class Social:
         """
         if isinstance(uuid, Profile):
             return uuid.age
-        if isinstance(uuid, User):
-            uuid = uuid.uuid
-        if isinstance(uuid, Contact):
-            if uuid.user:
-                uuid = uuid.user.uuid
-            else:
-                raise MeException("Contact has no user.")
         if uuid is None:
             uuid = self.uuid
-        profile = self.get_profile(uuid)
-        if profile.date_of_birth:
+        else:
+            uuid = self._extract_uuid_from_obj(uuid)
+        p = self.get_profile(uuid)
+        if p.date_of_birth:
             today = date.today()
-            if profile.date_of_birth > today:
+            if p.date_of_birth > today:
                 return 0
-            return int((today - profile.date_of_birth).days / 365)
+            return int((today - p.date_of_birth).days / 365)
         return 0
 
     def is_spammer(self: 'Me', phone_number: Union[int, str]) -> int:
@@ -773,10 +783,11 @@ class Social:
         :type longitude: ``float``
         :return: Is location update success.
         :rtype: ``bool``
+        :raises ValueError: If latitude or longitude is not a float.
         """
         if not isinstance(latitude, float) or not isinstance(longitude, float):
-            raise MeException("Not a valid coordination!")
-        return update_location_raw(self, latitude, longitude)['success']
+            raise ValueError("Not a valid coordination!")
+        return update_location_raw(client=self, latitude=latitude, longitude=longitude)['success']
 
     def share_location(self: 'Me', uuid: Union[str, Profile, User, Contact]) -> bool:
         """
@@ -787,17 +798,11 @@ class Social:
         :return: Is sharing success.
         :rtype: ``bool``
         """
-        if isinstance(uuid, (Profile, User)):
-            uuid = uuid.uuid
-        if isinstance(uuid, Contact):
-            if uuid.user:
-                uuid = uuid.user.uuid
-            else:
-                raise MeException("Contact has no user.")
+        uuid = self._extract_uuid_from_obj(uuid)
         if uuid == self.uuid:
             _logger.warning("SHARE_LOCATION: You can't share your location with yourself.")
             return False
-        return share_location_raw(self, validate_uuid(str(uuid)))['success']
+        return share_location_raw(client=self, uuid=validate_uuid(str(uuid)))['success']
 
     def stop_sharing_location(self: 'Me', uuids: Union[str, Profile, User, Contact, List[Union[str, Profile, User, Contact]]]) -> bool:
         """
@@ -820,7 +825,7 @@ class Social:
                     else:
                         _logger.info(f"STOP_SHARING_LOCATION: Skip contact {uuid.name} with no user.")
 
-        return stop_sharing_location_raw(self, [validate_uuid(str(uuid)) for uuid in uuids])['success']
+        return stop_sharing_location_raw(client=self, uuids=[validate_uuid(str(uuid)) for uuid in uuids])['success']
 
     def stop_shared_location(self: 'Me', uuids: Union[str, Profile, User, Contact, List[Union[str, Profile, User, Contact]]]) -> bool:
         """
@@ -843,23 +848,23 @@ class Social:
                     else:
                         _logger.warning(f"STOP_SHARED_LOCATION: Skip contact {uuid.name} with no user.")
 
-        return stop_shared_locations_raw(self, [validate_uuid(str(uuid)) for uuid in uuids])['success']
+        return stop_shared_locations_raw(client=self, uuids=[validate_uuid(str(uuid)) for uuid in uuids])['success']
 
-    def locations_shared_by_me(self: 'Me') -> List[user.User]:
+    def locations_shared_by_me(self: 'Me') -> List[User]:
         """
         Get list of users that you shared your location with them.
 
         :return: List of :py:obj:`~meapi.models.user.User` objects.
         :rtype: List[:py:obj:`~meapi.models.user.User`]
         """
-        return [user.User.new_from_dict(usr, _client=self) for usr in locations_shared_by_me_raw(self)]
+        return [User.new_from_dict(usr, _client=self) for usr in locations_shared_by_me_raw(client=self)]
 
-    def locations_shared_with_me(self: 'Me') -> List[user.User]:
+    def locations_shared_with_me(self: 'Me') -> List[User]:
         """
         Get users who have shared their location with you.
 
         :return: List of :py:obj:`~meapi.models.user.User` objects (with ``distance`` attribute).
         :rtype: List[:py:obj:`~meapi.models.user.User`]
         """
-        users = locations_shared_with_me_raw(self)['shared_location_users']
-        return [user.User.new_from_dict(usr['author'], _client=self, distance=usr['distance']) for usr in users]
+        users = locations_shared_with_me_raw(client=self)['shared_location_users']
+        return [User.new_from_dict(usr['author'], _client=self, distance=usr['distance']) for usr in users]

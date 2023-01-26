@@ -46,6 +46,3 @@ class MutualContact(MeModel, _CommonMethodsForUserContactProfile):
             self.uuid = None
         self.__client = _client
         super().__init__()
-
-    def __repr__(self):
-        return f"<MutualContact name={self.name} phone={self.phone_number}>"

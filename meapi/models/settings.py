@@ -1,5 +1,5 @@
-from typing import Union, TYPE_CHECKING
-from meapi.utils.exceptions import MeException
+from typing import TYPE_CHECKING
+from meapi.utils.exceptions import MeException, FrozenInstance
 from meapi.models.me_model import MeModel
 from meapi.utils.helpers import parse_date
 if TYPE_CHECKING:  # always False at runtime.
@@ -132,13 +132,10 @@ class Settings(MeModel):
         self.__client = _client
         self.__init_done = True
 
-    def __repr__(self):
-        return f"<Settings lang={self.language}>"
-
     def __setattr__(self, key, value):
         if getattr(self, '_Settings__init_done', None):
-            if key in ['spammers_count', 'last_backup_at', 'last_restore_at', 'contact_suspended']:
-                raise MeException("You can't change this setting!")
+            if key in ('spammers_count', 'last_backup_at', 'last_restore_at', 'contact_suspended'):
+                raise FrozenInstance(self, key, f"You can't change this setting {key}!")
             is_success, new = self.__client.change_settings(**{key: value})
             if is_success and getattr(new, key, None) != value:
                 raise MeException(f"{key} not updated!")

@@ -1,17 +1,17 @@
 from re import match
 from typing import Union, Optional
 from meapi.models.me_model import MeModel
-from requests import Session
-from meapi.api.client.account import Account
-from meapi.api.client.notifications import Notifications
-from meapi.api.client.settings import Settings
-from meapi.api.client.social import Social
-from meapi.api.client.auth import Auth, AUTH_SCHEMA
-from meapi.utils.credentials_managers import CredentialsManager, JsonFileCredentialsManager
-from meapi.utils.exceptions import MeException
-from meapi.utils.validations import validate_phone_number, validate_schema_types
-from logging import getLogger
-from meapi.credentials_managers import CredentialsManager, JsonFileCredentialsManager, RedisCredentialsManager
+from meapi.models.others import NewAccountDetails, AuthData
+from meapi.api.client.account import AccountMethods
+from meapi.api.client.notifications import NotificationsMethods
+from meapi.api.client.settings import SettingsMethods
+from meapi.api.client.social import SocialMethods
+from meapi.api.client.auth import AuthMethods
+from meapi.utils.exceptions import FrozenInstance
+from meapi.utils.validators import validate_phone_number
+from meapi.credentials_managers import CredentialsManager
+from meapi.credentials_managers.json import JsonCredentialsManager
+from meapi.credentials_managers.redis import RedisCredentialsManager
 
 _logger = getLogger(__name__)
 
@@ -57,19 +57,23 @@ class Me(MeModel, Auth, Account, Social, Settings, Notifications):
     :type config_file: ``str`` | ``None``
     :param session: requests Session object. Default: ``None``.
     :type session: ``requests.Session`` | ``None``
+    :param raise_new_account_exception: Raise ``NewAccountException`` if this is new account and ``new_account_details`` is not provided. *Default:* ``False``.
 
-    Example for ``account_details``::
+        - Designed for cases of new account to catch the exception and handle it.
+    :type raise_new_account_exception: ``bool``
 
-        {
-            'phone_number': 972123456789, # Required always
-            'activation_code': '123456', # Required only for the first time
-            'first_name': 'Regina', # Required for first account registration
-            'last_name': 'Phalange', # Optional for first account registration
-            'email': 'kenadams@friends.tv', # Optional for first account registration
-            'upload_random_data': True, # Recommended for first account registration. Default: True
-            'credentials_manager': None, # Optional. Default: JsonFileCredentialsManager('config.json')
-            'session': None, # Optional. Default: new requests.Session()
-        }
+    :raises NotValidPhoneNumber: If the ``phone_number`` is not valid.
+    :raises ValueError: If both ``phone_number`` and ``access_token`` are not provided or if ``activation_code`` is not valid (6-digits).
+    :raises NewAccountException: If this is new account and ``new_account_details`` is not provided and ``raise_new_account_exception`` is ``True``.
+    :raises TypeError: If ``credentials_manager`` is not an instance of :py:obj:`~meapi.credentials_managers.CredentialsManager`.
+    :raises BlockedAccount: If the account is blocked (You need to contact Me support).
+    :raises IncorrectPwdToken: If the ``pwd_token`` provided by the credentials manager is broken (You need to re-login).
+    :raises PhoneNumberDoesntExists: If the ``phone_number`` does not exists (Probably not valid phone number).
+    :raises IncorrectActivationCode: If the ``activation_code`` is incorrect.
+    :raises ActivationCodeExpired: If the ``activation_code`` is correct but expired (Request a new one).
+    :raises BlockedMaxVerifyReached: If the ``phone_number`` reached the maximum number of call or sms verification attempts (you can still verify by WhatsApp or Telegram).
+    :raises BrokenCredentialsManager: If the ``credentials_manager`` not providing the expected data.
+    :raises FrozenInstance: If you try to change the value of an attribute.
     """
     def __init__(self,
                  phone_number: Union[int, str] = None,
@@ -162,6 +166,6 @@ class Me(MeModel, Auth, Account, Social, Settings, Notifications):
         Prevent attr changes after the init in protected data classes
         """
         if getattr(self, '_Me__init_done', None):
-            if key in ('phone_number', 'uuid', '_activation_code', '_account_details'):
-                raise MeException(f"You cannot modify this protected attr '{key}'!")
+            if key in ('phone_number', 'uuid', '_activation_code', '_new_account_details'):
+                raise FrozenInstance(self, key)
         return super().__setattr__(key, value)

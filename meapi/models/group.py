@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional, TYPE_CHECKING
 from meapi.models.user import User
-from meapi.utils.exceptions import MeException
+from meapi.utils.exceptions import FrozenInstance
 from meapi.utils.helpers import parse_date
 from meapi.models.me_model import MeModel, _logger
 if TYPE_CHECKING:  # always False at runtime.
@@ -121,8 +121,5 @@ class Group(MeModel):
     def __setattr__(self, key, value):
         if getattr(self, '_Group__init_done', None):
             if key != 'is_active':
-                raise MeException("You can't modify this protected attr!")
+                raise FrozenInstance(self, key)
         return super().__setattr__(key, value)
-
-    def __repr__(self):
-        return f"<Group name={self.name} count={self.count} is_active={self.is_active}>"

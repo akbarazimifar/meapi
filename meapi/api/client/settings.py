@@ -1,28 +1,29 @@
 from typing import Tuple
-from meapi.utils.exceptions import MeException
-from meapi.models import settings
+from meapi.models.settings import Settings
 from meapi.api.raw.settings import *
-from meapi.utils.validations import validate_schema_types
+from meapi.utils.validators import validate_schema_types
 if TYPE_CHECKING:  # always False at runtime.
     from meapi import Me
 
 
-class Settings:
+class SettingsMethods:
     """
     This class is not intended to create an instance's but only to be inherited by ``Me``.
     The separation is for order purposes only.
     """
     def __init__(self: 'Me'):
-        raise MeException("Settings class is not intended to create an instance's but only to be inherited by Me class.")
+        raise TypeError(
+            "Settings class is not intended to create an instance's but only to be inherited by Me class."
+        )
 
-    def get_settings(self: 'Me') -> settings.Settings:
+    def get_settings(self: 'Me') -> Settings:
         """
         Get current settings.
 
         :return: :py:class:`~meapi.models.settings.Settings` object.
         :rtype: :py:class:`~meapi.models.settings.Settings`
         """
-        return settings.Settings.new_from_dict(get_settings_raw(self), _client=self)
+        return Settings.new_from_dict(get_settings_raw(client=self), _client=self)
 
     def change_settings(self: 'Me',
                         mutual_contacts_available: bool = None,
@@ -39,7 +40,7 @@ class Settings:
                         comments_notification_enabled: bool = None,
                         names_notification_enabled: bool = None,
                         notifications_enabled: bool = None,
-                        ) -> Tuple[bool, settings.Settings]:
+                        ) -> Tuple[bool, Settings]:
         """
         Change social, app and notification settings.
 
@@ -76,6 +77,7 @@ class Settings:
         :type names_notification_enabled: ``bool``
         :param notifications_enabled: *Default:* ``None``.
         :type notifications_enabled: ``bool``
+        :raises TypeError: If you don't change any setting.
         :return: Tuple: Is success, :py:class:`~meapi.models.settings.Settings` object.
         :rtype: Tuple[``bool``, :py:class:`~meapi.models.settings.Settings`]
         """
@@ -84,10 +86,10 @@ class Settings:
         body = {setting: value for setting, value in args.items() if value is not None}
         validate_schema_types({setting: bool if setting != 'language' else str for setting in body.keys()}, body)
         if not body:
-            raise MeException("You need to change at least one setting!")
-        results = change_settings_raw(self, **body)
+            raise TypeError("You need to change at least one setting!")
+        results = change_settings_raw(client=self, **body)
         success = True
         for key, value in body.items():
             if results[key] != value:
                 success = False
-        return success, settings.Settings.new_from_dict(results, _client=self)
+        return success, Settings.new_from_dict(results, _client=self)

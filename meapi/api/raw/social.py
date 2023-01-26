@@ -1,9 +1,10 @@
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Dict, Union, Any
+
 if TYPE_CHECKING:  # always False at runtime.
     from meapi import Me
 
 
-def friendship_raw(client: 'Me', phone_number: int) -> dict:
+def friendship_raw(client: 'Me', phone_number: int) -> Dict[str, Any]:
     """
     Get friendship information between you and another number.
     like count mutual friends, total calls duration, how do you name each other, calls count, your watches, comments, and more.
@@ -34,7 +35,7 @@ def friendship_raw(client: 'Me', phone_number: int) -> dict:
     return client._make_request('get', f'/main/contacts/friendship/?phone_number={phone_number}')
 
 
-def report_spam_raw(client: 'Me', country_code: str, phone_number: str, spam_name: str) -> dict:
+def report_spam_raw(client: 'Me', country_code: str, phone_number: str, spam_name: str) -> Dict[str, bool]:
     """
     Report a number as spam.
 
@@ -741,7 +742,7 @@ def add_social_token_raw(client: 'Me', social_name: str, token: str) -> dict:
             "success": True
         }
     """
-    return client.self._make_request('post', f'/main/social/save-auth-token/', {'social_name': social_name, 'code_first': token})
+    return client._make_request('post', f'/main/social/save-auth-token/', {'social_name': social_name, 'code_first': token})
 
 
 def add_social_url_raw(client: 'Me', social_name: str, url: str) -> dict:
@@ -1025,3 +1026,17 @@ def locations_shared_with_me_raw(client: 'Me') -> dict:
         }
     """
     return client._make_request('get', '/main/users/profile/share-location/for-me/')
+
+
+def get_news_raw(client: 'Me', os_type: str) -> dict:
+    """
+    Get news.
+
+    :param client :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
+    :param os_type: OS type. Can be 'android' or 'ios'.
+    :type os_type: ``str``
+    :return: dict with news.
+    :rtype: ``dict``
+    """
+    return client._make_request('get', f'/main/settings/app-customizations?os={os_type}')

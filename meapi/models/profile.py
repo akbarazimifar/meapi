@@ -2,7 +2,7 @@ from copy import deepcopy
 from datetime import date
 from typing import List, TYPE_CHECKING, Optional
 from meapi.models.mutual_contact import MutualContact
-from meapi.utils.exceptions import MeException
+from meapi.utils.exceptions import FrozenInstance
 from meapi.utils.helpers import parse_date
 from meapi.models.comment import Comment
 from meapi.models.common import _CommonMethodsForUserContactProfile
@@ -313,7 +313,8 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
                                     'date_of_birth', 'location_name', 'device_type', 'login_type', 'facebook_url',
                                     'google_url', 'carrier')
                 if key not in modifiable_attrs:
-                    raise MeException(
+                    raise FrozenInstance(
+                        self, key,
                         f"You can not modify this attr!\nThe modifiable attrs are: {', '.join(modifiable_attrs)}")
                 success, new_profile = self.__client.update_profile_details(**{key: value})
                 if (success and str(getattr(new_profile, key, None)) == str(value)) or key == 'profile_picture':
@@ -324,10 +325,7 @@ class Profile(MeModel, _CommonMethodsForUserContactProfile):
                     if key == 'facebook_url' and value:
                         value = f"https://facebook.com/profile.php?id={value}"
                 else:
-                    raise MeException(f"Failed to change '{getattr(self, key)}' to '{value}'!")
+                    raise ValueError(f"Failed to change '{getattr(self, key)}' to '{value}'!")
             else:
-                raise MeException("You cannot update profile if it's not yours!")
+                raise FrozenInstance(self, key, "You cannot update profile if it's not yours!")
         super().__setattr__(key, value)
-
-    def __repr__(self):
-        return f"<Profile name={self.name} uuid={self.uuid}>"

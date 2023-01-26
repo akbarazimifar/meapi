@@ -16,7 +16,7 @@ class Watcher(MeModel):
         'Mike Hannigan'
         >>> watcher.count
         15
-        >>> me.publish_comment(uuid=watcher.user, your_comment="So, what are your intentions with my Phoebe?")
+        >>> me.publish_comment(uuid=watcher.user,your_comment="So, what are your intentions with my Phoebe?")
         <Comment id=321 status=waiting msg=o, what are your intentions with my Phoebe? author=Joey Tribbiani>
 
     Parameters:
@@ -40,6 +40,3 @@ class Watcher(MeModel):
         self.count = count
         self.is_search = is_search
         super().__init__()
-
-    def __repr__(self):
-        return f"<Watcher name={self.user.name} count={self.count}>"

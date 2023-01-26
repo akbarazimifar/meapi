@@ -1,4 +1,5 @@
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Optional
+
 if TYPE_CHECKING:  # always False at runtime.
     from meapi import Me
 
@@ -13,7 +14,12 @@ def unread_notifications_count_raw(client: 'Me') -> dict:
     return client._make_request('get', '/notification/notification/count/')
 
 
-def get_notifications_raw(client: 'Me', page_number: int, results_limit: int, categories: List[str] = None) -> dict:
+def get_notifications_raw(
+        client: 'Me',
+        page_number: int,
+        results_limit: int,
+        categories: Optional[List[str]] = None
+) -> dict:
     """
     Get notifications.
 

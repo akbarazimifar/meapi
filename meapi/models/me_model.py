@@ -3,7 +3,7 @@ import json
 from abc import ABCMeta
 from typing import TYPE_CHECKING
 from datetime import datetime, date
-from meapi.utils.exceptions import MeException
+from meapi.utils.exceptions import FrozenInstance
 from logging import getLogger
 if TYPE_CHECKING:  # always False at runtime.
     from meapi import Me
@@ -153,7 +153,7 @@ class MeModel(metaclass=_ParameterReader):
         Prevent attr changes after the init in protected data classes
         """
         if getattr(self, '_MeModel__init_done', None):
-            raise MeException(f"You cannot change protected attr '{key}' of '{self.__class__.__name__}'!")
+            raise FrozenInstance(self, key)
         return super().__setattr__(key, value)
 
     def __str__(self) -> str:

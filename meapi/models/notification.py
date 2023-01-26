@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 from meapi.models.me_model import MeModel
-from meapi.utils.exceptions import MeException
+from meapi.utils.exceptions import FrozenInstance
 from meapi.utils.helpers import parse_date
 if TYPE_CHECKING:  # always False at runtime.
     from meapi import Me
@@ -23,7 +23,7 @@ class Notification(MeModel):
         'Mike Hannigan'
         >>> notification.new_name
         'Princess Consuela Banana-Hammock'
-        >>> me.publish_comment(uuid=notification.uuid, your_comment="Hi *** bag!")
+        >>> me.publish_comment(uuid=notification.uuid,your_comment="Hi *** bag!")
         <Comment id=678 status=waiting msg=Hi *** bag! author=Phoebe Buffay>
 
 
@@ -95,11 +95,8 @@ class Notification(MeModel):
     def __setattr__(self, key, value):
         if getattr(self, '_Notification__init_done', None):
             if key != 'is_read':
-                raise MeException("You can't change this attr!")
+                raise FrozenInstance(self, key)
         return super().__setattr__(key, value)
-
-    def __repr__(self):
-        return f"<Notification category={self.category} id={self.id}>"
 
     def read(self) -> bool:
         """

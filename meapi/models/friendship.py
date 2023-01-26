@@ -69,6 +69,3 @@ class Friendship(MeModel):
         self.mutual_friends_count = mutual_friends_count
         self.my_comment = my_comment
         super().__init__()
-
-    def __repr__(self):
-        return f"<Friendship you={self.i_named} he/she={self.he_named}>"

@@ -1,7 +1,7 @@
 import copy
 from datetime import datetime
 from typing import List, Optional, TYPE_CHECKING
-from meapi.utils.exceptions import MeException
+from meapi.utils.exceptions import FrozenInstance
 from meapi.utils.helpers import parse_date
 from meapi.models.me_model import MeModel, _logger
 
@@ -74,6 +74,14 @@ class Social(MeModel):
         self.twitter: SocialMediaAccount = SocialMediaAccount.new_from_dict(twitter, _client=_client, _my_social=_my_social, name='twitter')
         super().__init__()
 
+    def __iter__(self):
+        return self.__next__()
+
+    def __next__(self):
+        for obj in self.__dict__.values():
+            if isinstance(obj, SocialMediaAccount):
+                yield obj
+
 
 class SocialMediaAccount(MeModel):
     """
@@ -136,11 +144,8 @@ class SocialMediaAccount(MeModel):
     def __setattr__(self, key, value):
         if getattr(self, '_SocialMediaAccount__init_done', None):
             if not self.__my_social:
-                raise MeException(f"You cannot change social of another user!")
+                raise FrozenInstance(self, key, "You cannot change social of another user!")
         return super().__setattr__(key, value)
-
-    def __repr__(self):
-        return f"<{self.name.capitalize()} profile_id={self.profile_id} is_active={self.is_active}>"
 
     def add(self, token_or_url: str) -> bool:
         """
@@ -267,6 +272,3 @@ class Post(MeModel):
         self.redirect_id = redirect_id
         self.owner = owner
         super().__init__()
-
-    def __repr__(self):
-        return f"<Post text={self.text_first} id={self.redirect_id}>"

@@ -1,4 +1,4 @@
-from typing import Union, TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional
 from meapi.models.common import _CommonMethodsForUserContactProfile
 from meapi.models.me_model import MeModel
 if TYPE_CHECKING:  # always False at runtime.
@@ -99,9 +99,3 @@ class User(MeModel, _CommonMethodsForUserContactProfile):
         Returns the full name of the user. ``first_name`` + ``last_name``.
         """
         return (self.first_name or '') + (' ' if self.first_name and self.last_name else '') + (self.last_name or '')
-
-    def __repr__(self):
-        return f"<User name={self.name} uuid={self.uuid}>"
-
-    def __str__(self):
-        return str(self.name)
