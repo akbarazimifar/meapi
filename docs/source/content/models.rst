@@ -95,3 +95,8 @@
 
 .. currentmodule:: meapi.models.mutual_contact
 .. autoclass:: MutualContact()
+
+
+.. currentmodule:: meapi.models.others
+.. autoclass:: NewAccountDetails()
+

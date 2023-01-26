@@ -5,10 +5,11 @@
 
 There are number of credentials managers that are already implemented in the project:
 
-- ``JsonFileCredentialsManager`` (Used by default) that stores the credentials in a json file (``config.json`` by default),
+- ``JsonCredentialsManager`` (Used by default) that stores the credentials in a json file (``meapi_credentials.json`` by default),
 - ``RedisCredentialsManager`` that stores the credentials in a redis database.
 - ``MemoryCredentialsManager`` that stores the credentials in memory.
 - ``FlaskSessionCredentialsManager`` that stores the credentials in a flask session.
+- ``DjangoSessionCredentialsManager`` that stores the credentials in a django session.
 
 
 * You are more than welcome to create your own credentials manager and open a pull request to add it to the project.

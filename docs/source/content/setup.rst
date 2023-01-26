@@ -49,23 +49,23 @@
 
 - You can also initialize the client with the necessary information in advance, good for cases of creating a new account:
 
+
 .. code-block:: python
 
     from meapi import Me
+    from meapi.models.others import NewAccountDetails
 
-    data = {
-        'phone_number': 972123456789, # Required always
-        'activation_code': '123456', # Required only for the first time
-        'first_name': 'Regina', # Required for first account registration
-        'last_name': 'Phalange', # Optional for first account registration
-        'email': 'kenadams@friends.tv', # Optional for first account registration
-        'upload_random_data': True, # Recommended for first account registration. Default: True
-        'credentials_manager': None, # Optional. Default: JsonFileCredentialsManager('config.json')
-        'session': None, # Optional. Default: new requests.Session()
-        'proxies': None, # Optional. Default: None
-    }
+    data = NewAccountDetails(
+        first_name="Phoebe
+        last_name="Buffay",
+        email="reginaphalange@friends.tv"
+    )
 
-    me = Me(account_details=data)
+    me = Me(
+        phone_number=972123456789,
+        activation_code='123456',
+        new_account_details=data
+    )
 
 **SMS or Call:**
 
@@ -85,20 +85,27 @@
 
 **Credentials:**
 
-- The default credentials manager is the JsonFileCredentialsManager, which saves the credentials in a json file (``config.json`` by default).
+- The default credentials manager is the ``JsonCredentialsManager``, which saves the credentials in a json file (``meapi_credentials.json`` by default).
 - You can implement your own credentials manager by implementing the CredentialsManager interface. See `Credentials Manager <https://meapi.readthedocs.io/en/latest/content/credentials_manager.html>`_.
-- If you choose to use in the default credentials manager, If no path to the config file is provided, the config file will be created in the location from which the library was called.
-- The config file ``config.json`` format is:
+- If you choose to use in the default credentials manager, the config file will be created in the location from which the library was called.
+- The config file ``meapi_credentials.json`` format is:
 
-.. literalinclude:: ../../../config.json.example
-  :language: JSON
+.. code-block:: json
 
-- You can copy/move this file between projects. Just specify the path to the config file when you initialize the Me class:
+    {
+        "972123456789": {
+            "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.XXXXX",
+            "pwd_token": "XXXXX-XXXXX-XXXXX-XXXXX-XXXXXXXXXXXX",
+            "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.XXXXX"
+        }
+    }
+
+- You can copy/move this file between projects. Just specify the path to the config file in when you initialize the Me class:
 
 .. code-block:: python
 
     from meapi import Me
-    me = Me(phone_number=123456789, config_file="/home/david/credentials/config.json")
+    me = Me(phone_number=123456789, JsonCredentialsManager(config_file="/home/david/meapi_credentials.json"))
 
 🔓 Official method
 ^^^^^^^^^^^^^^^^^^^

@@ -6,6 +6,10 @@
 `meapi <https://github.com/david-lev/meapi>`_: Unofficial api for 'Me - Caller ID & Spam Blocker'
 ##################################################################################################
 
+.. image:: https://github.com/david-lev/meapi/workflows/Tests/badge.svg
+    :alt: Tests
+    :target: https://github.com/david-lev/meapi/actions?query=workflow%3ATests
+
 .. image:: https://img.shields.io/pypi/dm/meapi?style=flat-square
     :alt: PyPI Downloads
     :target: https://pypi.org/project/meapi/
@@ -63,7 +67,7 @@ ________________________
 ^^^^^^^^^^^^^
 
 * 📞 Search phone numbers
-* 😎 Get user full profile: profile picture, birthday, location, platform, socials and more
+* 😎 Get full user profile: profile picture, birthday, location, platform, socials and more
 * 🚫 Spam indication and report
 
 🌐 Social:
@@ -96,12 +100,11 @@ ________________________
     from meapi import Me
 
     # Initialize the Client:
-    me = Me(phone_number=972123456789)
-    # If you have official access token:
-    # me = Me(access_token='XXXXXXXX')
+    me = Me(phone_number=972123456789) # Replace with your phone number
+    # me = Me(access_token='eyJ0eXAiOiJ') # If you have official access token
 
     # ☎ Get information about any phone number:
-    search_res = me.phone_search('+865-456-234-12')
+    search_res = me.phone_search('+972548776658')
     if search_res:
         print(search_res.name)
 
@@ -111,28 +114,39 @@ ________________________
         print(profile.email, profile.date_of_birth, profile.slogan)
 
         # 📱 Get social media accounts:
-        if profile.social.twitter.is_active:
-            print(profile.social.twitter.profile_id)
-            print(profile.social.twitter.posts)
+        for social in profile.social:
+            if social.is_active:
+                print(f"Social media ({social.name}): {social.profile_url}")
+                for post in social.posts:
+                    print(f"Post from {post.posted_at}:\n{post.text_first}\n{post.text_second}")
 
-    # 💬 Watch and manage your comments:
+
+    # 💬 Watch, approve and like comments:
     for comment in me.get_comments():
-        print(comment.message)
+        print(f"Comment from {comment.author.name} at {comment.created_at}: {comment.message}")
         if comment.status == 'waiting':
             comment.approve()
-            comment.like()
+        comment.like()
 
     # ✍️ Change your profile details:
     my_profile = me.get_my_profile()
     my_profile.first_name = 'David'
 
-    # 👁 who watched your profile:
-    for watcher in me.who_watched(incognito=True, sorted_by='last_view'):
-        print(watcher.user.name, watcher.count)
+    # 🎴 Get your profile in vCard format:
+    with open('~/Downloads/my_vcard.vcf', 'w') as f:
+        f.write(my_profile.as_vcard(dl_profile_picture=True))
 
     # 👥 See how people call you:
-    for group in me.get_groups():
-        print(group.name, group.count)
+    for group in me.get_groups(sorted_by='count'):
+        print(f"People named you {group.name} {group.count} times")
+
+    # 👁 who watched your profile:
+    for watcher in me.who_watched(incognito=True, sorted_by='last_view'):
+        print(f"The user {watcher.user.name} watched you {watcher.count} times")
+
+    # 🗑 who deleted you:
+    for deleted in me.who_deleted():
+        print(f"The user {deleted.user.name} deleted you at {deleted.created_at}")
 
     # ➕ And much much more...
 
@@ -152,6 +166,8 @@ See the `Documentation <https://meapi.readthedocs.io/>`_ for detailed instructio
 ------------------
 
 **This application is intended for educational purposes only. Any use in professional manner or to harm anyone or any organization doesn't relate to me and can be considered as illegal.
-Me name, its variations and the logo are registered trademarks of NFO LTD. I have nothing to do with the registered trademark.**
+Me name, its variations and the logo are registered trademarks of NFO LTD. I have nothing to do with the registered trademark.
+I'm also not responsible for blocked accounts or any other damage caused by the use of this library. it is always
+recommended to use virtual phone numbers for testing purposes.**
 
 .. end-readme
