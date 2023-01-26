@@ -1,12 +1,13 @@
-from typing import Union, Tuple
+from typing import Union, Tuple, List, TYPE_CHECKING
 from meapi.api.raw.notifications import *
 from meapi.models.notification import Notification
-from meapi.utils.exceptions import MeException
+
 if TYPE_CHECKING:  # always False at runtime.
     from meapi import Me
 
 notification_categories = {
-    'names': ['JOINED_ME', 'CONTACT_ADD', 'UPDATED_CONTACT', 'DELETED_CONTACT', 'NEW_NAME_REQUEST', 'NEW_NAME_REQUEST_APPROVED'],
+    'names': ['JOINED_ME', 'CONTACT_ADD', 'UPDATED_CONTACT', 'DELETED_CONTACT', 'NEW_NAME_REQUEST',
+              'NEW_NAME_REQUEST_APPROVED'],
     'system': ['NAME_SUGGESTION_UPDATED', 'SPAM_SUGGESTION_APPROVED', 'TURN_ON_MUTUAL', 'NONE'],
     'comments': ['NEW_COMMENT', 'PUBLISHED_COMMENT', 'TURN_ON_COMMENTS'],
     'who_watch': ['WEEKLY_VISITS'],
@@ -16,13 +17,16 @@ notification_categories = {
 }
 
 
-class Notifications:
+class NotificationsMethods:
     """
     This class is not intended to create an instance's but only to be inherited by ``Me``.
     The separation is for order purposes only.
     """
+
     def __init__(self: 'Me'):
-        raise MeException("Notifications class is not intended to create an instance's but only to be inherited by Me class.")
+        raise TypeError(
+            "Notifications class is not intended to create an instance's but only to be inherited by Me class."
+        )
 
     def unread_notifications_count(self: 'Me') -> int:
         """
@@ -31,7 +35,7 @@ class Notifications:
         :return: count of unread notifications.
         :rtype: ``int``
         """
-        return unread_notifications_count_raw(self)['count']
+        return unread_notifications_count_raw(client=self)['count']
 
     def get_notifications(self: 'Me',
                           page: int = 1,
@@ -43,7 +47,7 @@ class Notifications:
                           who_deleted_filter: bool = False,
                           birthday_filter: bool = False,
                           location_filter: bool = False
-                          ) -> Tuple[int, List[Notification]]:
+                          ) -> List[Notification]:
         """
         Get app notifications: new names, birthdays, comments, watches, deletes, location shares and system notifications.
 
@@ -65,18 +69,16 @@ class Notifications:
         :type birthday_filter: ``bool``
         :param location_filter: Shared locations: suggestions to turn on location, locations that shared with you. *Default:* ``False``.
         :type location_filter: ``bool``
-        :return: Tuple of count of notifications and list of :py:obj:`~meapi.models.notification.Notification` objects.
-        :rtype: Tuple[``int``, List[:py:obj:`~meapi.models.notification.Notification`]]
+        :return: List of :py:obj:`~meapi.models.notification.Notification` objects.
+        :rtype: List[:py:obj:`~meapi.models.notification.Notification`]
         """
         args = locals()
         filters = []
         for fil, val in args.items():
             if val and fil.endswith('filter'):
                 filters = [*filters, *notification_categories[fil.replace("_filter", "")]]
-        results = get_notifications_raw(self, page, limit, filters)
-
-        return results['count'], [Notification.new_from_dict(notification, _client=self,
-                                                             **notification.pop('context')) for notification in results['results']]
+        results = get_notifications_raw(client=self, page_number=page, results_limit=limit, categories=filters)
+        return [Notification.new_from_dict(notification, _client=self) for notification in results['results']]
 
     def read_notification(self: 'Me', notification_id: Union[int, str, Notification]) -> bool:
         """
@@ -89,4 +91,4 @@ class Notifications:
         """
         if isinstance(notification_id, Notification):
             notification_id = notification_id.id
-        return read_notification_raw(self, int(notification_id))['is_read']
+        return read_notification_raw(client=self, notification_id=int(notification_id))['is_read']
