@@ -6,9 +6,6 @@
 `meapi <https://github.com/david-lev/meapi>`_: Unofficial api for 'Me - Caller ID & Spam Blocker'
 ##################################################################################################
 
-.. image:: https://github.com/david-lev/meapi/workflows/Tests/badge.svg
-    :alt: Tests
-    :target: https://github.com/david-lev/meapi/actions?query=workflow%3ATests
 
 .. image:: https://img.shields.io/pypi/dm/meapi?style=flat-square
     :alt: PyPI Downloads
