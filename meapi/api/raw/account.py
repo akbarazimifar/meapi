@@ -1,4 +1,7 @@
 from typing import Union, List, TYPE_CHECKING
+
+from meapi.utils.randomator import grft
+
 if TYPE_CHECKING:  # always False at runtime.
     from meapi import Me
 
@@ -460,6 +463,62 @@ def remove_contacts_raw(client: 'Me', contacts: List[dict]) -> dict:
     return _contact_handler(client, to_add=False, contacts=contacts)
 
 
+def add_calls_raw(client: 'Me', calls: List[dict]) -> dict:
+    """
+    Add call to your calls log. See :py:func:`upload_random_data`.
+
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
+    :param calls: List of dicts with calls data.
+    :type calls: List[``dict``]
+    :return: dict with upload result.
+    :rtype: ``dict``
+
+    Example of list of calls to add::
+
+        [
+            {
+                "called_at": "2021-07-29T11:27:50Z",
+                "duration": 28,
+                "name": "043437535",
+                "phone_number": 43437535,
+                "tag": None,
+                "type": "missed",
+            }
+        ]
+    """
+    body = {"add": calls, "remove": []}
+    return client._make_request('post', '/main/call-log/change-sync/', body)
+
+
+def remove_calls_raw(client: 'Me', calls: List[dict]) -> dict:
+    """
+    Remove call from your calls log
+
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
+    :param calls: List of dicts with calls data.
+    :type calls: List[``dict``]
+    :return: dict with upload result.
+    :rtype: ``dict``
+
+    Example of list of calls to remove::
+
+        [
+            {
+                "called_at": "2021-07-29T11:27:50Z",
+                "duration": 28,
+                "name": "043437535",
+                "phone_number": 43437535,
+                "tag": None,
+                "type": "missed",
+            }
+        ]
+    """
+    body = {"add": [], "remove": calls}
+    return client._make_request('post', '/main/call-log/change-sync/', body)
+
+
 def block_profile_raw(client: 'Me', phone_number: int, block_contact: bool, me_full_block: bool) -> dict:
     """
     Block user profile.
@@ -613,3 +672,15 @@ def upload_image_raw(client: 'Me', binary_img: bytes) -> dict:
     """
     headers = {'user-agent': 'okhttp/4.9.1'}
     return client._make_request('post', '/media/file/upload/', files={'file': binary_img}, headers=headers)
+
+
+def update_fcm_token_raw(client: 'Me', fcm_token: str = None) -> dict:
+    """
+    Update FCM token.
+
+    :param client: :py:obj:`~meapi.Me` client object.
+    :type client: :py:obj:`~meapi.Me`
+    :param fcm_token: FCM token.
+    :type fcm_token: ``str``
+    """
+    return client._make_request('post', '/notification/users/firebase-token/', {'token': fcm_token or grft()})

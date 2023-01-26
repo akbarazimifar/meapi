@@ -1,10 +1,12 @@
+from typing import TYPE_CHECKING, Dict, Union
+
 from meapi.utils.helpers import HEADERS
-from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:  # always False at runtime.
     from meapi import Me
 
 
-def activate_account_raw(client: 'Me', phone_number: int, activation_code: str) -> dict:
+def activate_account_raw(client: 'Me', phone_number: int, activation_code: str) -> Dict[str, str]:
     """
     Activate your account with the activation code.
 
@@ -78,7 +80,7 @@ def ask_for_call_raw(client: 'Me', phone_number: str, session_token: str) -> dic
     return client._make_request(req_type='post', endpoint='/auth/authorization/verify/', headers=headers, body=body)
 
 
-def ask_for_sms_raw(client: 'Me', phone_number: str, session_token: str) -> dict:
+def ask_for_sms_raw(client: 'Me', phone_number: str, session_token: str) -> Dict[str, Union[str, bool]]:
     """
     Ask me to send you the activation code in SMS.
 

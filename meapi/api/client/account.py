@@ -1,48 +1,54 @@
-from re import match
 from datetime import datetime, date
-from typing import Tuple, List, Optional, TYPE_CHECKING
-from meapi.api.raw.account import *
-from meapi.utils.validations import validate_contacts, validate_calls, validate_phone_number, validate_schema_types, \
-    validate_uuid
-from meapi.utils.exceptions import MeApiException, MeException, MeApiError
-from meapi.utils.helpers import generate_random_data, _register_new_account, _upload_picture
-from meapi.models import contact, profile, call, blocked_number, user
 from logging import getLogger
+from re import match
+from typing import Tuple, List, Optional, Union, TYPE_CHECKING, Dict
+from meapi.api.raw.account import *
+from meapi.models.contact import Contact
+from meapi.models.profile import Profile
+from meapi.models.call import Call
+from meapi.models.blocked_number import BlockedNumber
+from meapi.models.user import User
+from meapi.utils.exceptions import MeApiException, ProfileViewPassedLimit, BlockedAccount
+from meapi.utils.helpers import upload_picture
+from meapi.utils.randomator import generate_random_data
+from meapi.utils.validators import validate_phone_number, validate_schema_types, \
+    validate_uuid
+
 if TYPE_CHECKING:  # always False at runtime.
     from meapi import Me
 
 _logger = getLogger(__name__)
 
 
-class Account:
+class AccountMethods:
     """
     This class is not intended to create an instance's but only to be inherited by ``Me``.
     The separation is for order purposes only.
     """
     def __init__(self: 'Me'):
-        raise MeException("Account class is not intended to create an instance's but only to be inherited by Me class.")
+        raise TypeError(
+            "Account class is not intended to create an instance's but only to be inherited by Me class."
+        )
 
-    def phone_search(self: 'Me', phone_number: Union[str, int]) -> Optional[contact.Contact]:
+    def phone_search(self: 'Me', phone_number: Union[str, int]) -> Optional[Contact]:
         """
         Get information on any phone number.
 
         :param phone_number: International phone number format.
         :type phone_number: ``str`` | ``int``
-        :raises MeApiException: msg: ``api_search_passed_limit`` if you passed the limit (About ``350`` per day in the unofficial auth method).
+        :raises SearchPassedLimit: if you passed the limit (About ``350`` per day in the unofficial auth method).
         :return: :py:obj:`~meapi.models.contact.Contact` object or ``None`` if no user exists on the provided phone number.
         :rtype: :py:obj:`~meapi.models.contact.Contact` | ``None``
         """
         try:
-            response = phone_search_raw(self, validate_phone_number(phone_number))
+            response = phone_search_raw(client=self, phone_number=validate_phone_number(phone_number))
         except MeApiException as err:
-            if err.http_status == 404 and err.msg == 'Not found.':
+            if err.http_status == 404:
                 return None
-            elif err.msg == MeApiError.search_passed_limit:
-                err.reason = 'You passed the phone searches limit (About 350 per day in the unofficial auth method).'
             raise err
-        return contact.Contact.new_from_dict(response['contact'], _client=self)
+        return Contact.new_from_dict(response['contact'], _client=self)
 
-    def get_profile(self: 'Me', uuid: Union[str, contact.Contact, user.User]) -> profile.Profile:
+    def get_profile(self: 'Me', uuid: Union[str, Contact, User]) -> Profile:
         """
         Get user's profile.
 
@@ -52,19 +58,15 @@ class Account:
 
         :param uuid: The user's UUID as ``str`` or :py:obj:`~meapi.models.contact.Contact` or :py:obj:`~meapi.models.user.User` objects.
         :type uuid: ``str`` | :py:obj:`~meapi.models.contact.Contact` | :py:obj:`~meapi.models.user.User`
-        :raises MeApiException: msg: ``api_profile_view_passed_limit`` if you passed the limit (About ``500`` per day in the unofficial auth method).
+        :raises ProfileViewPassedLimit:  if you passed the limit (About ``500`` per day in the unofficial auth method).
         :return: :py:obj:`~meapi.models.profile.Profile` object.
         :rtype: :py:obj:`~meapi.models.profile.Profile`
         """
-        if isinstance(uuid, contact.Contact):
-            if getattr(uuid, 'user', None):
-                uuid = uuid.user.uuid
-        if isinstance(uuid, user.User):
-            uuid = uuid.uuid
+        uuid = self._extract_uuid_from_obj(uuid)
         try:
-            res = get_profile_raw(self, validate_uuid(str(uuid)))
+            res = get_profile_raw(client=self, uuid=validate_uuid(str(uuid)))
         except MeApiException as err:
-            if err.msg == MeApiError.profile_view_passed_limit:
+            if isinstance(err, ProfileViewPassedLimit):
                 if uuid == self.uuid:
                     _logger.warning('You passed the profile view limit '
                                     '(About 500 per day in the unofficial auth method). You got the limited profile.')
@@ -73,9 +75,9 @@ class Account:
             raise err
         if uuid == self.uuid:
             res['_my_profile'] = True
-        return profile.Profile.new_from_dict(res, _client=self, **res.pop('profile'))
+        return Profile.new_from_dict(res, _client=self, **res.pop('profile'))
 
-    def get_my_profile(self: 'Me', only_limited_data: bool = False) -> profile.Profile:
+    def get_my_profile(self: 'Me', only_limited_data: bool = False) -> Profile:
         """
         Get your profile information.
 
@@ -85,14 +87,14 @@ class Account:
         :rtype: :py:obj:`~meapi.models.profile.Profile`
         """
         if self.uuid and not only_limited_data:
-            res = get_profile_raw(self, self.uuid)
+            res = get_profile_raw(client=self, uuid=self.uuid)
         else:
-            res = get_my_profile_raw(self)
+            res = get_my_profile_raw(client=self)
         try:
             extra = res.pop('profile')
         except KeyError:
             extra = {}
-        return profile.Profile.new_from_dict(_client=self, data=res, _my_profile=True, **extra)
+        return Profile.new_from_dict(_client=self, data=res, _my_profile=True, **extra)
 
     def get_uuid(self: 'Me', phone_number: Union[int, str] = None) -> Optional[str]:
         """
@@ -108,13 +110,7 @@ class Account:
             if res and getattr(res, 'user', None):
                 return validate_uuid(res.user.uuid)
             return None
-        try:  # self uuid
-            return get_my_profile_raw(self)['uuid']
-        except MeApiException as err:
-            if err.http_status == 401:  # on login, if no active account on this number you need to register
-                return _register_new_account(self)
-            else:
-                raise err
+        return get_my_profile_raw(client=self)['uuid']
 
     def update_profile_details(self: 'Me',
                                first_name: Optional[str] = False,
@@ -128,17 +124,17 @@ class Account:
                                carrier: Optional[str] = False,
                                device_type: Optional[str] = False,
                                login_type: Optional[str] = False,
-                               facebook_url: Union[str, int] = False,
+                               facebook_url: Optional[Union[str, int]] = False,
                                google_url: Optional[Union[str, int]] = False,
-                               ) -> Tuple[bool, profile.Profile]:
+                               ) -> Tuple[bool, Profile]:
         """
         Update your profile details.
             - The default of the parameters is ``False``. if you leave it ``False``, the parameter will not be updated.
 
         Examples:
-            >>> update_profile_details(first_name='Chandler', last_name='Bing', date_of_birth='1968-04-08')
+            >>> me.update_profile_details(first_name='Chandler', last_name='Bing', date_of_birth='1968-04-08')
             >>> new_details = {'location_name': 'New York', 'gender': 'M'}
-            >>> update_profile_details(**new_details)  # dict unpacking
+            >>> me.update_profile_details(**new_details)  # dict unpacking
 
         :param first_name: First name.
         :type first_name: ``str`` | ``None``
@@ -168,15 +164,17 @@ class Account:
 
         :return: Tuple of: Is update success, new :py:obj:`~meapi.models.profile.Profile` object.
         :rtype: Tuple[``bool``, :py:obj:`~meapi.models.profile.Profile`]
+        :raises ValueError: If one of the parameters is not valid.
         """
         args = locals()
         del args['self']
         for key, value in args.items():
             if value is not False:
                 if key == 'device_type':
-                    device_types = ['android', 'ios', None]
-                    if value not in device_types:
-                        raise MeException(f"Device type not in the available device types ({', '.join(device_types)})!")
+                    device_types = ['android', 'ios']
+                    if value not in device_types and value is not None:
+                        raise ValueError(f"Device type not in the available device types "
+                                         f"({', '.join(device_types)}, None)!")
                 if key == 'date_of_birth' and value is not None:
                     date_str = str(value)
                     if ' ' in date_str:  # datetime obj
@@ -184,42 +182,43 @@ class Account:
                     try:
                         datetime.strptime(date_str, '%Y-%M-%d')
                     except ValueError:
-                        raise MeException(f"Birthday must be in YYYY-MM-DD format! {value}")
+                        raise ValueError(f"Birthday must be in YYYY-MM-DD format! {value}")
                     args[key] = date_str
                 elif key in ['facebook_url', 'google_url'] and value is not None and not match(r'^\d+$', str(value)):
-                    raise MeException(f"{key} must be numbers!")
+                    raise ValueError(f"{key} must be numbers!")
                 elif key == 'profile_picture':
                     if value is not None:
                         if not isinstance(value, str):
-                            raise MeException("profile_picture_url must be a url or path to a file!")
-                        args[key] = str(_upload_picture(self, **{'image': value}))
+                            raise ValueError("profile_picture_url must be a url or path to a file!")
+                        args[key] = str(upload_picture(self, **{'image': value}))
                 elif key == 'gender':
                     if value not in ['M', 'm', 'F', 'f', None]:
-                        raise MeException("Gender must be: 'F' for Female, 'M' for Male, and 'None' for null.")
-                    if value:
-                        args[key] = str(value).upper()
+                        raise ValueError("Gender must be: 'F' for Female, 'M' for Male, and 'None' for null.")
+                    args[key] = str(value).upper() if value is not None else None
                 elif key in ['first_name', 'last_name', 'slogan', 'location_name'] and type(value) not in [str, None]:
-                    raise MeException(f"{key} value must be a string or None!")
+                    raise ValueError(f"{key} value must be a string or None!")
                 elif key == 'email':
-                    if value is not None and not match(r'^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$', str(value)):
-                        raise MeException("Email must be in user@domain.com format!")
+                    if value is not None and not match(r'^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*'
+                                                       r')|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.'
+                                                       r',;:\s@\"]{2,})$', str(value)):
+                        raise ValueError("Email must be in user@domain.com format!")
                 elif key == 'login_type':
                     login_types = ['email', 'apple', None]
                     if value not in login_types:
-                        raise MeException(f"{key} not in the available login types ({', '.join(login_types)})!")
+                        raise ValueError(f"{key} not in the available login types ({', '.join(login_types)})!")
 
         body = {key: val for key, val in args.items() if val is not False}
         try:
-            res = update_profile_details_raw(self, **body)
+            res = update_profile_details_raw(client=self, **body)
         except MeApiException as err:
             if err.http_status == 401 and err.msg == 'User is blocked for patch':
-                err.reason = "Locks like your account is blocked!"
+                raise BlockedAccount(err.http_status, err.msg)
             raise err
         successes = 0
         for key in body.keys():
             if res[key] == body[key]:
                 successes += 1
-        return bool(successes == len(body.keys())), profile.Profile.new_from_dict(res, _client=self, _my_profile=True)
+        return bool(successes == len(body.keys())), Profile.new_from_dict(res, _client=self, _my_profile=True)
 
     def delete_account(self: 'Me', yes_im_sure: bool = False) -> bool:
         """
@@ -234,7 +233,7 @@ class Account:
             print("Are you sure you want to delete your account? (y/n)")
             if input().lower() != 'y':
                 return False
-        if delete_account_raw(self) == {}:
+        if delete_account_raw(client=self) == {}:
             self._logout()
             return True
         return False
@@ -252,12 +251,12 @@ class Account:
             print("Are you sure you want to suspend your account? (y/n)")
             if input().lower() != 'y':
                 return False
-        if suspend_account_raw(self)['contact_suspended']:
+        if suspend_account_raw(client=self)['contact_suspended']:
             self._logout()
             return True
         return False
 
-    def add_contacts(self: 'Me', contacts: List[dict]) -> dict:
+    def add_contacts(self: 'Me', contacts: List[Dict[str, Union[str, int, None]]]) -> dict:
         """
         Upload new contacts to your Me account. See :py:func:`upload_random_data`.
 
@@ -277,9 +276,9 @@ class Account:
                 }
             ]
         """
-        return add_contacts_raw(self, validate_contacts(contacts))
+        return add_contacts_raw(client=self, contacts=contacts)
 
-    def remove_contacts(self: 'Me', contacts: List[dict]) -> dict:
+    def remove_contacts(self: 'Me', contacts: List[Dict[str, Union[str, int, None]]]) -> dict:
         """
         Remove contacts from your Me account.
 
@@ -287,10 +286,21 @@ class Account:
         :type contacts: List[``dict``]
         :return: Dict with upload results.
         :rtype: ``dict``
-        """
-        return remove_contacts_raw(self, validate_contacts(contacts))
 
-    def get_saved_contacts(self: 'Me') -> List[user.User]:
+        Example of list of contacts to remove::
+
+            [
+                {
+                    "country_code": "XX",
+                    "date_of_birth": None,
+                    "name": "Chandler",
+                    "phone_number": 512145887,
+                }
+            ]
+        """
+        return remove_contacts_raw(client=self, contacts=contacts)
+
+    def get_saved_contacts(self: 'Me') -> List[User]:
         """
         Get all the contacts stored in your contacts (Which has an Me account).
 
@@ -299,7 +309,7 @@ class Account:
         """
         return [usr for grp in self.get_groups() for usr in grp.contacts if usr.in_contact_list]
 
-    def get_unsaved_contacts(self: 'Me') -> List[user.User]:
+    def get_unsaved_contacts(self: 'Me') -> List[User]:
         """
         Get all the contacts that not stored in your contacts (Which has an Me account).
 
@@ -308,7 +318,7 @@ class Account:
         """
         return [usr for grp in self.get_groups() for usr in grp.contacts if not usr.in_contact_list]
 
-    def add_calls_to_log(self: 'Me', calls: List[dict]) -> List[call.Call]:
+    def add_calls_to_log(self: 'Me', calls: List[Dict[str, Union[str, int, None]]]) -> List[Call]:
         """
         Add call to your calls log. See :py:func:`upload_random_data`.
 
@@ -330,11 +340,10 @@ class Account:
                 }
             ]
         """
-        body = {"add": validate_calls(calls), "remove": []}
-        r = self._make_request('post', '/main/call-log/change-sync/', body)
-        return [call.Call.new_from_dict(cal) for cal in r['added_list']]
+        r = add_calls_raw(client=self, calls=calls)
+        return [Call.new_from_dict(cal) for cal in r['added_list']]
 
-    def remove_calls_from_log(self: 'Me', calls: List[dict]) -> List[call.Call]:
+    def remove_calls_from_log(self: 'Me', calls: List[Dict[str, Union[str, int, None]]]) -> List[Call]:
         """
         Remove calls from your calls log.
 
@@ -356,10 +365,9 @@ class Account:
                 }
             ]
         """
-        body = {"add": [], "remove": validate_calls(calls)}
-        return [call.Call.new_from_dict(cal) for cal in self._make_request('post', '/main/call-log/change-sync/', body)]
+        return [Call.new_from_dict(cal) for cal in remove_calls_raw(client=self, calls=calls)['removed_list']]
 
-    def block_profile(self: 'Me', phone_number: Union[str, int], block_contact=True, me_full_block=True) -> blocked_number.BlockedNumber:
+    def block_profile(self: 'Me', phone_number: Union[str, int], block_contact=True, me_full_block=True) -> BlockedNumber:
         """
         Block user profile.
 
@@ -376,7 +384,7 @@ class Account:
         validate_schema_types({'phone_number': int, 'block_contact': bool, 'me_full_block': bool}, body)
         res = block_profile_raw(client=self, **body)
         if res['success']:
-            return blocked_number.BlockedNumber.new_from_dict(body, _client=self)
+            return BlockedNumber.new_from_dict(body, _client=self)
 
     def unblock_profile(self: 'Me', phone_number: int, unblock_contact=True, me_full_unblock=True) -> bool:
         """
@@ -410,7 +418,8 @@ class Account:
         if isinstance(numbers, (int, str)):
             numbers = [numbers]
         body = {'numbers': [validate_phone_number(number) for number in numbers]}
-        return bool([phone['phone_number'] for phone in block_numbers_raw(self, **body)].sort() == numbers.sort())
+        return bool([phone['phone_number'] for phone in
+                     block_numbers_raw(client=self, **body)].sort() == numbers.sort())
 
     def unblock_numbers(self: 'Me', numbers: Union[int, List[int]]) -> bool:
         """
@@ -424,35 +433,37 @@ class Account:
         if isinstance(numbers, (int, str)):
             numbers = [numbers]
         body = {'numbers': [validate_phone_number(number) for number in numbers]}
-        return unblock_numbers_raw(self, **body)['success']
+        return unblock_numbers_raw(client=self, **body)['success']
 
-    def get_blocked_numbers(self: 'Me') -> List[blocked_number.BlockedNumber]:
+    def get_blocked_numbers(self: 'Me') -> List[BlockedNumber]:
         """
         Get list of your blocked numbers. See :py:func:`unblock_numbers`.
 
         :return: List of :py:class:`blocked_number.BlockedNumber` objects.
         :rtype: List[:py:obj:`~meapi.models.blocked_number.BlockedNumber`]
         """
-        return [blocked_number.BlockedNumber.new_from_dict(blocked) for blocked in get_blocked_numbers_raw(self)]
+        return [BlockedNumber.new_from_dict(blocked) for blocked in get_blocked_numbers_raw(client=self)]
 
-    def upload_random_data(self: 'Me', contacts=True, calls=True, location=True) -> bool:
+    def upload_random_data(self: 'Me', count: int = 50, contacts=False, calls=False, location=False) -> bool:
         """
         Upload random data to your account.
 
-        :param contacts: To upload random contacts data. Default: ``True``.
+        :param count: Count of random data to upload. Default: ``50``.
+        :type count: ``int``
+        :param contacts: To upload random contacts data. Default: ``False``.
         :type contacts: ``bool``
-        :param calls: To upload random calls data. Default: ``True``.
+        :param calls: To upload random calls data. Default: ``False``.
         :type calls: ``bool``
-        :param location: To upload random location data. Default: ``True``.
+        :param location: To upload random location data. Default: ``False``.
         :type location: ``bool``
         :return: Is uploading success.
         :rtype: ``bool``
         """
-        random_data = generate_random_data(contacts, calls, location)
+        random_data = generate_random_data(count=count, contacts=contacts, calls=calls, location=location)
         if contacts:
-            self.add_contacts(random_data['contacts'])
+            self.add_contacts([c.as_dict() for c in random_data.contacts])
         if calls:
-            self.add_calls_to_log(random_data['calls'])
+            self.add_calls_to_log([c.as_dict() for c in random_data.calls])
         if location:
-            self.update_location(random_data['location']['lat'], random_data['location']['lon'])
+            self.update_location(random_data.location.location_latitude, random_data.location.location_longitude)
         return True
