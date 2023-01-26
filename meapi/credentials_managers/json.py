@@ -1,60 +1,94 @@
 import json
 import os
 from json import JSONDecodeError
-from typing import Optional
-from meapi.credentials_managers.credentials_manager import CredentialsManager
+from typing import Optional, Dict
+from meapi.credentials_managers import CredentialsManager
 
 
-class JsonFileCredentialsManager(CredentialsManager):
+class JsonCredentialsManager(CredentialsManager):
     """
-    Json File Credentials Manager
-        - This class is used to store the credentials in a json file.
+    Json Credentials Manager
+        - This class is used to store the credentials in a json file/s.
 
     Parameters:
-        - config_file: (``str``) The config json file path. *Default:* 'config.json'.
-    """
-    def __init__(self, config_file: str = 'config.json'):
-        super().__init__()
-        if str(config_file).endswith(".json"):
-            self.config_file = config_file
-        else:
-            raise ValueError("config_file must be a json file")
+        - config_file: (``str``) The config json file path. *Default:* 'meapi_credentials.json'.
+        - separate_files: (``bool``) If True, each phone number will have its own file: 'credentials_dir/phone_number.json'. *Default:* ``False``.
+        - directory: (``str``) The directory where the credentials files will be stored. *Default:* ``meapi_credentials``.
 
-    def _read_or_create(self):
-        if os.path.exists(self.config_file):
-            with open(self.config_file, "r") as config_file:
+    Raises:
+        - FileExistsError: If the config file is not a valid json file.
+    """
+    def __init__(
+        self,
+        config_file: str = 'meapi_credentials.json',
+        separate_files: bool = False,
+        directory: str = 'meapi_credentials'
+    ):
+        super().__init__()
+        self.config_file = config_file
+        self._mode = 'single' if not separate_files else 'directory'
+        self.directory = directory
+        if self._mode == 'directory':
+            try:
+                os.mkdir(self.directory)
+            except FileExistsError:
+                pass
+        if self._mode == 'single':
+            if not os.path.exists(self.config_file):
+                with open(self.config_file, "w") as new_config_file:
+                    new_config_file.write('{}')
+            else:
                 try:
-                    existing_content = json.load(config_file)
+                    with open(self.config_file, "r") as config_file:
+                        json.load(config_file)
                 except JSONDecodeError:
                     raise FileExistsError("Not a valid json file: " + self.config_file)
-        else:
-            with open(self.config_file, "w") as new_config_file:
-                new_config_file.write('{}')
-                existing_content = {}
-        return existing_content
 
-    def get(self, phone_number: str) -> Optional[dict]:
-        existing_content = self._read_or_create()
-        if not existing_content.get(str(phone_number)):
-            return None
+    def get(self, phone_number: str) -> Optional[Dict[str, str]]:
+        if self._mode == 'single':
+            with open(self.config_file, "r") as config_file:
+                try:
+                    return json.load(config_file)[str(phone_number)]
+                except KeyError:
+                    return None
         else:
-            return existing_content[str(phone_number)]
+            try:
+                with open(os.path.join(self.directory, phone_number + '.json'), "r") as config_file:
+                    return json.load(config_file)
+            except FileNotFoundError:
+                return None
 
-    def set(self, phone_number: str, data: dict):
-        existing_content = self._read_or_create()
-        existing_content[str(phone_number)] = data
-        with open(self.config_file, "w") as config_file:
-            json.dump(existing_content, config_file, indent=4, sort_keys=True)
+    def set(self, phone_number: str, data: Dict[str, str]):
+        if self._mode == 'single':
+            with open(self.config_file, "r") as config_file:
+                existing_content = json.load(config_file)
+            existing_content[phone_number] = data
+            with open(self.config_file, "w") as config_file:
+                json.dump(existing_content, config_file, indent=4)
+        else:
+            with open(os.path.join(self.directory, phone_number + '.json'), "w") as config_file:
+                json.dump(data, config_file, indent=4)
 
     def update(self, phone_number: str, access_token: str):
-        existing_content = self._read_or_create()
-        existing_content[str(phone_number)]['access'] = access_token
-        with open(self.config_file, "w") as config_file:
-            json.dump(existing_content, config_file, indent=4, sort_keys=True)
+        if self._mode == 'single':
+            with open(self.config_file, "r") as config_file:
+                existing_content = json.load(config_file)
+            existing_content[phone_number]['access'] = access_token
+            with open(self.config_file, "w") as config_file:
+                json.dump(existing_content, config_file, indent=4)
+        else:
+            with open(os.path.join(self.directory, phone_number + '.json'), "r") as config_file:
+                existing_content = json.load(config_file)
+            existing_content['access'] = access_token
+            with open(os.path.join(self.directory, phone_number + '.json'), "w") as config_file:
+                json.dump(existing_content, config_file, indent=4)
 
     def delete(self, phone_number: str):
-        existing_content = self._read_or_create()
-        if existing_content.get(str(phone_number)):
-            del existing_content[str(phone_number)]
+        if self._mode == 'single':
+            with open(self.config_file, "r") as config_file:
+                existing_content = json.load(config_file)
+            del existing_content[phone_number]
             with open(self.config_file, "w") as config_file:
-                json.dump(existing_content, config_file, indent=4, sort_keys=True)
+                json.dump(existing_content, config_file, indent=4)
+        else:
+            os.remove(os.path.join(self.directory, phone_number + '.json'))

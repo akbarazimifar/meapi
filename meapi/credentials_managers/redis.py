@@ -1,6 +1,6 @@
 import json
-from typing import Optional
-from meapi.credentials_managers.credentials_manager import CredentialsManager
+from typing import Optional, Dict
+from meapi.credentials_managers import CredentialsManager
 
 
 class RedisCredentialsManager(CredentialsManager):
@@ -15,13 +15,13 @@ class RedisCredentialsManager(CredentialsManager):
         super().__init__()
         self.redis = redis
 
-    def get(self, phone_number: str) -> Optional[dict]:
+    def get(self, phone_number: str) -> Optional[Dict[str, str]]:
         data = self.redis.get(str(phone_number))
         if data:
             return json.loads(data)
         return None
 
-    def set(self, phone_number: str, data: dict):
+    def set(self, phone_number: str, data: Dict[str, str]):
         self.redis.set(str(phone_number), json.dumps(data))
 
     def update(self, phone_number: str, access_token: str):

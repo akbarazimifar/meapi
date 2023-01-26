@@ -1,5 +1,5 @@
-from typing import Optional
-from meapi.credentials_managers.credentials_manager import CredentialsManager
+from typing import Optional, Dict
+from meapi.credentials_managers import CredentialsManager
 
 
 class MemoryCredentialsManager(CredentialsManager):
@@ -10,10 +10,10 @@ class MemoryCredentialsManager(CredentialsManager):
     def __init__(self):
         self.credentials = {}
 
-    def get(self, phone_number: str) -> Optional[dict]:
+    def get(self, phone_number: str) -> Optional[Dict[str, str]]:
         return self.credentials.get(str(phone_number))
 
-    def set(self, phone_number: str, data: dict):
+    def set(self, phone_number: str, data: Dict[str, str]):
         self.credentials[str(phone_number)] = data
 
     def update(self, phone_number: str, access_token: str):
