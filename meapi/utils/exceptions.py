@@ -165,6 +165,17 @@ class UnfinishedRegistration(MeApiException):
     pass
 
 
+class ForbiddenRequest(MeApiException):
+    """
+    Raise this exception when the request is forbidden.
+        - Happens in official authentication method when the access token is expired.
+    """
+    def __init__(self, http_status: int, msg: str, reason: Optional[str] = None):
+        self.http_status = http_status
+        self.msg = msg
+        self.reason = reason or "The access token is expired!"
+
+
 class MeApiError(Enum):
     """
     Enum class for all api errors.

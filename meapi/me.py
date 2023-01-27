@@ -95,8 +95,12 @@ class Me(MeModel, AuthMethods, AccountMethods, SocialMethods, SettingsMethods, N
         # check for the presence of the phone number or access token
         if not access_token and not phone_number:
             raise ValueError("You need to provide phone number or access token!")
-        if access_token and phone_number:
-            _logger.warning("access_token mode does not accept phone number, ignoring it!")
+        elif access_token and phone_number:
+            raise ValueError("You can't provide both phone number and access token!")
+        elif access_token and not phone_number:
+            self.phone_number = None
+        elif phone_number and not access_token:
+            self.phone_number = validate_phone_number(phone_number)
 
         # check for the presence valid credentials manager, else use default (JsonCredentialsManager)
         if credentials_manager is None:
@@ -107,7 +111,6 @@ class Me(MeModel, AuthMethods, AccountMethods, SocialMethods, SettingsMethods, N
             raise TypeError("credentials_manager must be an instance of CredentialsManager!")
 
         # set the rest of the attributes
-        self.phone_number = validate_phone_number(phone_number) if (phone_number and not access_token) else phone_number
         self.uuid = None
         self._session = session or requests.Session()  # create new session if not provided
         self._auth_data = None if not access_token else AuthData(access=access_token, refresh=access_token)

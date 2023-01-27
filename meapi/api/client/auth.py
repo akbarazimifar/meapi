@@ -12,8 +12,8 @@ from meapi.api.raw.notifications import unread_notifications_count_raw
 from meapi.api.raw.settings import get_settings_raw, change_settings_raw
 from meapi.api.raw.social import numbers_count_raw, get_news_raw
 from meapi.models.others import AuthData, NewAccountDetails
-from meapi.utils.exceptions import MeException, MeApiException, MeApiError, BlockedMaxVerifyReached, IncorrectPwdToken,\
-    BrokenCredentialsManager, BlockedAccount, NewAccountException
+from meapi.utils.exceptions import MeException, MeApiException, MeApiError, BlockedMaxVerifyReached, IncorrectPwdToken, \
+    BrokenCredentialsManager, BlockedAccount, NewAccountException, ForbiddenRequest
 from meapi.utils.helpers import generate_session_token, ANDROID_VERSION_NAME, ANDROID_VERSION_CODE, HEADERS
 from meapi.utils.randomator import get_random_carrier, get_random_country_code, get_random_adv_id, generate_random_data
 if TYPE_CHECKING:  # always False at runtime.
@@ -331,10 +331,12 @@ class AuthMethods:
             except JSONDecodeError:
                 raise ValueError(f"The response (Status code: {response.status_code}) "
                                  f"received does not contain a valid JSON:\n" + str(response.text))
-            if response.status_code == 403 and self.phone_number:
-                if self._generate_access_token():
-                    continue
-                raise MeException("Cannot generate new access token!")
+            if response.status_code == 403:
+                if self.phone_number:
+                    if self._generate_access_token():
+                        continue
+                else:  # official authentication method, no pwd_token to generate access token
+                    raise ForbiddenRequest(http_status=response.status_code, msg=str(response_text.get('detail')))
 
             if response.status_code >= 400:
                 try:
