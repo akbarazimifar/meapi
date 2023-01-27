@@ -41,6 +41,8 @@ Here is an example:
 
 .. currentmodule:: meapi.utils.exceptions
 
+====================================================================================================
+
 This are the exceptions that may be raised by the API:
 
 .. autoclass:: MeApiException
@@ -58,6 +60,9 @@ This are the exceptions that may be raised by the API:
 .. autoclass:: CommentAlreadyApproved
 .. autoclass:: CommentAlreadyIgnored
 .. autoclass:: BlockedAccount
+.. autoclass:: ForbiddenRequest
+
+====================================================================================================
 
 This are the exceptions that may be raised by the library:
 
