@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 from meapi.models.me_model import MeModel
@@ -12,8 +11,7 @@ class AuthData(MeModel):
         super().__init__()
 
 
-@dataclass
-class NewAccountDetails:
+class NewAccountDetails(MeModel):
     """
     Account details for new account registration.
 
@@ -24,9 +22,11 @@ class NewAccountDetails:
     :param email: Email to use. *Default:* ``None``.
     :type email: ``str`` | ``None``
     """
-    first_name: str
-    last_name: str = None
-    email: str = None
+    def __init__(self, first_name: str, last_name: Optional[str] = None, email: Optional[str] = None):
+        self.first_name = first_name
+        self.last_name = last_name
+        self.email = email
+        super().__init__()
 
 
 class CallType(Enum):

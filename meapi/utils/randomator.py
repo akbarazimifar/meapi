@@ -2,9 +2,7 @@ import re
 import random
 import time
 from datetime import date, datetime
-
 import requests
-from dataclasses import dataclass, field
 from typing import List
 from meapi.models.others import Contact, Call, Location, CallType
 from meapi.utils.exceptions import NotValidPhoneNumber
@@ -13,11 +11,15 @@ from meapi.utils.validators import validate_phone_number
 RANDOM_API = "https://randommer.io"
 
 
-@dataclass
 class RandomData:
-    contacts: List[Contact] = field(default_factory=list)
-    calls: List[Call] = field(default_factory=list)
-    location: Location = None
+    def __init__(self,
+                 contacts: List[Contact] = None,
+                 calls: List[Call] = None,
+                 location: Location = None
+                 ):
+        self.contacts = contacts or list()
+        self.calls = calls or list()
+        self.location = location
 
 
 def random_date(start_year: int = None, end_year: int = None) -> str:
