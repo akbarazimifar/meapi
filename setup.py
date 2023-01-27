@@ -31,10 +31,8 @@ setup(
     keywords='me, caller id, spam blocker, meapi',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
-
         'Intended Audience :: Developers',
-        'Topic :: Communications :: Telephony'
-
+        'Topic :: Communications :: Telephony',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
