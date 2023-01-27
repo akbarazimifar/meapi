@@ -117,7 +117,6 @@ ________________________
                 for post in social.posts:
                     print(f"Post from {post.posted_at}:\n{post.text_first}\n{post.text_second}")
 
-
     # 💬 Watch, approve and like comments:
     for comment in me.get_comments():
         print(f"Comment from {comment.author.name} at {comment.created_at}: {comment.message}")

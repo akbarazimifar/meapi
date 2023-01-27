@@ -11,12 +11,36 @@ class JsonCredentialsManager(CredentialsManager):
         - This class is used to store the credentials in a json file/s.
 
     Parameters:
-        - config_file: (``str``) The config json file path. *Default:* 'meapi_credentials.json'.
-        - separate_files: (``bool``) If True, each phone number will have its own file: 'credentials_dir/phone_number.json'. *Default:* ``False``.
+        - config_file: (``str``) The config json file path. *Default:* ``meapi_credentials.json``.
+
+            .. code-block:: text
+
+                {
+                    "123456789": {"pwd_token": "xxx", "access": "xxx", "refresh": "xxx"},
+                    "987654321": {"pwd_token": "xxx", "access": "xxx", "refresh": "xxx"},
+                    "123456789": {"pwd_token": "xxx", "access": "xxx", "refresh": "xxx"}
+                }
+
+        - separate_files: (``bool``) If ``True``, each phone number will have its own file: ``credentials_dir/phone_number.json``. *Default:* ``False``.
         - directory: (``str``) The directory where the credentials files will be stored. *Default:* ``meapi_credentials``.
+
+            .. code-block:: text
+
+                .
+                ├── meapi_credentials
+                │   ├── 123456789.json -> {"pwd_token": "xxx", "access": "xxx", "refresh": "xxx"}
+                │   ├── 987654321.json -> {"pwd_token": "xxx", "access": "xxx", "refresh": "xxx"}
+                │   └── 123456789.json -> {"pwd_token": "xxx", "access": "xxx", "refresh": "xxx"}
+                └──────────────────────
 
     Raises:
         - FileExistsError: If the config file is not a valid json file.
+
+    Example:
+        >>> from meapi.credentials_managers.json_files import JsonCredentialsManager
+        >>> from meapi import Me
+        >>> jcm = JsonCredentialsManager(separate_files=True, directory='/home/david/credentials')
+        >>> me = Me(phone_number='123456789', credentials_manager=jcm)
     """
     def __init__(
         self,

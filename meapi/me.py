@@ -13,7 +13,7 @@ from meapi.api.client.auth import AuthMethods
 from meapi.utils.exceptions import FrozenInstance
 from meapi.utils.validators import validate_phone_number
 from meapi.credentials_managers import CredentialsManager
-from meapi.credentials_managers.json import JsonCredentialsManager
+from meapi.credentials_managers.json_files import JsonCredentialsManager
 from meapi.credentials_managers.redis import RedisCredentialsManager
 
 if os.environ.get("ENV") == "DEBUG":
@@ -77,6 +77,7 @@ class Me(MeModel, AuthMethods, AccountMethods, SocialMethods, SettingsMethods, N
     :raises ActivationCodeExpired: If the ``activation_code`` is correct but expired (Request a new one).
     :raises BlockedMaxVerifyReached: If the ``phone_number`` reached the maximum number of call or sms verification attempts (you can still verify by WhatsApp or Telegram).
     :raises BrokenCredentialsManager: If the ``credentials_manager`` not providing the expected data.
+    :raises ForbiddenRequest: In the official method, if the ``access_token`` is not valid.
     :raises FrozenInstance: If you try to change the value of an attribute.
     """
     def __init__(self,
@@ -130,6 +131,6 @@ class Me(MeModel, AuthMethods, AccountMethods, SocialMethods, SettingsMethods, N
         Prevent attr changes after the init in protected data classes
         """
         if getattr(self, '_Me__init_done', None):
-            if key in ('phone_number', 'uuid', '_activation_code', '_new_account_details'):
+            if key in ('phone_number', 'uuid'):
                 raise FrozenInstance(self, key)
         return super().__setattr__(key, value)

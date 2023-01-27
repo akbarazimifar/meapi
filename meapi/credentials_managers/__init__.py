@@ -15,11 +15,11 @@ class CredentialsManager(ABC):
     @abstractmethod
     def get(self, phone_number: str) -> Optional[Dict[str, str]]:
         """
-        Get the credentials by ``client.phone_number`` key.
+        Get the credentials by ``phone_number`` key.
 
         :param phone_number: The phone number of the client.
         :type phone_number: ``str``
-        :return: Dict with credentials. ``None`` if credentials are not found for the given ``phone_number``. see example below.
+        :return: Optional dict with the credentials. see example below.
         :rtype: dict
 
         Example for return value::
@@ -35,7 +35,7 @@ class CredentialsManager(ABC):
     @abstractmethod
     def set(self, phone_number: str, data: Dict[str, str]):
         """
-        Store new credentials with ``phone_number`` key.
+        Set the credentials by ``phone_number`` key.
 
         :param phone_number: The phone number of the client.
         :type phone_number: str
@@ -55,7 +55,7 @@ class CredentialsManager(ABC):
     @abstractmethod
     def update(self, phone_number: str, access_token: str):
         """
-        Update the access token in the credentials with ``phone_number`` key.
+        Update the access token in the credentials by ``phone_number`` key.
 
         :param phone_number: The phone number of the client.
         :type phone_number: str

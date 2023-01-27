@@ -45,7 +45,7 @@
     2. Telegram: Go to Telegram (http://t.me/Meofficialbot?start=__iw__XXXXXX Replace the ``XXXXX`` with your phone number) and hit ``start`` to get a verification code.
 
 - Enter the code in the terminal and you will see if the verification was successful.
-- If this is a new number that is not already open an account, you will be required to fill in some details like name and email in order to create an account, See `Registration <https://meapi.readthedocs.io/en/latest/content/setup.html#registration>`_.
+- If this is a new number that is not already open an account, you will be required to fill in some details like name and email in order to create an account, See `Registration <https://meapi.readthedocs.io/en/latest/content/setup.html#id2>`_.
 
 🔓 **Official method**
 
@@ -78,7 +78,7 @@ So you will need to catch the :py:obj:`~meapi.utils.exceptions.ForbiddenRequest`
         me = Me(access_token=access_token)
 
 
-- Again, if you have any information about the process of getting an access token in the, contact me and I will be happy to add it to the library.
+- Again, if you have any information about the process of getting an access token in official method, contact me and I will be happy to add it to the library.
 
 ========================================================================
 
@@ -132,9 +132,10 @@ If you don't know if this is a new account, you can ask to raise :py:obj:`~meapi
 
 🔑 Credentials
 ---------------
+meapi, needs to store your credentials (access token, refresh token etc.) in order to be able to use them later on without the need to login again every time you want to use the API.
 
-- The default credentials manager is the ``JsonCredentialsManager``, which saves the credentials in a json file (``meapi_credentials.json`` by default).
-- You can implement your own credentials manager by implementing the CredentialsManager interface. See `Credentials Manager <https://meapi.readthedocs.io/en/latest/content/credentials_manager.html>`_.
+- The default credentials manager is the - :py:obj:`~meapi.credentials_managers.json_files.JsonCredentialsManager`, which saves the credentials in a json file (``meapi_credentials.json`` by default).
+- You can implement your own credentials manager by implementing the :py:obj:`~meapi.credentials_managers.CredentialsManager` interface. See `Credentials Manager <https://meapi.readthedocs.io/en/latest/content/credentials_manager.html>`_.
 - If you choose to use in the default credentials manager, the config file will be created in the location from which the library was called.
 - The config file ``meapi_credentials.json`` format is:
 
@@ -153,7 +154,7 @@ If you don't know if this is a new account, you can ask to raise :py:obj:`~meapi
 .. code-block:: python
 
     from meapi import Me
-    from meapi.credentials_managers.json import JsonCredentialsManager
+    from meapi.credentials_managers.json_files import JsonCredentialsManager
 
     cm = JsonCredentialsManager(config_file="/home/david/meapi_credentials.json")
     me = Me(phone_number=123456789, credentials_manager=cm)

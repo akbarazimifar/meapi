@@ -10,6 +10,16 @@ class RedisCredentialsManager(CredentialsManager):
 
     Parameters:
         - redis: (``redis.Redis``) The redis object of redis-py library. (https://github.com/redis/redis-py)
+
+    Examples:
+        >>> from meapi import Me
+        >>> from redis import Redis
+        >>> from meapi.credentials_managers.redis import RedisCredentialsManager
+        >>> redis = Redis(host='localhost', port=6379, db=0)
+        >>> rcm = RedisCredentialsManager(redis)
+        >>> me = Me(phone_number=972123456789, credentials_manager=rcm)
+
+
     """
     def __init__(self, redis):
         super().__init__()
