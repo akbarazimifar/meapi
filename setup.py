@@ -13,7 +13,7 @@ else:
 
 setup(
     name='meapi',
-    packages=find_packages(),
+    packages=find_packages(exclude=['tests']),
     version=version,
     description="Unofficial api for 'Me - Caller ID & Spam Blocker' app",
     long_description=(open('README.rst', encoding='utf-8').read()),
