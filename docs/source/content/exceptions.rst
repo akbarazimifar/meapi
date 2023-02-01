@@ -51,6 +51,7 @@ This are the exceptions that may be raised by the API:
 .. autoclass:: UnfinishedRegistration
 .. autoclass:: PhoneNumberDoesntExists
 .. autoclass:: IncorrectActivationCode
+.. autoclass:: MaxValidateReached
 .. autoclass:: BlockedMaxVerifyReached
 .. autoclass:: ActivationCodeExpired
 .. autoclass:: SearchPassedLimit
