@@ -1,6 +1,6 @@
 from re import match, sub
 from typing import Union
-from meapi.utils.exceptions import NotValidPhoneNumber
+from meapi.utils.exceptions import NotValidPhoneNumber, NotValidAccessToken
 from uuid import UUID
 
 
@@ -26,6 +26,15 @@ def validate_phone_number(phone_number: Union[str, int]) -> int:
     if match(r"^\d{10,15}$", phone_number):
         return int(phone_number)
     raise NotValidPhoneNumber
+
+
+def validate_access_token(access_token: str) -> str:
+    """
+    Check if the access token is valid (if it contains 3 parts separated by dots).
+    """
+    if len(access_token.split(".")) == 3:
+        return access_token
+    raise NotValidAccessToken
 
 
 def validate_uuid(uuid: str) -> str:
