@@ -1,5 +1,5 @@
-from enum import Enum
-from typing import Optional
+from enum import Enum, auto
+from typing import Optional, Union
 from meapi.models.me_model import MeModel
 
 
@@ -37,6 +37,23 @@ class CallType(Enum):
     @classmethod
     def all(cls):
         return list(map(lambda c: c.value, cls))
+
+
+class RequestType(Enum):
+    POST = auto()
+    GET = auto()
+    PUT = auto()
+    DELETE = auto()
+    PATCH = auto()
+
+
+class AuthMethod(Enum):
+    """
+    Enum for Auth methods.
+    """
+    WHATSAPP_OR_TELEGRAM = 1
+    SMS = 2
+    CALL = 3
 
 
 class Contact(MeModel):
@@ -79,3 +96,6 @@ class Location(MeModel):
         self.location_longitude = longitude
         self.location_latitude = latitude
         super().__init__()
+
+    def __hash__(self) -> int:
+        return hash((self.location_longitude, self.location_latitude))

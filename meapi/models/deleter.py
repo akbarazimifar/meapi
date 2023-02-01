@@ -31,3 +31,6 @@ class Deleter(MeModel):
         self.created_at: datetime = parse_date(created_at)
         self.user = User.new_from_dict(user)
         super().__init__()
+
+    def __hash__(self) -> int:
+        return hash(self.user.phone_number)

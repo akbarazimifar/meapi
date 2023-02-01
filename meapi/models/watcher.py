@@ -40,3 +40,6 @@ class Watcher(MeModel):
         self.count = count
         self.is_search = is_search
         super().__init__()
+
+    def __hash__(self) -> int:
+        return hash(self.user.phone_number)

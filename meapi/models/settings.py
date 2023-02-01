@@ -140,3 +140,11 @@ class Settings(MeModel):
             if is_success and getattr(new, key, None) != value:
                 raise MeException(f"{key} not updated!")
         return super().__setattr__(key, value)
+
+    def __eq__(self, other):
+        if not isinstance(other, Settings):
+            return False
+        return self.as_dict() == other.as_dict()
+
+    def __ne__(self, other):
+        return not self.__eq__(other)

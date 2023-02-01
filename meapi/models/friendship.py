@@ -69,3 +69,11 @@ class Friendship(MeModel):
         self.mutual_friends_count = mutual_friends_count
         self.my_comment = my_comment
         super().__init__()
+
+    def __eq__(self, other):
+        if not isinstance(other, Friendship):
+            return False
+        return self.as_dict() == other.as_dict()
+
+    def __ne__(self, other):
+        return not self.__eq__(other)

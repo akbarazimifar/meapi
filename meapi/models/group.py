@@ -123,3 +123,6 @@ class Group(MeModel):
             if key != 'is_active':
                 raise FrozenInstance(self, key)
         return super().__setattr__(key, value)
+
+    def __hash__(self) -> int:
+        return hash(self.name)

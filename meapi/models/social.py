@@ -147,6 +147,11 @@ class SocialMediaAccount(MeModel):
                 raise FrozenInstance(self, key, "You cannot change social of another user!")
         return super().__setattr__(key, value)
 
+    def __hash__(self) -> int:
+        if not self.profile_id:
+            raise TypeError("Social media account must have profile_id to be hashable!")
+        return hash(self.profile_id)
+
     def add(self, token_or_url: str) -> bool:
         """
         Add social media account to your Me profile.
