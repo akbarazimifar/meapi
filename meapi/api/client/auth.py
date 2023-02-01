@@ -373,19 +373,21 @@ class AuthMethods:
         request_types = (rt.name for rt in RequestType)
         if method not in request_types:
             raise ValueError("Request type not in requests type list!!\nAvailable types: " + ", ".join(request_types))
-        if headers is None:
-            headers = HEADERS.copy()
-            if self._auth_data is not None:
-                headers['authorization'] = self._auth_data.access
         max_rounds = 3
         while max_rounds > 0:
             max_rounds -= 1
+            if headers is None:
+                req_headers = HEADERS.copy()
+                if self._auth_data is not None:
+                    req_headers['authorization'] = self._auth_data.access
+            else:
+                req_headers = headers
             response = self._session.request(
                 method=method,
                 url=url,
                 json=body,
                 files=files,
-                headers=headers
+                headers=req_headers
             )
             try:
                 response_text = loads(response.text)
