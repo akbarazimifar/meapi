@@ -66,12 +66,12 @@ class AuthMethods:
         :return: Is login succeeded.
         :rtype: ``bool``
         """
-        self._Me__init_done = False
-        interactive_mode = interactive_mode or self._interactive_mode
-        if not interactive_mode and activation_code is None:
-            raise NeedActivationCode
-        need_emulate = False
         if self._auth_data is None and self.phone_number:
+            self._Me__init_done = False
+            interactive_mode = interactive_mode or self._interactive_mode
+            if not interactive_mode and activation_code is None:
+                raise NeedActivationCode
+            need_emulate = False
             activate_already = False
             while self._auth_data is None:
                 try:
@@ -93,8 +93,8 @@ class AuthMethods:
                         self._register(new_account_details=new_account_details)
                         need_emulate = True
                 activate_already = True
-        if need_emulate:
-            self._emulate_app()
+            if need_emulate:
+                self._emulate_app()
         self._Me__init_done = True
         if interactive_mode:
             print("You are now logged in!")
