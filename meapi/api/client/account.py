@@ -1,7 +1,9 @@
+import os
 from datetime import datetime, date
 from logging import getLogger
 from re import match
 from typing import Tuple, List, Optional, Union, TYPE_CHECKING, Dict
+import requests
 from meapi.api.raw.account import *
 from meapi.models.contact import Contact
 from meapi.models.profile import Profile
@@ -9,7 +11,6 @@ from meapi.models.call import Call
 from meapi.models.blocked_number import BlockedNumber
 from meapi.models.user import User
 from meapi.utils.exceptions import MeApiException, ProfileViewPassedLimit, BlockedAccount
-from meapi.utils.helpers import upload_picture
 from meapi.utils.randomator import generate_random_data
 from meapi.utils.validators import validate_phone_number, validate_schema_types, \
     validate_uuid
@@ -190,7 +191,7 @@ class AccountMethods:
                     if value is not None:
                         if not isinstance(value, str):
                             raise ValueError("profile_picture_url must be a url or path to a file!")
-                        args[key] = str(upload_picture(self, **{'image': value}))
+                        args[key] = str(self.upload_picture(image=value))
                 elif key == 'gender':
                     if value not in ['M', 'm', 'F', 'f', None]:
                         raise ValueError("Gender must be: 'F' for Female, 'M' for Male, and 'None' for null.")
@@ -234,7 +235,7 @@ class AccountMethods:
             if input().lower() != 'y':
                 return False
         if delete_account_raw(client=self) == {}:
-            self._logout()
+            self.logout()
             return True
         return False
 
@@ -252,7 +253,7 @@ class AccountMethods:
             if input().lower() != 'y':
                 return False
         if suspend_account_raw(client=self)['contact_suspended']:
-            self._logout()
+            self.logout()
             return True
         return False
 
@@ -467,3 +468,22 @@ class AccountMethods:
         if location:
             self.update_location(random_data.location.location_latitude, random_data.location.location_longitude)
         return True
+
+    def upload_picture(self: 'Me', image: str) -> str:
+        """
+        Upload a profile picture from a local file or a direct url.
+
+        :param image: Path or url to the image. for example: ``https://example.com/image.png``, ``/path/to/image.png``.
+        :type image: ``str``
+        :return: The url of the uploaded image.
+        :rtype: ``str``
+        :raises FileNotFoundError: If the file does not exist.
+        """
+        if not str(image).startswith("http"):
+            if not os.path.isfile(image):
+                raise FileNotFoundError(f"File {image} does not exist!")
+            with open(image, 'rb') as f:
+                image_data = f.read()
+        else:
+            image_data = requests.get(url=str(image)).content
+        return upload_image_raw(client=self, binary_img=image_data)['url']
