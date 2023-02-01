@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING, Dict, Union
-
+from meapi.models.others import RequestType
 from meapi.utils.helpers import HEADERS
 
 if TYPE_CHECKING:  # always False at runtime.
@@ -27,7 +27,8 @@ def activate_account_raw(client: 'Me', phone_number: int, activation_code: str) 
         }
     """
     body = {"activation_code": activation_code, "activation_type": "sms", "phone_number": phone_number}
-    return client._make_request(req_type='post', endpoint='/auth/authorization/activate/', body=body, headers=HEADERS)
+    return client.make_request(method=RequestType.POST, endpoint='/auth/authorization/activate/', body=body,
+                               headers=HEADERS.copy())
 
 
 def generate_new_access_token_raw(client: 'Me', phone_number: str, pwd_token: str) -> dict:
@@ -50,7 +51,7 @@ def generate_new_access_token_raw(client: 'Me', phone_number: str, pwd_token: st
         }
     """
     body = {"phone_number": phone_number, "pwd_token": pwd_token}
-    return client._make_request(req_type='post', endpoint='/auth/authorization/login/', body=body)
+    return client.make_request(method=RequestType.POST, endpoint='/auth/authorization/login/', body=body)
 
 
 def ask_for_call_raw(client: 'Me', phone_number: str, session_token: str) -> dict:
@@ -75,9 +76,10 @@ def ask_for_call_raw(client: 'Me', phone_number: str, session_token: str) -> dic
         }
     """
     body = {"activation_type": "failb", "device_type": "android", "phone_number": phone_number}
-    headers = HEADERS
+    headers = HEADERS.copy()
     headers['session-token'] = session_token
-    return client._make_request(req_type='post', endpoint='/auth/authorization/verify/', headers=headers, body=body)
+    return client.make_request(method=RequestType.POST, endpoint='/auth/authorization/verify/', body=body,
+                               headers=headers)
 
 
 def ask_for_sms_raw(client: 'Me', phone_number: str, session_token: str) -> Dict[str, Union[str, bool]]:
@@ -102,6 +104,7 @@ def ask_for_sms_raw(client: 'Me', phone_number: str, session_token: str) -> Dict
         }
     """
     body = {"activation_type": "sms", "device_type": "android", "app_token": "", "phone_number": phone_number}
-    headers = HEADERS
+    headers = HEADERS.copy()
     headers['session-token'] = session_token
-    return client._make_request(req_type='post', endpoint='/auth/authorization/verify/', headers=headers, body=body)
+    return client.make_request(method=RequestType.POST, endpoint='/auth/authorization/verify/', body=body,
+                               headers=headers)

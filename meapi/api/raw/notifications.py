@@ -1,4 +1,5 @@
 from typing import List, TYPE_CHECKING, Optional
+from meapi.models.others import RequestType
 
 if TYPE_CHECKING:  # always False at runtime.
     from meapi import Me
@@ -11,7 +12,7 @@ def unread_notifications_count_raw(client: 'Me') -> dict:
     :return: Dict with number of unread notifications.
     :rtype: ``dict``
     """
-    return client._make_request('get', '/notification/notification/count/')
+    return client.make_request(method=RequestType.GET, endpoint='/notification/notification/count/')
 
 
 def get_notifications_raw(
@@ -113,7 +114,7 @@ def get_notifications_raw(
     params = f"?page={page_number}&page_size={results_limit}&status=distributed"
     if categories:
         params += f"&categories=%5B{'%2C%20'.join(categories)}%5D"
-    return client._make_request('get', '/notification/notification/items/' + params)
+    return client.make_request(method=RequestType.GET, endpoint='/notification/notification/items/' + params)
 
 
 def read_notification_raw(client: 'Me', notification_id: int) -> dict:
@@ -150,4 +151,5 @@ def read_notification_raw(client: 'Me', notification_id: int) -> dict:
             }
         }
     """
-    return client._make_request('post', '/notification/notification/read/', {'notification_id': notification_id})
+    return client.make_request(method=RequestType.POST, endpoint='/notification/notification/read/',
+                               body={'notification_id': notification_id})

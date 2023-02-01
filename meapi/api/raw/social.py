@@ -1,4 +1,5 @@
 from typing import List, TYPE_CHECKING, Dict, Union, Any
+from meapi.models.others import RequestType
 
 if TYPE_CHECKING:  # always False at runtime.
     from meapi import Me
@@ -32,7 +33,8 @@ def friendship_raw(client: 'Me', phone_number: int) -> Dict[str, Any]:
             "my_comment": None,
         }
     """
-    return client._make_request('get', f'/main/contacts/friendship/?phone_number={phone_number}')
+    return client.make_request(method=RequestType.GET,
+                               endpoint=f'/main/contacts/friendship/?phone_number={phone_number}')
 
 
 def report_spam_raw(client: 'Me', country_code: str, phone_number: str, spam_name: str) -> Dict[str, bool]:
@@ -54,8 +56,8 @@ def report_spam_raw(client: 'Me', country_code: str, phone_number: str, spam_nam
         {'success': True}
     """
     body = {"country_code": country_code, "is_spam": True, "is_from_v": False,
-     "name": spam_name, "phone_number": phone_number}
-    return client._make_request('post', f'/main/names/suggestion/report/', body=body)
+            "name": spam_name, "phone_number": phone_number}
+    return client.make_request(method=RequestType.POST, endpoint=f'/main/names/suggestion/report/', body=body)
 
 
 def who_deleted_raw(client: 'Me') -> List[dict]:
@@ -88,7 +90,7 @@ def who_deleted_raw(client: 'Me') -> List[dict]:
             }
         ]
     """
-    return client._make_request('get', '/main/users/profile/who-deleted/')
+    return client.make_request(method=RequestType.GET, endpoint='/main/users/profile/who-deleted/')
 
 
 def who_watched_raw(client: 'Me') -> List[dict]:
@@ -123,7 +125,7 @@ def who_watched_raw(client: 'Me') -> List[dict]:
             }
         ]
     """
-    return client._make_request('get', '/main/users/profile/who-watched/')
+    return client.make_request(method=RequestType.GET, endpoint='/main/users/profile/who-watched/')
 
 
 def get_comments_raw(client: 'Me', uuid: str) -> dict:
@@ -188,7 +190,7 @@ def get_comments_raw(client: 'Me', uuid: str) -> dict:
             "user_comment": None,
         }
     """
-    return client._make_request('get', f'/main/comments/list/{uuid}')
+    return client.make_request(method=RequestType.GET, endpoint=f'/main/comments/list/{uuid}')
 
 
 def get_comment_raw(client: 'Me', comment_id: int) -> dict:
@@ -228,7 +230,7 @@ def get_comment_raw(client: 'Me', comment_id: int) -> dict:
             "message": "Test comment",
         }
     """
-    return client._make_request('get', f'/main/comments/retrieve/{comment_id}')
+    return client.make_request(method=RequestType.GET, endpoint=f'/main/comments/retrieve/{comment_id}')
 
 
 def publish_comment_raw(client: 'Me', uuid: str, your_comment: str) -> dict:
@@ -269,7 +271,7 @@ def publish_comment_raw(client: 'Me', uuid: str, your_comment: str) -> dict:
         }
     """
     body = {"message": your_comment}
-    return client._make_request('post', f'/main/comments/add/{uuid}/', body)
+    return client.make_request(method=RequestType.POST, endpoint=f'/main/comments/add/{uuid}/', body=body)
 
 
 def approve_comment_raw(client: 'Me', comment_id: int) -> dict:
@@ -307,7 +309,7 @@ def approve_comment_raw(client: 'Me', comment_id: int) -> dict:
             'comments_blocked': False
         }
     """
-    return client._make_request('post', f'/main/comments/approve/{comment_id}/')
+    return client.make_request(method=RequestType.POST, endpoint=f'/main/comments/approve/{comment_id}/')
 
 
 def ignore_comment_raw(client: 'Me', comment_id: int) -> dict:
@@ -345,7 +347,7 @@ def ignore_comment_raw(client: 'Me', comment_id: int) -> dict:
             'comments_blocked': False
         }
     """
-    return client._make_request('delete', f'/main/comments/approve/{comment_id}/')
+    return client.make_request(method=RequestType.DELETE, endpoint=f'/main/comments/approve/{comment_id}/')
 
 
 def delete_comment_raw(client: 'Me', comment_id: int) -> dict:
@@ -365,7 +367,7 @@ def delete_comment_raw(client: 'Me', comment_id: int) -> dict:
             "success": true
         }
     """
-    return client._make_request('delete', f'/main/comments/remove/{comment_id}/')
+    return client.make_request(method=RequestType.DELETE, endpoint=f'/main/comments/remove/{comment_id}/')
 
 
 def like_comment_raw(client: 'Me', comment_id: int) -> dict:
@@ -399,7 +401,7 @@ def like_comment_raw(client: 'Me', comment_id: int) -> dict:
             }
         }
     """
-    return client._make_request('post', f'/main/comments/like/{comment_id}/')
+    return client.make_request(method=RequestType.POST, endpoint=f'/main/comments/like/{comment_id}/')
 
 
 def unlike_comment_raw(client: 'Me', comment_id: int) -> dict:
@@ -437,7 +439,7 @@ def unlike_comment_raw(client: 'Me', comment_id: int) -> dict:
             'comments_blocked': False
         }
     """
-    return client._make_request('delete', f'/main/comments/like/{comment_id}/')
+    return client.make_request(method=RequestType.DELETE, endpoint=f'/main/comments/like/{comment_id}/')
 
 
 def block_comments_raw(client: 'Me', uuid: str) -> dict:
@@ -457,7 +459,7 @@ def block_comments_raw(client: 'Me', uuid: str) -> dict:
             "blocked": true
         }
     """
-    return client._make_request('post', f'/main/comments/block/{uuid}/')
+    return client.make_request(method=RequestType.POST, endpoint=f'/main/comments/block/{uuid}/')
 
 
 def get_groups_raw(client: 'Me') -> dict:
@@ -499,7 +501,7 @@ def get_groups_raw(client: 'Me') -> dict:
             ],
         }
     """
-    return client._make_request('get', '/main/names/groups/')
+    return client.make_request(method=RequestType.GET, endpoint='/main/names/groups/')
 
 
 def get_deleted_groups_raw(client: 'Me') -> dict:
@@ -540,7 +542,7 @@ def get_deleted_groups_raw(client: 'Me') -> dict:
             "contact_ids": [409879786],
         }
     """
-    return client._make_request('get', '/main/settings/hidden-names/')
+    return client.make_request(method=RequestType.GET, endpoint='/main/settings/hidden-names/')
 
 
 def delete_group_raw(client: 'Me', contact_ids: List[int]) -> dict:
@@ -560,7 +562,8 @@ def delete_group_raw(client: 'Me', contact_ids: List[int]) -> dict:
             'success': True
         }
     """
-    return client._make_request('post', '/main/contacts/hide/', {'contact_ids': contact_ids})
+    return client.make_request(method=RequestType.POST, endpoint='/main/contacts/hide/',
+                               body={'contact_ids': contact_ids})
 
 
 def restore_group_raw(client: 'Me', contact_ids: List[int]) -> dict:
@@ -580,7 +583,8 @@ def restore_group_raw(client: 'Me', contact_ids: List[int]) -> dict:
             'success': True
         }
     """
-    return client._make_request('post', '/main/settings/hidden-names/', {'contact_ids': contact_ids})
+    return client.make_request(method=RequestType.POST, endpoint='/main/settings/hidden-names/',
+                               body={'contact_ids': contact_ids})
 
 
 def ask_group_rename_raw(client: 'Me', contact_ids: List[int], new_name: str) -> dict:
@@ -602,7 +606,8 @@ def ask_group_rename_raw(client: 'Me', contact_ids: List[int], new_name: str) ->
             'success': True
         }
     """
-    return client._make_request('post', '/main/names/suggestion/', {'contact_ids': contact_ids, 'name': new_name})
+    return client.make_request(method=RequestType.POST, endpoint='/main/names/suggestion/',
+                               body={'contact_ids': contact_ids, 'name': new_name})
 
 
 def get_my_social_raw(client: 'Me') -> dict:
@@ -719,7 +724,7 @@ def get_my_social_raw(client: 'Me') -> dict:
             },
         }
     """
-    return client._make_request('post', '/main/social/update/')
+    return client.make_request(method=RequestType.POST, endpoint='/main/social/update/')
 
 
 def add_social_token_raw(client: 'Me', social_name: str, token: str) -> dict:
@@ -742,7 +747,8 @@ def add_social_token_raw(client: 'Me', social_name: str, token: str) -> dict:
             "success": True
         }
     """
-    return client._make_request('post', f'/main/social/save-auth-token/', {'social_name': social_name, 'code_first': token})
+    return client.make_request(method=RequestType.POST, endpoint=f'/main/social/save-auth-token/',
+                               body={'social_name': social_name, 'code_first': token})
 
 
 def add_social_url_raw(client: 'Me', social_name: str, url: str) -> dict:
@@ -765,7 +771,8 @@ def add_social_url_raw(client: 'Me', social_name: str, url: str) -> dict:
             "success": True
         }
     """
-    return client._make_request('post', '/main/social/update-url/', {'social_name': social_name, 'profile_id': url})
+    return client.make_request(method=RequestType.POST, endpoint='/main/social/update-url/',
+                               body={'social_name': social_name, 'profile_id': url})
 
 
 def remove_social_raw(client: 'Me', social_name: str) -> dict:
@@ -786,7 +793,8 @@ def remove_social_raw(client: 'Me', social_name: str) -> dict:
             "success": True
         }
     """
-    return client._make_request('post', '/main/social/delete/', {'social_name': social_name})
+    return client.make_request(method=RequestType.POST, endpoint='/main/social/delete/',
+                               body={'social_name': social_name})
 
 
 def switch_social_status_raw(client: 'Me', social_name: str) -> dict:
@@ -807,7 +815,8 @@ def switch_social_status_raw(client: 'Me', social_name: str) -> dict:
             'is_hidden': False
         }
     """
-    return client._make_request('post', '/main/social/hide/', {'social_name': social_name})
+    return client.make_request(method=RequestType.POST, endpoint='/main/social/hide/',
+                               body={'social_name': social_name})
 
 
 def numbers_count_raw(client: 'Me') -> dict:
@@ -825,7 +834,7 @@ def numbers_count_raw(client: 'Me') -> dict:
             'count': 5783726484
         }
     """
-    return client._make_request('get', '/main/contacts/count/')
+    return client.make_request(method=RequestType.GET, endpoint='/main/contacts/count/')
 
 
 def suggest_turn_on_comments_raw(client: 'Me', uuid: str):
@@ -845,7 +854,8 @@ def suggest_turn_on_comments_raw(client: 'Me', uuid: str):
             'requested': True
         }
     """
-    return client._make_request('post', '/main/users/profile/suggest-turn-on-comments/', {'uuid': uuid})
+    return client.make_request(method=RequestType.POST, endpoint='/main/users/profile/suggest-turn-on-comments/',
+                               body={'uuid': uuid})
 
 
 def suggest_turn_on_mutual_raw(client: 'Me', uuid: str):
@@ -865,7 +875,8 @@ def suggest_turn_on_mutual_raw(client: 'Me', uuid: str):
             'requested': True
         }
     """
-    return client._make_request('post', '/main/users/profile/suggest-turn-on-mutual/', {'uuid': uuid})
+    return client.make_request(method=RequestType.POST, endpoint='/main/users/profile/suggest-turn-on-mutual/',
+                               body={'uuid': uuid})
 
 
 def suggest_turn_on_location_raw(client: 'Me', uuid: str):
@@ -885,7 +896,8 @@ def suggest_turn_on_location_raw(client: 'Me', uuid: str):
             'requested': True
         }
     """
-    return client._make_request('post', '/main/users/profile/suggest-turn-on-location/', {'uuid': uuid})
+    return client.make_request(method=RequestType.POST, endpoint='/main/users/profile/suggest-turn-on-location/',
+                               body={'uuid': uuid})
 
 
 def update_location_raw(client: 'Me', latitude: float, longitude: float):
@@ -907,8 +919,8 @@ def update_location_raw(client: 'Me', latitude: float, longitude: float):
             'success': True
         }
     """
-    body = {"location_latitude": latitude, "location_longitude": longitude}
-    return client._make_request('post', '/main/location/update/', body)
+    return client.make_request(method=RequestType.POST, endpoint='/main/location/update/',
+                               body={"location_latitude": latitude, "location_longitude": longitude})
 
 
 def share_location_raw(client: 'Me', uuid: str):
@@ -928,7 +940,7 @@ def share_location_raw(client: 'Me', uuid: str):
             'success': True
         }
     """
-    return client._make_request('post', f'/main/users/profile/share-location/{uuid}/')
+    return client.make_request(method=RequestType.POST, endpoint=f'/main/users/profile/share-location/{uuid}/')
 
 
 def stop_sharing_location_raw(client: 'Me', uuids: List[str]) -> dict:
@@ -948,7 +960,8 @@ def stop_sharing_location_raw(client: 'Me', uuids: List[str]) -> dict:
             'success': True
         }
     """
-    return client._make_request('post', '/main/users/profile/share-location/stop-for-me/', {"uuids": uuids})
+    return client.make_request(method=RequestType.POST, endpoint='/main/users/profile/share-location/stop-for-me/',
+                               body={"uuids": uuids})
 
 
 def stop_shared_locations_raw(client: 'Me', uuids: List[str]) -> dict:
@@ -968,7 +981,8 @@ def stop_shared_locations_raw(client: 'Me', uuids: List[str]) -> dict:
             'success': True
         }
     """
-    return client._make_request('post', '/main/users/profile/share-location/stop/', {"uuids": uuids})
+    return client.make_request(method=RequestType.POST, endpoint='/main/users/profile/share-location/stop/',
+                               body={"uuids": uuids})
 
 
 def locations_shared_by_me_raw(client: 'Me') -> List[dict]:
@@ -992,7 +1006,7 @@ def locations_shared_by_me_raw(client: 'Me') -> List[dict]:
             }
         ]
     """
-    return client._make_request('get', '/main/users/profile/share-location/')
+    return client.make_request(method=RequestType.GET, endpoint='/main/users/profile/share-location/')
 
 
 def locations_shared_with_me_raw(client: 'Me') -> dict:
@@ -1025,7 +1039,7 @@ def locations_shared_with_me_raw(client: 'Me') -> dict:
             ]
         }
     """
-    return client._make_request('get', '/main/users/profile/share-location/for-me/')
+    return client.make_request(method=RequestType.GET, endpoint='/main/users/profile/share-location/for-me/')
 
 
 def get_news_raw(client: 'Me', os_type: str) -> dict:
@@ -1039,4 +1053,4 @@ def get_news_raw(client: 'Me', os_type: str) -> dict:
     :return: dict with news.
     :rtype: ``dict``
     """
-    return client._make_request('get', f'/main/settings/app-customizations?os={os_type}')
+    return client.make_request(method=RequestType.GET, endpoint=f'/main/settings/app-customizations?os={os_type}')

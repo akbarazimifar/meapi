@@ -1,4 +1,6 @@
 from typing import TYPE_CHECKING
+from meapi.models.others import RequestType
+
 if TYPE_CHECKING:  # always False at runtime.
     from meapi import Me
 
@@ -33,7 +35,7 @@ def get_settings_raw(client: 'Me') -> dict:
             "who_watched_notification_enabled": True,
         }
     """
-    return client._make_request('get', '/main/settings/')
+    return client.make_request(method=RequestType.GET, endpoint='/main/settings/')
 
 
 def change_settings_raw(client: 'Me', **kwargs) -> dict:
@@ -66,4 +68,4 @@ def change_settings_raw(client: 'Me', **kwargs) -> dict:
             "who_watched_notification_enabled": True,
         }
     """
-    return client._make_request('patch', '/main/settings/', kwargs)
+    return client.make_request(method=RequestType.PATCH, endpoint='/main/settings/', body=kwargs)

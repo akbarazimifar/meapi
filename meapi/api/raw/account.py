@@ -1,5 +1,6 @@
 from typing import Union, List, TYPE_CHECKING
-
+from meapi.models.others import RequestType
+from meapi.utils.helpers import HEADERS
 from meapi.utils.randomator import grft
 
 if TYPE_CHECKING:  # always False at runtime.
@@ -68,7 +69,7 @@ def phone_search_raw(client: 'Me', phone_number: Union[str, int]) -> dict:
             }
         }
     """
-    return client._make_request(req_type='get', endpoint=f'/main/contacts/search/?phone_number={phone_number}')
+    return client.make_request(method=RequestType.GET, endpoint=f'/main/contacts/search/?phone_number={phone_number}')
 
 
 def get_profile_raw(client: 'Me', uuid: str = None) -> dict:
@@ -242,7 +243,7 @@ def get_profile_raw(client: 'Me', uuid: str = None) -> dict:
             },
         }
     """
-    return client._make_request('get', f'/main/users/profile/{uuid}')
+    return client.make_request(method=RequestType.GET, endpoint=f'/main/users/profile/{uuid}')
 
 
 def get_my_profile_raw(client: 'Me') -> dict:
@@ -281,7 +282,7 @@ def get_my_profile_raw(client: 'Me') -> dict:
             'verify_subscription': True
         }
     """
-    return client._make_request('get', '/main/users/profile/me/')
+    return client.make_request(method=RequestType.GET, endpoint='/main/users/profile/me/')
 
 
 def update_profile_details_raw(client: 'Me', **kwargs) -> dict:
@@ -320,7 +321,7 @@ def update_profile_details_raw(client: 'Me', **kwargs) -> dict:
             'verify_subscription': True
         }
     """
-    return client._make_request('patch', '/main/users/profile/', kwargs)
+    return client.make_request(method=RequestType.PATCH, endpoint='/main/users/profile/', body=kwargs)
 
 
 def delete_account_raw(client: 'Me') -> dict:
@@ -335,7 +336,7 @@ def delete_account_raw(client: 'Me') -> dict:
 
         {}
     """
-    return client._make_request('delete', '/main/settings/remove-user/')
+    return client.make_request(method=RequestType.DELETE, endpoint='/main/settings/remove-user/')
 
 
 def suspend_account_raw(client: 'Me') -> dict:
@@ -368,12 +369,12 @@ def suspend_account_raw(client: 'Me') -> dict:
             'who_deleted_notification_enabled': False
         }
     """
-    return client._make_request('put', '/main/settings/suspend-user/')
+    return client.make_request(method=RequestType.PUT, endpoint='/main/settings/suspend-user/')
 
 
 def _contact_handler(client: 'Me', to_add: bool, contacts: List[dict]) -> dict:
     body = {"add": contacts if to_add else [], "is_first": False, "remove": contacts if not to_add else []}
-    return client._make_request('post', '/main/contacts/sync/', body)
+    return client.make_request(method=RequestType.POST, endpoint='/main/contacts/sync/', body=body)
 
 
 def add_contacts_raw(client: 'Me', contacts: List[dict]) -> dict:
@@ -420,7 +421,7 @@ def add_contacts_raw(client: 'Me', contacts: List[dict]) -> dict:
             'failed_contacts': []
         }
     """
-    return _contact_handler(client, to_add=True, contacts=contacts)
+    return _contact_handler(client=client, to_add=True, contacts=contacts)
 
 
 def remove_contacts_raw(client: 'Me', contacts: List[dict]) -> dict:
@@ -460,7 +461,7 @@ def remove_contacts_raw(client: 'Me', contacts: List[dict]) -> dict:
     Args:
         contacts:
     """
-    return _contact_handler(client, to_add=False, contacts=contacts)
+    return _contact_handler(client=client, to_add=False, contacts=contacts)
 
 
 def add_calls_raw(client: 'Me', calls: List[dict]) -> dict:
@@ -488,7 +489,7 @@ def add_calls_raw(client: 'Me', calls: List[dict]) -> dict:
         ]
     """
     body = {"add": calls, "remove": []}
-    return client._make_request('post', '/main/call-log/change-sync/', body)
+    return client.make_request(method=RequestType.POST, endpoint='/main/call-log/change-sync/', body=body)
 
 
 def remove_calls_raw(client: 'Me', calls: List[dict]) -> dict:
@@ -516,7 +517,7 @@ def remove_calls_raw(client: 'Me', calls: List[dict]) -> dict:
         ]
     """
     body = {"add": [], "remove": calls}
-    return client._make_request('post', '/main/call-log/change-sync/', body)
+    return client.make_request(method=RequestType.POST, endpoint='/main/call-log/change-sync/', body=body)
 
 
 def block_profile_raw(client: 'Me', phone_number: int, block_contact: bool, me_full_block: bool) -> dict:
@@ -542,7 +543,7 @@ def block_profile_raw(client: 'Me', phone_number: int, block_contact: bool, me_f
         }
     """
     body = {"block_contact": block_contact, "me_full_block": me_full_block, "phone_number": phone_number}
-    return client._make_request('post', '/main/users/profile/block/', body)
+    return client.make_request(method=RequestType.POST, endpoint='/main/users/profile/block/', body=body)
 
 
 def unblock_profile_raw(client: 'Me', phone_number: int, unblock_contact=True, me_full_unblock=True) -> dict:
@@ -568,7 +569,7 @@ def unblock_profile_raw(client: 'Me', phone_number: int, unblock_contact=True, m
         }
     """
     body = {"block_contact": not unblock_contact, "me_full_block": not me_full_unblock, "phone_number": phone_number}
-    return client._make_request('post', '/main/users/profile/block/', body)
+    return client.make_request(method=RequestType.POST, endpoint='/main/users/profile/block/', body=body)
 
 
 def block_numbers_raw(client: 'Me', numbers: List[int]) -> dict:
@@ -592,7 +593,8 @@ def block_numbers_raw(client: 'Me', numbers: List[int]) -> dict:
             }
         ]
     """
-    return client._make_request('post', '/main/users/profile/bulk-block/', {"phone_numbers": numbers})
+    return client.make_request(method=RequestType.POST, endpoint='/main/users/profile/bulk-block/',
+                               body={"phone_numbers": numbers})
 
 
 def unblock_numbers_raw(client: 'Me', numbers: List[int]) -> dict:
@@ -613,7 +615,8 @@ def unblock_numbers_raw(client: 'Me', numbers: List[int]) -> dict:
             'message': 'Phone numbers successfully unblocked'
         }
     """
-    return client._make_request('post', '/main/users/profile/bulk-unblock/', {"phone_numbers": numbers})
+    return client.make_request(method=RequestType.POST, endpoint='/main/users/profile/bulk-unblock/',
+                               body={"phone_numbers": numbers})
 
 
 def get_blocked_numbers_raw(client: 'Me') -> List[dict]:
@@ -635,7 +638,7 @@ def get_blocked_numbers_raw(client: 'Me') -> List[dict]:
             }
         ]
     """
-    return client._make_request('get', '/main/settings/blocked-phone-numbers/')
+    return client.make_request(method=RequestType.GET, endpoint='/main/settings/blocked-phone-numbers/')
 
 
 def upload_image_raw(client: 'Me', binary_img: bytes) -> dict:
@@ -670,8 +673,9 @@ def upload_image_raw(client: 'Me', binary_img: bytes) -> dict:
             'url': 'https://d18zaexen4dp1s.cloudfront.net/24e9a99sdisfiseorew0b5a7a2c38.jpg'
         }
     """
-    headers = {'user-agent': 'okhttp/4.9.1'}
-    return client._make_request('post', '/media/file/upload/', files={'file': binary_img}, headers=headers)
+    headers = {'user-agent': HEADERS['user-agent']}
+    return client.make_request(method=RequestType.POST, endpoint='/media/file/upload/', headers=headers,
+                               files={'file': binary_img})
 
 
 def update_fcm_token_raw(client: 'Me', fcm_token: str = None) -> dict:
@@ -683,4 +687,5 @@ def update_fcm_token_raw(client: 'Me', fcm_token: str = None) -> dict:
     :param fcm_token: FCM token.
     :type fcm_token: ``str``
     """
-    return client._make_request('post', '/notification/users/firebase-token/', {'token': fcm_token or grft()})
+    return client.make_request(method=RequestType.POST, endpoint='/notification/users/firebase-token/',
+                               body={'token': fcm_token or grft()})
