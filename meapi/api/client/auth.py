@@ -124,6 +124,7 @@ class AuthMethods:
                     activation_code = input("Enter the activation code you received (6 digits): ")
                     if not re.match(r'^\d{6}$', str(activation_code)):
                         print("Not a valid 6-digits activation code!")
+                        activation_code = None
                         continue
             else:
                 raise NeedActivationCode
