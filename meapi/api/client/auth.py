@@ -69,8 +69,6 @@ class AuthMethods:
         if self._auth_data is None and self.phone_number:
             self._Me__init_done = False
             interactive_mode = interactive_mode or self._interactive_mode
-            if not interactive_mode and activation_code is None:
-                raise NeedActivationCode
             need_emulate = False
             activate_already = False
             while self._auth_data is None:
@@ -109,15 +107,19 @@ class AuthMethods:
         :return: Is success.
         :type: ``bool``
         """
+        self._Me__init_done = False
+        self._auth_data = None
+        if not self.phone_number:
+            return True
         try:
             self._credentials_manager.delete(phone_number=str(self.phone_number))
         except TypeError as e:
             raise BrokenCredentialsManager(str(e))
-        self._Me__init_done = False
-        self._auth_data = None
         return True
 
     def _activate(self: 'Me', activation_code: Optional[str], interactive_mode: bool):
+        if not interactive_mode and activation_code is None:
+            raise NeedActivationCode
         if activation_code is None:
             if interactive_mode:
                 self._choose_verification()
@@ -246,7 +248,7 @@ class AuthMethods:
         :return: Is success to generate new access token.
         :type: ``bool``
         """
-        if self._auth_data is None:
+        if self._auth_data is None:  # after logout
             raise NotLoggedIn
         try:
             new_auth_data = generate_new_access_token_raw(
@@ -395,6 +397,8 @@ class AuthMethods:
                     if self._generate_access_token():
                         continue
                 else:  # official authentication method, no pwd_token to generate access token
+                    if self._auth_data is None:  # after logout
+                        raise NotLoggedIn("You are not logged in!")
                     raise ForbiddenRequest(http_status=response.status_code, msg=str(response_text.get('detail')))
 
             if response.status_code >= 400:
