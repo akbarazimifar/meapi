@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, Type
 
 if TYPE_CHECKING:
     from meapi.models.me_model import MeModel
@@ -33,16 +33,17 @@ class IncorrectPwdToken(MeApiException):
         self.http_status = http_status
         self.msg = msg
         self.reason = reason or f"Your 'pwd_token' in is broken (You probably activated the account elsewhere)." \
-                                f"You need to call 'client._activate_account()' or create new instance of Me() in " \
-                                "order to generate a new 'pwd_token'."
+                                f"\nYou need to re-activate the account by calling the `me._client.login(args)`" \
+                                f" method or by creating a new instance o the `Me` class." \
+                                f"\n- For more info: https://meapi.readthedocs.io/en/latest/setup.html#initialization"
 
 
 class PhoneNumberDoesntExists(MeApiException):
-    """Raise this exception when the phone number doesn't exists."""
+    """Raise this exception when the phone number doesn't exist in me database."""
     def __init__(self, http_status: int, msg: str, reason: Optional[str] = None):
         self.http_status = http_status
         self.msg = msg
-        self.reason = reason or "Not a valid phone number!"
+        self.reason = reason or "Looks like you haven't ask for a verification code yet."
 
 
 class IncorrectActivationCode(MeApiException):
@@ -50,7 +51,7 @@ class IncorrectActivationCode(MeApiException):
     def __init__(self, http_status: int, msg: str, reason: Optional[str] = None):
         self.http_status = http_status
         self.msg = msg
-        self.reason = reason or "Wrong activation code!"
+        self.reason = reason or "Incorrect activation code!"
 
 
 class BlockedMaxVerifyReached(MeApiException):
@@ -59,7 +60,8 @@ class BlockedMaxVerifyReached(MeApiException):
         self.http_status = http_status
         self.msg = msg
         self.reason = reason or "You have reached the maximum number of attempts " \
-                                "to verify your phone number with sms or call!"
+                                "to verify your phone number with sms or call!\n" \
+                                "- For more info: https://meapi.readthedocs.io/en/latest/setup.html#sms-or-call"
 
 
 class ActivationCodeExpired(MeApiException):
@@ -99,7 +101,10 @@ class UserCommentsDisabled(MeApiException):
     Raise this exception when the user comments are disabled.
     Happens when trying to publish a comment to a user that disabled comments.
     """
-    pass
+    def __init__(self, http_status: int, msg: str, reason: Optional[str] = None):
+        self.http_status = http_status
+        self.msg = msg
+        self.reason = reason or "This user disabled comments on his profile!"
 
 
 class UserCommentsPostingIsNotAllowed(MeApiException):
@@ -107,7 +112,10 @@ class UserCommentsPostingIsNotAllowed(MeApiException):
     Raise this exception when the user comments posting is not allowed.
     Happens when trying to publish a comment to a user that blocked you from commenting.
     """
-    pass
+    def __init__(self, http_status: int, msg: str, reason: Optional[str] = None):
+        self.http_status = http_status
+        self.msg = msg
+        self.reason = reason or "This user blocked you from commenting on his profile!"
 
 
 class CommentAlreadyApproved(MeApiException):
@@ -141,8 +149,8 @@ class NewAccountException(MeApiException):
     def __init__(self, http_status: int, msg: str, reason: Optional[str] = None):
         self.http_status = http_status
         self.msg = msg
-        self.reason = reason or "This is a new account! " \
-                                "You need to register it first with the Me(new_account_details=NewAccountDetails)!"
+        self.reason = reason or "This is a new account that needs to be registered!\n" \
+                                "- For more info: https://meapi.readthedocs.io/en/latest/content/setup.html#id2"
 
 
 class BlockedAccount(MeApiException):
@@ -173,7 +181,8 @@ class ForbiddenRequest(MeApiException):
     def __init__(self, http_status: int, msg: str, reason: Optional[str] = None):
         self.http_status = http_status
         self.msg = msg
-        self.reason = reason or "The access token is expired!"
+        self.reason = reason or "The access token is not valid!\n- For more info: " \
+                                "https://meapi.readthedocs.io/en/latest/content/setup.html#official-method"
 
 
 class MeApiError(Enum):
@@ -230,6 +239,12 @@ class NotValidPhoneNumber(MeException):
         self.msg = msg or "Phone number must be 11-15 digits long!"
 
 
+class NotValidAccessToken(MeException):
+    """Raise this exception when the access token is not valid."""
+    def __init__(self, msg: Optional[str] = None):
+        self.msg = msg or "Access token not valid! (must contains 3 parts separated by '.')"
+
+
 class ContactHasNoUser(MeException):
     """Raise this exception when the contact has no user."""
     def __init__(self, msg: Optional[str] = None):
@@ -239,6 +254,7 @@ class ContactHasNoUser(MeException):
 class FrozenInstance(MeException):
     """
     Raise this exception when trying to change a frozen instance.
+        - In some cases, the library uses frozen instances to prevent changing the attributes because in some models, reassigning the attributes will actually change the data on the server.
 
     :param cls: The class of the frozen instance.
     :type cls: MeModel
@@ -247,13 +263,14 @@ class FrozenInstance(MeException):
     :param msg: Reason of the exception. override the default message.
     :type msg: str
     """
-    def __init__(self, cls: 'MeModel', attr: str, msg: Optional[str] = None):
+    def __init__(self, cls: Type['MeModel'], attr: str, msg: Optional[str] = None):
         self.msg = msg or f"Can't modify frozen instance of {cls.__class__.__name__} with attribute '{attr}'!"
 
 
 class BrokenCredentialsManager(MeException):
     """
     Raise this exception when the credentials manager is broken.
+        - Happens when login was successful but the credentials manager not providing the access token.
 
     :param msg: Reason of the exception.
     :type msg: str
@@ -261,3 +278,30 @@ class BrokenCredentialsManager(MeException):
     def __init__(self, msg: Optional[str] = None):
         self.msg = msg or "It seems that the CredentialsManager does not provide the necessary data!"
 
+
+class NeedActivationCode(MeException):
+    """
+    Raise this exception when the activation code is needed.
+        - Happens when trying to login to a new account without providing the activation code in the constructor and the client initialized with ``interaction_mode`` = ``False``.
+
+    :param msg: Reason of the exception.
+    :type msg: str
+    """
+    def __init__(self, msg: Optional[str] = None):
+        self.msg = msg or "You need to provide the activation code in the constructor:\n" \
+                          "\t- if this is first initialization of the client: Me(phone_number, activation_code)\n" \
+                          "\t- if the client is already initialized: me_client.login(activation_code)" \
+                          "\n-For more info: https://meapi.readthedocs.io/en/latest/content/setup.html#initialization"
+
+
+class NotLoggedIn(MeException):
+    """
+    Raise this exception when the user is not logged in.
+        - Happens when trying to call a method after calling ``me_client.logout(args)``
+
+    :param msg: Reason of the exception.
+    :type msg: str
+    """
+    def __init__(self, msg: Optional[str] = None):
+        self.msg = msg or "You are not logged in! call me_client.login(args)" \
+                          " first or create a new instance of Me class."
