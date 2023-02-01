@@ -22,7 +22,6 @@ class RedisCredentialsManager(CredentialsManager):
 
     """
     def __init__(self, redis):
-        super().__init__()
         self.redis = redis
 
     def get(self, phone_number: str) -> Optional[Dict[str, str]]:

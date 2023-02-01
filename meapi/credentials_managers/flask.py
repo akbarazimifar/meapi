@@ -12,7 +12,6 @@ class FlaskSessionCredentialsManager(CredentialsManager):
         - session: (``flask.sessions.Session``) The flask session.
     """
     def __init__(self, session):
-        super().__init__()
         self.session = session
 
     def get(self, phone_number: str) -> Optional[Dict[str, str]]:

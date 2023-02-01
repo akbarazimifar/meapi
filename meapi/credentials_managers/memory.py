@@ -5,7 +5,7 @@ from meapi.credentials_managers import CredentialsManager
 class MemoryCredentialsManager(CredentialsManager):
     """
     Memory Credentials Manager.
-        - This class is used to store the credentials in memory.
+        - This class is storing the credentials in memory.
         - The data will be lost when the program ends.
     """
     def __init__(self):

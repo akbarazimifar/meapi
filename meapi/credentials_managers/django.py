@@ -12,7 +12,6 @@ class DjangoSessionCredentialsManager(CredentialsManager):
         - session: (``django.contrib.sessions.backends.base.SessionBase``) The django session.
     """
     def __init__(self, session):
-        super().__init__()
         self.session = session
 
     def get(self, phone_number: str) -> Optional[Dict[str, str]]:

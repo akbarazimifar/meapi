@@ -8,14 +8,12 @@ class CredentialsManager(ABC):
     Abstract class for credentials managers.
         - You can implement your own credentials manager to store credentials in your own way.
     """
-
-    def __init__(self):
-        self._logger = logging.getLogger(self.__class__.__name__)
-
     @abstractmethod
     def get(self, phone_number: str) -> Optional[Dict[str, str]]:
         """
         Get the credentials by ``phone_number`` key.
+            - If the credentials are not in the manager, return ``None``.
+            - The keys of the dict must be: ``access``, ``refresh`` and ``pwd_token``, see example below.
 
         :param phone_number: The phone number of the client.
         :type phone_number: ``str``
@@ -36,6 +34,7 @@ class CredentialsManager(ABC):
     def set(self, phone_number: str, data: Dict[str, str]):
         """
         Set the credentials by ``phone_number`` key.
+            - If the credentials are already in the manager, update them.
 
         :param phone_number: The phone number of the client.
         :type phone_number: str
@@ -68,5 +67,7 @@ class CredentialsManager(ABC):
     def delete(self, phone_number: str):
         """
         Delete the credentials by ``phone_number`` key.
+            - If the credentials are not in the manager, do nothing.
+            - You can implement your own idea of what ``delete`` means (e.g. change the state of your credentials).
         """
         pass

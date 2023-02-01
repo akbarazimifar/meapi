@@ -13,7 +13,7 @@ class JsonCredentialsManager(CredentialsManager):
     Parameters:
         - config_file: (``str``) The config json file path. *Default:* ``meapi_credentials.json``.
 
-            .. code-block:: text
+            .. code-block:: json
 
                 {
                     "123456789": {"pwd_token": "xxx", "access": "xxx", "refresh": "xxx"},
