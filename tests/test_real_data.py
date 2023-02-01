@@ -39,7 +39,6 @@ def test_login(phone_number, cm, new_account_details, activation_code):
             phone_number=phone_number,
             activation_code=activation_code,
             credentials_manager=cm,
-            raise_new_account_exception=True
         )
     except NewAccountException:
         me = Me(phone_number=phone_number, credentials_manager=cm, new_account_details=new_account_details)
