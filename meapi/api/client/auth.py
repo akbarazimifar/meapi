@@ -90,6 +90,8 @@ class AuthMethods:
                             raise NewAccountException(http_status=e.http_status, msg=e.msg)
                         self._register(new_account_details=new_account_details)
                         need_emulate = True
+                        continue
+                    raise e
                 activate_already = True
             if need_emulate:
                 self._emulate_app()
