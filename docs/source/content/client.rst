@@ -104,3 +104,9 @@ This page is about the client methods.
 ----------
 .. automethod:: Me.get_settings
 .. automethod:: Me.change_settings
+
+🔩 Advanced
+-----------
+.. automethod:: Me.login
+.. automethod:: Me.logout
+.. automethod:: Me.make_request

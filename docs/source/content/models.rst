@@ -97,6 +97,11 @@
 .. autoclass:: MutualContact()
 
 
+📑 Others
+----------
 .. currentmodule:: meapi.models.others
 .. autoclass:: NewAccountDetails()
-
+.. autoclass:: Call()
+.. autoclass:: Contact()
+.. autoclass:: CallType()
+.. autoclass:: RequestType()

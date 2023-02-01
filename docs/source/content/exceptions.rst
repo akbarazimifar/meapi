@@ -68,6 +68,9 @@ This are the exceptions that may be raised by the library:
 
 .. autoclass:: MeException
 .. autoclass:: NotValidPhoneNumber
+.. autoclass:: NotValidAccessToken
+.. autoclass:: NotLoggedIn
+.. autoclass:: NeedActivationCode
 .. autoclass:: ContactHasNoUser
 .. autoclass:: FrozenInstance
 .. autoclass:: BrokenCredentialsManager

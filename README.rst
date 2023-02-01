@@ -31,7 +31,7 @@ ________________________
 
 ☎️ **meapi** is a Python3 library to identify, discover and get information about phone numbers, indicate and report spam, get and manage socials, profile management and much more.
 
-🔐 To **get started**, read the `Authentication guide <https://meapi.readthedocs.io/en/latest/content/setup.html>`_.
+🔐 To **get started**, read the `Setup guide <https://meapi.readthedocs.io/en/latest/content/setup.html>`_.
 
 📖 For a **complete documentation** of available functions, see the `Reference <https://meapi.readthedocs.io/en/latest/content/reference.html>`_.
 
@@ -97,7 +97,7 @@ ________________________
     from meapi import Me
 
     # Initialize the Client:
-    me = Me(phone_number=972123456789) # Replace with your phone number
+    me = Me(phone_number=972123456789, interactive_mode=True)
     # me = Me(access_token='eyJ0eXAiOiJ') # If you have official access token
 
     # ☎ Get information about any phone number:

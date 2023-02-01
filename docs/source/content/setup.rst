@@ -9,10 +9,67 @@
 
 ========================================================================
 
+🎛️ Initialization
+-------------------
+There are two ways to initialize the :py:obj:`~meapi.Me` client. *the programmatic way* and *the interactive way*.
+
+💻 The programmatic way
+.......................
+
+Here you will need to provide the phone number and the activation code and also try to catch the exceptions that may occur.
+
+- This method is more suitable for automation, for example if you want to interact with the client from a web server.
+
+    >>> from meapi import Me
+    >>> me = Me(phone_number=1234567890, activation_code='123456', interactive_mode=False) # intractive_mode=False is the default value
+    >>> my_profile = me.get_my_profile() # start using the client
+
+You may want to catch some exceptions that may occur during the initialization process:
+
+    >>> from meapi import Me
+    >>> try:
+    ...     me = Me(phone_number=1234567890, activation_code='123456', interactive_mode=False)
+    ... except NewAccountException: # If this is a new number that is not already open an account
+    ...     me = Me(phone_number=1234567890, new_account_details=NewAccountDetails(
+    ...         first_name="Chandler",
+    ...         last_name="Bing",
+    ...         email="chandler.bing@freinds.tv"
+    ...     ))
+    >>> my_profile = me.get_my_profile() # start using the client
+
+- See the exceptions that may occur in the initialization process of the :py:obj:`~meapi.Me` class (in the ``raises`` section).
+
+
+✍️ The interactive way
+.......................
+
+Here you will be prompted to choose the authentication method and then you will be prompted to enter the necessary information.
+
+- This method is more suitable for self use, for testing and for thous who are not familiar with the library.
+
+>>> from meapi import Me
+>>> me = Me(interactive_mode=True)
+Welcome to Meapi!
+How do you want to login?"
+    1. Unofficial method (phone number)
+    2. Official method (access token)
+Enter your choice (1-2): 1
+Enter your phone number: 1234567890
+To get access token you need to authorize yourself.
+Enter your verification code (6 digits): 123456
+>>> my_profile = me.get_my_profile() # start using the client
+
+
+========================================================================
+
 🔐 Authentication
 -----------------
 
-✅ **Unofficial method**
+No matter the initialization method you choose, you will need to authenticate yourself in order to use the client.
+There are two ways for authentication, the unofficial method and the official method.
+
+✅ Unofficial method
+.....................
 
 *important notes:*
 
@@ -21,33 +78,20 @@
     - After verification, if you are connected to another device, Chances are you will be disconnected.
     - For app users there is an Rate-limit of about ``350`` phone searches and ``500`` profile views per day.
 
-*Verification:*
-
-- Run this code:
-
-.. code-block:: python
-
-    from meapi import Me
-    me = Me(phone_number=1234567890) # Enter your phone number
-
-- If you have not verified this number before, you will see the following prompt in the terminal:
-
-::
-
-    To get access token you need to authorize yourself:
-    * WhatsApp (Recommended): https://wa.me/972543229534?text=Connectme
-    * Telegram: http://t.me/Meofficialbot?start=__iw__XXXXXXXXXX // Your phone number instead of the 'XXXXX'
-
-    ** Enter your verification code (6 digits):
 
 - There are two forms of active authentication, which means that you can initialize the client with the authentication code that you will receive actively in one of the following forms:
-    1. WhatsApp: Go to `WhatsApp <https://wa.me/972543229534?text=Connectme>`_ and send any message to this number (`+972543229534 <tel:+972543229534>`_) to get a verification code.
-    2. Telegram: Go to Telegram (http://t.me/Meofficialbot?start=__iw__XXXXXX Replace the ``XXXXX`` with your phone number) and hit ``start`` to get a verification code.
+    1. **WhatsApp:** Go to `WhatsApp <https://wa.me/972543229534?text=Connectme>`_ and send any message to this number (`+972543229534 <tel:+972543229534>`_) to get a verification code.
+    2. **Telegram:** Go to Telegram (http://t.me/Meofficialbot?start=__iw__XXXXXX Replace the ``XXXXX`` with your phone number) and hit ``/start`` to get a verification code.
 
-- Enter the code in the terminal and you will see if the verification was successful.
+- After you get the code, you can initialize the client with the following code:
+
+>>> from meapi import Me
+>>> me = Me(phone_number=1234567890, activation_code='123456')
+
 - If this is a new number that is not already open an account, you will be required to fill in some details like name and email in order to create an account, See `Registration <https://meapi.readthedocs.io/en/latest/content/setup.html#id2>`_.
 
-🔓 **Official method**
+🔓 Official method
+...................
 
 - You can also use the official verification and verify directly with an access token.
     Me has an official API which can be accessed by submitting a formal request at `this <https://meapp.co.il/api/>`_ link (Probably paid).
@@ -106,7 +150,7 @@ You can also initialize the client with the necessary information in advance, go
         new_account_details=data
     )
 
-If you don't know if this is a new account, you can ask to raise :py:obj:`~meapi.utils.exceptions.NewAccountException` if the account is new:
+If you don't know if this is a new account, try except for :py:obj:`~meapi.utils.exceptions.NewAccountException`:
 
 .. code-block:: python
 
@@ -122,11 +166,9 @@ If you don't know if this is a new account, you can ask to raise :py:obj:`~meapi
             last_name=input("Enter last name: "),
             email=input("Enter email: ")
         )
-        me = Me(phone_number=972123456789, activation_code='123456', new_account_details=data)
+        me = Me(phone_number=972123456789, new_account_details=data) # no need to enter the activation code because the credentials are already saved
 
-    # Continue with the code
-
-- After registration, sometimes it will take time for the account to be activated, so you may receive a ``404`` error while trying to search for a phone number or view a profile. So you may want to run the :py:func:`~meapi.Me.upload_random_data` function, in order to activate the account.
+    # Continue using the client
 
 ========================================================================
 

@@ -7,13 +7,16 @@ meapi, needs to store your credentials (access token, refresh token etc.) in ord
 
 There are number of credentials managers that are already implemented in the project:
 
-- :py:obj:`~meapi.credentials_managers.json_files.JsonCredentialsManager` that stores the credentials in a json file (``meapi_credentials.json`` by default).
+- :py:obj:`~meapi.credentials_managers.json_files.JsonCredentialsManager`: stores the credentials in a json file (``meapi_credentials.json`` by default).
     - This is the default credentials manager.
-- :py:obj:`~meapi.credentials_managers.memory.MemoryCredentialsManager` that stores the credentials in memory.
+- :py:obj:`~meapi.credentials_managers.memory.MemoryCredentialsManager`: stores the credentials in memory.
     - The credentials will be lost when the program exits
-- :py:obj:`~meapi.credentials_managers.redis.RedisCredentialsManager` that stores the credentials in a redis database.
-- :py:obj:`~meapi.credentials_managers.flask.FlaskSessionCredentialsManager` that stores the credentials in a flask session.
-- :py:obj:`~meapi.credentials_managers.django.DjangoSessionCredentialsManager` that stores the credentials in a django session.
+
+And more... (see the list below)
+
+---------------------------------
+
+How to use a credentials manager? simple as that:
 
 >>> from me import Me
 >>> me = Me(phone_number=972123456789, credentials_manager=YourCredentialsManager())
@@ -22,7 +25,8 @@ There are number of credentials managers that are already implemented in the pro
 
 ---------------------------------
 
-➕ **Creating your own custom CredentialsManager:**
+➕ Creating your own custom CredentialsManager
+-----------------------------------------------
 
 - You must implement the methods ``get``, ``set``, ``update`` and ``delete`` in order to allow ``meapi`` to store and manage the credentials.
 
@@ -33,67 +37,82 @@ There are number of credentials managers that are already implemented in the pro
 
 ---------------------------------
 
-📄 **Examples:**
+🗄️ Example: Using a database
+----------------------------
 
-Let's say you want to store the credentials in a database, create a new class that implements the :py:obj:`~meapi.credentials_managers.CredentialsManager` interface:
+Let's say you want to store the credentials in a database
 
-*In this example we will use the pony ORM, but you can use any other ORM or database library you want.*
+- In this example we will use the `Pony ORM <https://ponyorm.org/>`_ , but you can use any other ORM or database library you want.
+
+Creating the database
+......................
+
+First, we need to create the database and the table that will store the credentials:
+
+.. code-block:: python
+
+    from pony.orm import Database, PrimaryKey, Required
+
+    db = Database()
+    db.bind(provider='sqlite', filename='meapi_credentials.sqlite', create_db=True)
+
+    class MeUser(db.Entity):
+        _table_ = 'me_user'
+        phone_number = PrimaryKey(str)
+        pwd_token = Required(str)
+        access = Required(str)
+        refresh = Required(str)
+        status = Required(str, default='active')
+
+    db.generate_mapping(create_tables=True)
+
+
+Implementing the CredentialsManager interface
+...............................................
+
+Create a new class that implements the :py:obj:`~meapi.credentials_managers.CredentialsManager` interface:
 
 .. code-block:: python
 
     from meapi.credentials_manager import CredentialsManager
-    from typing import Optional
-    from pony.orm import Database, Required, db_session
-
-    db = Database()
-
-    class User(db.Entity):
-        phone_number = Required(str, unique=True)
-        pwd_token Required(str)
-        access = Required(str)
-        refresh = Required(str)
-
-    db.bind(provider='sqlite', filename='meapi_credentials.sqlite', create_db=True)
-    db.generate_mapping(create_tables=True)
-
-    # Now we implement the CredentialsManager interface
+    from typing import Optional, Dict
+    from pony.orm import db_session
 
     class DatabaseCredentialsManager(CredentialsManager):
-        def __init__(self):
-            pass
-
-        @db_session
-        def get(self, phone_number: str) -> Optional[Dict[str, str]]:
-            user = User.get(phone_number=phone_number)
-            if user:
-                return {
-                    'pwd_token': user.pwd_token,
-                    'access': user.access,
-                    'refresh': user.refresh
-                }
-            return None
-
         @db_session
         def set(self, phone_number: str, data: dict):
             User(phone_number=phone_number, **data)
 
         @db_session
+        def get(self, phone_number: str) -> Optional[Dict[str, str]]:
+            user = User.get(phone_number=phone_number)
+            return user.to_dict(only=['pwd_token', 'access', 'refresh']) if
+                (user and user.status == 'active') else None
+
+        @db_session
         def update(self, phone_number: str, access_token: str):
-            User.get(phone_number=phone_number).access = access_token
+            User[phone_number].access = access_token
 
         @db_session
         def delete(self, phone_number: str):
-            User.get(phone_number=phone_number).delete()
+            User[phone_number].status = 'inactive' # We don't want actually to delete the user from the database
 
 
-You can use the credentials manager in the following way:
+Using the CredentialsManager
+............................
 
-    >>> from me import Me
+Now we can use the credentials manager by passing it to the :py:obj:`~meapi.Me` class:
+
+    >>> from meapi import Me
     >>> dbcm = DatabaseCredentialsManager()
-    >>> me = Me(phone_number=972123456789, credentials_manager=dbcm)
+    >>> me = Me(phone_number=972123456789, activation_code='123456', credentials_manager=dbcm)
 
 
 ====================================================================================================
+
+🎛️ Available Credentials Managers
+---------------------------------
+
 
 .. currentmodule:: meapi.credentials_managers.json_files
 .. autoclass:: JsonCredentialsManager()
