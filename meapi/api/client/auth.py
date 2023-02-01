@@ -59,6 +59,7 @@ class AuthMethods:
         :raises NeedActivationCode: If ``activation_code`` is not provided and ``interactive_mode`` is ``False``.
         :raises IncorrectActivationCode: If the activation code is incorrect and ``interactive_mode`` is ``False``.
         :raises ActivationCodeExpired: If the activation code is expired and ``interactive_mode`` is ``False``.
+        :raises MaxValidateReached: If ``activation_code`` is incorrect for a few times.
         :raises NewAccountException: If the account is new and ``new_account_details`` is not provided and ``interactive_mode`` is ``False``.
         :raises BrokenCredentialsManager: If the credentials manager is broken (if authentication succeeded but the credentials manager failed to save the credentials).
 

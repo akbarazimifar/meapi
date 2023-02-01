@@ -55,13 +55,22 @@ class IncorrectActivationCode(MeApiException):
 
 
 class BlockedMaxVerifyReached(MeApiException):
-    """Raise this exception when the max verify attempts reached."""
+    """Raise this exception when the max verify attempts via sms or call reached."""
     def __init__(self, http_status: int, msg: str, reason: Optional[str] = None):
         self.http_status = http_status
         self.msg = msg
         self.reason = reason or "You have reached the maximum number of attempts " \
                                 "to verify your phone number with sms or call!\n" \
                                 "- For more info: https://meapi.readthedocs.io/en/latest/setup.html#sms-or-call"
+
+
+class MaxValidateReached(MeApiException):
+    """Raise this exception when the max validate attempts via WhatsApp or Telegram reached."""
+    def __init__(self, http_status: int, msg: str, reason: Optional[str] = None):
+        self.http_status = http_status
+        self.msg = msg
+        self.reason = reason or "You have reached the maximum number of attempts " \
+                                "to validate your phone number!"
 
 
 class ActivationCodeExpired(MeApiException):
@@ -194,6 +203,7 @@ class MeApiError(Enum):
     PHONE_NUMBER_DOESNT_EXISTS = PhoneNumberDoesntExists
     INCORRECT_ACTIVATION_CODE = IncorrectActivationCode
     BLOCKED_MAX_VERIFY_REACHED = BlockedMaxVerifyReached
+    MAX_VALIDATE_REACHED = MaxValidateReached
     ACTIVATION_CODE_EXPIRED = ActivationCodeExpired
     SEARCH_PASSED_LIMIT = SearchPassedLimit
     PROFILE_VIEW_PASSED_LIMIT = ProfileViewPassedLimit

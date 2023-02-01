@@ -62,6 +62,7 @@ class Me(MeModel, AuthMethods, AccountMethods, SocialMethods, SettingsMethods, N
     :raises NeedActivationCode: If the account is not activated and ``activation_code`` is not provided and ``interactive_mode`` is ``False``.
     :raises IncorrectActivationCode: If the ``activation_code`` is incorrect and ``interactive_mode`` is ``False``.
     :raises ActivationCodeExpired: If the ``activation_code`` is correct but expired (Request a new one) and ``interactive_mode`` is ``False``.
+    :raises MaxValidateReached: If the ``activation_code`` is not correct and the max number of tries reached (Request a new one).
     :raises ValueError: If both ``phone_number`` and ``access_token`` are provided.
     :raises NewAccountException: If this is new account and ``new_account_details`` is not provided and ``interactive_mode`` is ``False``.
     :raises TypeError: If ``credentials_manager`` is not an instance of :py:obj:`~meapi.credentials_managers.CredentialsManager`.
