@@ -3,44 +3,38 @@ from base64 import b64encode
 from datetime import datetime, date
 from quopri import encodestring
 from random import choice
-from typing import Union, Optional, TYPE_CHECKING
+from typing import Union, Optional
 from requests import get
 from string import ascii_letters, digits
 from hashlib import sha256
-from os import urandom, path
-from meapi.api.raw.account import upload_image_raw
+from os import urandom
 
-if TYPE_CHECKING:
-    from meapi.me import Me
 
-ANDROID_VERSION_CODE = 444
-ANDROID_VERSION_NAME = '7.2.6'
+AVC = 444
+AVN = '7.2.6'
+GIB = '545b7fc43d93'
 HEADERS = {
     'accept-encoding': 'gzip',
-    'user-agent': f'A({ANDROID_VERSION_CODE}):545b7fc43d93',
+    'user-agent': f'A({AVC}):{GIB}',
     'content-type': 'application/json; charset=UTF-8'
 }
 
-
-def upload_picture(client: 'Me', image: str) -> str:
-    """
-    Upload a profile picture from a local file or a direct url.
-    :param client: Me client
-    :type client: Me
-    :param image: Path or url to the image. for example: ``https://example.com/image.png``, ``/path/to/image.png``.
-    :type image: ``str``
-    :return: The url of the uploaded image.
-    :rtype: ``str``
-    :raises FileNotFoundError: If the file does not exist.
-    """
-    if not str(image).startswith("http"):
-        if not path.isfile(image):
-            raise FileNotFoundError(f"File {image} does not exist!")
-        with open(image, 'rb') as f:
-            image_data = f.read()
-    else:
-        image_data = get(url=str(image)).content
-    return upload_image_raw(client, image_data)['url']
+logo = \
+"""
+Welcome to meapi!
+                            _ 
+ _ __ ___   ___  __ _ _ __ (_)
+| '_ ` _ \ / _ \/ _` | '_ \| |
+| | | | | |  __/ (_| | |_) | |
+|_| |_| |_|\___|\__,_| .__/|_|
+                     |_|
+>> MeAPI v{version}
+>> Copyright (C) {copyright}
+>> Source Code: https://github.com/david-lev/meapi
+>> Documentation: https://meapi.readthedocs.io
+>> License: {license}
+>> meapi is free software and comes with ABSOLUTELY NO WARRANTY.
+"""
 
 
 def parse_date(date_str: Optional[str], date_only=False) -> Optional[Union[datetime, date]]:
