@@ -127,28 +127,27 @@ class AuthMethods:
                         continue
             else:
                 raise NeedActivationCode
+        if interactive_mode:
+            while True:
+                try:
+                    self._auth_data = AuthData(**activate_account_raw(
+                        client=self, phone_number=self.phone_number, activation_code=activation_code
+                    ))
+                    break
+                except (IncorrectActivationCode, ActivationCodeExpired, PhoneNumberDoesntExists) as e:
+                    print(e.reason)
+                    activation_code = input("Enter the activation code you received (6 digits): ")
+                    continue
         else:
-            if interactive_mode:
-                while True:
-                    try:
-                        self._auth_data = AuthData(**activate_account_raw(
-                            client=self, phone_number=self.phone_number, activation_code=activation_code
-                        ))
-                        break
-                    except (IncorrectActivationCode, ActivationCodeExpired, PhoneNumberDoesntExists) as e:
-                        print(e.reason)
-                        activation_code = input("Enter the activation code you received (6 digits): ")
-                        continue
-            else:
-                if not re.match(r'^\d{6}$', str(activation_code)):
-                    raise IncorrectActivationCode(
-                        http_status=400,
-                        msg=MeApiError.INCORRECT_ACTIVATION_CODE.name.lower(),
-                        reason="Not a valid 6-digits activation code!"
-                    )
-                self._auth_data = AuthData(**activate_account_raw(
-                    client=self, phone_number=self.phone_number, activation_code=activation_code
-                ))
+            if not re.match(r'^\d{6}$', str(activation_code)):
+                raise IncorrectActivationCode(
+                    http_status=400,
+                    msg=MeApiError.INCORRECT_ACTIVATION_CODE.name.lower(),
+                    reason="Not a valid 6-digits activation code!"
+                )
+            self._auth_data = AuthData(**activate_account_raw(
+                client=self, phone_number=self.phone_number, activation_code=activation_code
+            ))
         try:
             self._credentials_manager.set(
                 phone_number=str(self.phone_number), data=self._auth_data.as_dict()
