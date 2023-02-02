@@ -7,14 +7,13 @@ from uuid import UUID
 def validate_phone_number(phone_number: Union[str, int]) -> int:
     """
     Check if phone number is valid and return it clean without spaces, pluses or any other spacial characters.
-     For example, the following phone numbers are valid:
+     For example, the following phone numbers are valid and will be returned as ``972501234567``:
          - ``972501234567``
          - ``972-50-123-4567``
          - ``972 50 123 4567``
          - ``+972501234567``
          - ``+972-50-123-4567``
          - ``+972 50 123 4567``
-     and will be returned as ``972501234567``.
 
     :param phone_number: phone number in global format.
     :type phone_number:  ``int`` | ``str``

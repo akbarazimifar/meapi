@@ -4,7 +4,7 @@ from meapi.models.me_model import MeModel
 
 
 class AuthData(MeModel):
-    def __init__(self, access: str, refresh: str, pwd_token: Optional[str] = None):
+    def __init__(self, access: str, refresh: Optional[str], pwd_token: Optional[str] = None):
         self.access = access
         self.refresh = refresh
         self.pwd_token = pwd_token
@@ -22,7 +22,7 @@ class NewAccountDetails(MeModel):
     :param email: Email to use. *Default:* ``None``.
     :type email: ``str`` | ``None``
     """
-    def __init__(self, first_name: str, last_name: Optional[str] = None, email: Optional[str] = None):
+    def __init__(self, first_name: str, last_name: Optional[str] = '', email: Optional[str] = None):
         self.first_name = first_name
         self.last_name = last_name
         self.email = email

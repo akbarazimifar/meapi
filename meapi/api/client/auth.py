@@ -13,9 +13,12 @@ from meapi.api.raw.social import numbers_count_raw, get_news_raw
 from meapi.models.others import AuthData, NewAccountDetails, RequestType, AuthMethod
 from meapi.utils.exceptions import MeException, MeApiException, MeApiError, BlockedMaxVerifyReached, IncorrectPwdToken, \
     BrokenCredentialsManager, BlockedAccount, NewAccountException, ForbiddenRequest, NeedActivationCode, \
-    IncorrectActivationCode, ActivationCodeExpired, PhoneNumberDoesntExists, NotLoggedIn
-from meapi.utils.helpers import generate_session_token, AVN, AVC, HEADERS
+    IncorrectActivationCode, ActivationCodeExpired, PhoneNumberDoesntExists, NotLoggedIn, NotValidAccessToken, \
+    NotValidPhoneNumber
+from meapi.utils.helpers import generate_session_token, AVN, AVC, HEADERS, logo
 from meapi.utils.randomator import get_random_carrier, get_random_country_code, get_random_adv_id, generate_random_data
+from meapi.utils.validators import validate_phone_number, validate_access_token
+
 if TYPE_CHECKING:  # always False at runtime.
     from meapi import Me
 
@@ -24,7 +27,6 @@ _logger = logging.getLogger(__name__)
 ME_BASE_API = 'https://app.mobile.me.app'
 WA_AUTH_URL = "https://wa.me/972543229534?text=Connectme"
 TG_AUTH_URL = "http://t.me/Meofficialbot?start=__iw__{}"
-AUTH_SCHEMA = {key: str for key in ('access', 'refresh', 'pwd_token')}
 
 
 class AuthMethods:
@@ -120,6 +122,7 @@ class AuthMethods:
         return True
 
     def _activate(self: 'Me', activation_code: Optional[str], interactive_mode: bool):
+        """Activate the account."""
         if not interactive_mode and activation_code is None:
             raise NeedActivationCode
         if activation_code is None:
@@ -161,7 +164,39 @@ class AuthMethods:
         except TypeError as e:
             raise BrokenCredentialsManager(str(e))
 
+    def _choose_login_method(self: 'Me'):
+        """Allows the user to choose the login method in interactive mode."""
+        print(logo.format(version=meapi.__version__, copyright=meapi.__copyright__, license=meapi.__license__))
+        print("How do you want to login?\n"
+              "\t1. Unofficial method (phone number)\n\t2. Official method (access token)\n")
+        while True:
+            try:
+                choice = int(input("Please enter your choice: "))
+                if choice not in (1, 2):
+                    print("Please enter a valid choice! (1 or 2)")
+                    continue
+                break
+            except ValueError:
+                print("Please enter a valid choice! (1 or 2)")
+        while True:
+            if choice == 1:
+                try:
+                    self.phone_number = validate_phone_number(input("Please enter your phone number: "))
+                    self._auth_data = None
+                    break
+                except NotValidPhoneNumber:
+                    print("Please enter a valid phone number!")
+            elif choice == 2:
+                try:
+                    access_token = validate_access_token(input("Please enter your access token: "))
+                    self._auth_data = AuthData(access=access_token, refresh=None)
+                    self.phone_number = None
+                    break
+                except NotValidAccessToken:
+                    print("Please enter a valid access token!")
+
     def _choose_verification(self: 'Me'):
+        """Allows the user to choose the verification method in interactive mode."""
         anti_session_key = os.environ.get('ANTI_SESSION_BOT_KEY', None)
         print(f"In order to use meapi, you need to verify your phone number in "
               f"one of the following ways:")

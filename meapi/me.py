@@ -2,7 +2,6 @@ import os
 import requests
 import logging
 from typing import Union, Optional, Any
-import meapi
 from meapi.models.me_model import MeModel
 from meapi.models.others import NewAccountDetails, AuthData
 from meapi.api.client.account import AccountMethods
@@ -10,8 +9,7 @@ from meapi.api.client.notifications import NotificationsMethods
 from meapi.api.client.settings import SettingsMethods
 from meapi.api.client.social import SocialMethods
 from meapi.api.client.auth import AuthMethods
-from meapi.utils.exceptions import FrozenInstance, NotValidPhoneNumber, NotValidAccessToken
-from meapi.utils.helpers import logo
+from meapi.utils.exceptions import FrozenInstance
 from meapi.utils.validators import validate_phone_number, validate_access_token
 from meapi.credentials_managers import CredentialsManager
 from meapi.credentials_managers.json_files import JsonCredentialsManager
@@ -35,11 +33,10 @@ class Me(MeModel, AuthMethods, AccountMethods, SocialMethods, SettingsMethods, N
     Examples to setting up the client:
 
         >>> from meapi import Me
-        >>> me = Me(phone_number=972123456789) # Unofficial method, phone number is required, activation code will be prompted.
         >>> me = Me(phone_number=972123456789, activation_code='123456') # Unofficial method with pre-provided activation code.
+        >>> me = Me(interactive_mode=True) # With interactive mode (prompt for missing data instead of raising exceptions).
         >>> me = Me(access_token='xxxxxxxxxxxx') # Official method, access token is required (saved in memory).
         >>> me = Me(phone_number=972123456789, credentials_manager=RedisCredentialsManager(redis_con)) # With custom credentials manager.
-        >>> me = Me(phone_number=972123456789, interactive_mode=True) # With interactive mode (prompt for missing data instead of raising exceptions).
         >>> me = Me(phone_number=972123456789, activation_code='123456', new_account_details=NewAccountDetails(first_name='Chandler', last_name='Bing')) # New account registration.
 
     :param interactive_mode: If ``True``, the client will prompt for missing data instead of raising exceptions (See `Interactive mode <https://meapi.readthedocs.io/en/latest/content/setup.html#the-interactive-way>`_). *Default:* ``False``.
@@ -73,25 +70,30 @@ class Me(MeModel, AuthMethods, AccountMethods, SocialMethods, SettingsMethods, N
     :raises ForbiddenRequest: In the official method, if the ``access_token`` is not valid.
     :raises FrozenInstance: If you try to change the value of an attribute.
     """
-    def __init__(self,
-                 phone_number: Union[int, str] = None,
-                 access_token: Optional[str] = None,
-                 activation_code: Optional[str] = None,
-                 credentials_manager: Optional[CredentialsManager] = None,
-                 new_account_details: Optional[NewAccountDetails] = None,
-                 interactive_mode: bool = False,
-                 session: Optional[requests.Session] = None
-                 ):
-        # check for the presence of the phone number or access token
+    def __init__(
+        self: 'Me',
+        phone_number: Union[int, str] = None,
+        access_token: Optional[str] = None,
+        activation_code: Optional[str] = None,
+        credentials_manager: Optional[CredentialsManager] = None,
+        new_account_details: Optional[NewAccountDetails] = None,
+        interactive_mode: bool = False,
+        session: Optional[requests.Session] = None
+    ):
         if not access_token and not phone_number:
-            access_token = self._choose_login_method(access_token=access_token, interactive_mode=interactive_mode)
+            if interactive_mode:
+                self._choose_login_method()
+            else:
+                raise ValueError("You must provide either phone number or access token!")
         elif access_token and phone_number:
             raise ValueError("You can't provide both phone number and access token!")
-        elif access_token and not phone_number:
+        elif access_token and not phone_number:  # official method
             access_token = validate_access_token(access_token)
+            self._auth_data = AuthData(access=access_token, refresh=None)
             self.phone_number = None
-        elif phone_number and not access_token:
+        elif phone_number and not access_token:  # unofficial method
             self.phone_number = validate_phone_number(phone_number)
+            self._auth_data = None
 
         # check for the presence valid credentials manager, else use default (JsonCredentialsManager)
         if credentials_manager is None:
@@ -105,42 +107,11 @@ class Me(MeModel, AuthMethods, AccountMethods, SocialMethods, SettingsMethods, N
         self.uuid = None
         self._interactive_mode = interactive_mode
         self._session = session or requests.Session()  # create new session if not provided
-        self._auth_data = None if not access_token else AuthData(access=access_token, refresh=access_token)
         self.login(
-            activation_code=activation_code, new_account_details=new_account_details, interactive_mode=interactive_mode
+            activation_code=activation_code,
+            new_account_details=new_account_details,
+            interactive_mode=interactive_mode
         )
-
-    def _choose_login_method(self, access_token, interactive_mode):
-        if interactive_mode:
-            print(logo.format(version=meapi.__version__, copyright=meapi.__copyright__, license=meapi.__license__))
-            print("How do you want to login?\n"
-                  "\t1. Unofficial method (phone number)\n\t2. Official method (access token)\n")
-            while True:
-                try:
-                    choice = int(input("Please enter your choice: "))
-                    if choice not in (1, 2):
-                        print("Please enter a valid choice!")
-                        continue
-                    break
-                except ValueError:
-                    print("Please enter a valid choice!")
-            while True:
-                if choice == 1:
-                    try:
-                        self.phone_number = validate_phone_number(input("Please enter your phone number: "))
-                        break
-                    except NotValidPhoneNumber:
-                        print("Please enter a valid phone number!")
-                elif choice == 2:
-                    try:
-                        access_token = validate_access_token(input("Please enter your access token: "))
-                        self.phone_number = None
-                        break
-                    except NotValidAccessToken:
-                        print("Please enter a valid access token!")
-        else:
-            raise ValueError("You need to provide phone number or access token!")
-        return access_token
 
     def __setattr__(self, key: str, value: Any):
         """
@@ -150,3 +121,10 @@ class Me(MeModel, AuthMethods, AccountMethods, SocialMethods, SettingsMethods, N
             if key in ('phone_number', 'uuid', '_credentials_manager', '_interactive_mode', '_session', '_auth_data'):
                 raise FrozenInstance(self, key)
         return super().__setattr__(key, value)
+
+    def __hash__(self):
+        if self.phone_number:
+            return hash(self.phone_number)
+        elif self._auth_data:
+            return hash(self._auth_data.access)
+        return False
