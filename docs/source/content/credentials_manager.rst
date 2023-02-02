@@ -76,12 +76,15 @@ Create a new class that implements the :py:obj:`~meapi.credentials_managers.Cred
 
     from meapi.credentials_manager import CredentialsManager
     from typing import Optional, Dict
-    from pony.orm import db_session
+    from pony.orm import db_session, TransactionIntegrityError
 
     class DatabaseCredentialsManager(CredentialsManager):
         @db_session
         def set(self, phone_number: str, data: dict):
-            User(phone_number=phone_number, **data)
+            try:
+                User(phone_number=phone_number, **data)
+            except TransactionIntegrityError: # phone_number already exists
+                User[phone_number].set(status='active', **data)
 
         @db_session
         def get(self, phone_number: str) -> Optional[Dict[str, str]]:

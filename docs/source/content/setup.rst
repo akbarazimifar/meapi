@@ -33,7 +33,7 @@ You may want to catch some exceptions that may occur during the initialization p
     ...     me = Me(phone_number=1234567890, new_account_details=NewAccountDetails(
     ...         first_name="Chandler",
     ...         last_name="Bing",
-    ...         email="chandler.bing@freinds.tv"
+    ...         email="chandler.bing@friends.tv"
     ...     ))
     >>> my_profile = me.get_my_profile() # start using the client
 
@@ -159,14 +159,15 @@ If you don't know if this is a new account, try except for :py:obj:`~meapi.utils
     from meapi.utils.exceptions import NewAccountException
 
     try:
-        me = Me(phone_number=972123456789, activation_code='123456', raise_new_account_exception=True)
+        me = Me(phone_number=972123456789, activation_code='123456')
     except NewAccountException:
         data = NewAccountDetails( # Ask the user for the details
             first_name=input("Enter first name: "),
             last_name=input("Enter last name: "),
-            email=input("Enter email: ")
+            email=input("Enter email: ") or None
         )
-        me = Me(phone_number=972123456789, new_account_details=data) # no need to enter the activation code because the credentials are already saved
+        # no need to for the activation code because the credentials are already saved
+        me = Me(phone_number=972123456789, new_account_details=data)
 
     # Continue using the client
 
