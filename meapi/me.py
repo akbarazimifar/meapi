@@ -65,7 +65,7 @@ class Me(MeModel, AuthMethods, AccountMethods, SocialMethods, SettingsMethods, N
     :raises TypeError: If ``credentials_manager`` is not an instance of :py:obj:`~meapi.credentials_managers.CredentialsManager`.
     :raises BlockedAccount: If the account is blocked (You need to contact Me support).
     :raises IncorrectPwdToken: If the ``pwd_token`` provided by the credentials manager is broken (You need to re-login).
-    :raises PhoneNumberDoesntExists: If the ``phone_number`` does not exist (Probably not valid phone number).
+    :raises PhoneNumberDoesntExists: If the ``phone_number`` never request an activation code.
     :raises BrokenCredentialsManager: If the ``credentials_manager`` not providing the expected data.
     :raises ForbiddenRequest: In the official method, if the ``access_token`` is not valid.
     :raises FrozenInstance: If you try to change the value of an attribute.
@@ -80,6 +80,17 @@ class Me(MeModel, AuthMethods, AccountMethods, SocialMethods, SettingsMethods, N
         interactive_mode: bool = False,
         session: Optional[requests.Session] = None
     ):
+        if credentials_manager is None:
+            self._credentials_manager = JsonCredentialsManager()
+        elif isinstance(credentials_manager, CredentialsManager):
+            self._credentials_manager = credentials_manager
+        else:
+            raise TypeError("credentials_manager must be an instance of CredentialsManager!")
+
+        self.uuid = None
+        self._interactive_mode = interactive_mode
+        self._session = session or requests.Session()  # create new session if not provided
+
         if not access_token and not phone_number:
             if interactive_mode:
                 self._choose_login_method()
@@ -95,18 +106,6 @@ class Me(MeModel, AuthMethods, AccountMethods, SocialMethods, SettingsMethods, N
             self.phone_number = validate_phone_number(phone_number)
             self._auth_data = None
 
-        # check for the presence valid credentials manager, else use default (JsonCredentialsManager)
-        if credentials_manager is None:
-            self._credentials_manager = JsonCredentialsManager()
-        elif isinstance(credentials_manager, CredentialsManager):
-            self._credentials_manager = credentials_manager
-        else:
-            raise TypeError("credentials_manager must be an instance of CredentialsManager!")
-
-        # set the rest of the attributes
-        self.uuid = None
-        self._interactive_mode = interactive_mode
-        self._session = session or requests.Session()  # create new session if not provided
         self.login(
             activation_code=activation_code,
             new_account_details=new_account_details,
@@ -119,12 +118,17 @@ class Me(MeModel, AuthMethods, AccountMethods, SocialMethods, SettingsMethods, N
         """
         if getattr(self, '_Me__init_done', None):
             if key in ('phone_number', 'uuid', '_credentials_manager', '_interactive_mode', '_session', '_auth_data'):
-                raise FrozenInstance(self, key)
+                raise FrozenInstance(cls=self, attr=key)
         return super().__setattr__(key, value)
 
     def __hash__(self):
+        """For equality check"""
         if self.phone_number:
             return hash(self.phone_number)
         elif self._auth_data:
             return hash(self._auth_data.access)
         return False
+
+    def __bool__(self):
+        """Check if logged in"""
+        return bool(self._auth_data)
