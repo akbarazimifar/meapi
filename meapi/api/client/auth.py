@@ -117,7 +117,7 @@ class AuthMethods:
             return True
         try:
             self._credentials_manager.delete(phone_number=str(self.phone_number))
-        except TypeError as e:
+        except (TypeError, KeyError) as e:
             raise BrokenCredentialsManager(str(e))
         return True
 
@@ -161,7 +161,7 @@ class AuthMethods:
             self._credentials_manager.set(
                 phone_number=str(self.phone_number), data=self._auth_data.as_dict()
             )
-        except TypeError as e:
+        except (TypeError, KeyError) as e:
             raise BrokenCredentialsManager(str(e))
 
     def _choose_login_method(self: 'Me'):
@@ -178,22 +178,32 @@ class AuthMethods:
                 break
             except ValueError:
                 print("Please enter a valid choice! (1 or 2)")
+        if choice == 1:
+            self._prompt_for_phone_number()
+        else:
+            self._prompt_for_access_token()
+
+    def _prompt_for_phone_number(self: 'Me'):
+        """Allows the user to enter the phone number in interactive mode."""
         while True:
-            if choice == 1:
-                try:
-                    self.phone_number = validate_phone_number(input("Please enter your phone number: "))
-                    self._auth_data = None
-                    break
-                except NotValidPhoneNumber:
-                    print("Please enter a valid phone number!")
-            elif choice == 2:
-                try:
-                    access_token = validate_access_token(input("Please enter your access token: "))
-                    self._auth_data = AuthData(access=access_token, refresh=None)
-                    self.phone_number = None
-                    break
-                except NotValidAccessToken:
-                    print("Please enter a valid access token!")
+            try:
+                self.phone_number = validate_phone_number(input("Please enter your phone number: "))
+                break
+            except NotValidPhoneNumber:
+                print("Please enter a valid phone number!")
+
+    def _prompt_for_access_token(self: 'Me'):
+        """Allows the user to enter the access token in interactive mode."""
+        self._Me__init_done = False
+        while True:
+            try:
+                access_token = validate_access_token(input("Please enter your access token: "))
+                self._auth_data = AuthData(access=access_token, refresh=None)
+                self.phone_number = None
+                break
+            except NotValidAccessToken:
+                print("Please enter a valid access token!")
+        self._Me__init_done = True
 
     def _choose_verification(self: 'Me'):
         """Allows the user to choose the verification method in interactive mode."""
@@ -251,10 +261,10 @@ class AuthMethods:
                 first_name = input("Enter your first name (Required): ")
 
             while last_name is None:
-                last_name = input("Enter your last name (Optional): ")
+                last_name = input("Enter your last name (Optional. Press Enter to skip): ") or ''
 
             while email == '':
-                email = input("Enter your email (Optional): ") or None
+                email = input("Enter your email (Optional. Press Enter to skip): ") or None
 
             new_account_details = NewAccountDetails(
                 first_name=first_name, last_name=last_name, email=email
@@ -277,7 +287,7 @@ class AuthMethods:
 
     def _generate_access_token(self: 'Me') -> bool:
         """
-        Generate new access token.
+        Generate new access token (in the unofficial method).
 
         :raises NotLoggedIn: If the user is not logged in.
         :raises IncorrectPwdToken: If the ``pwd_token`` is incorrect.
@@ -371,8 +381,8 @@ class AuthMethods:
         )
         unread_notifications_count_raw(client=self)
         add_calls_raw(client=self, calls=[c.as_dict() for c in generate_random_data(calls=True).calls])
-        update_fcm_token_raw(self, '')
-        update_profile_details_raw(self, adv_id=get_random_adv_id())
+        update_fcm_token_raw(client=self, fcm_token='')
+        update_profile_details_raw(client=self, adv_id=get_random_adv_id())
         return True
 
     def make_request(
@@ -382,6 +392,7 @@ class AuthMethods:
             body: Dict[str, Any] = None,
             headers: Dict[str, Union[str, int]] = None,
             files: Dict[str, bytes] = None,
+            max_retries: int = 3
       ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """
         Make a request to the API.
@@ -396,6 +407,8 @@ class AuthMethods:
         :type headers: ``dict``
         :param files: Files to send with the request. Default: ``None``.
         :type files: ``dict``
+        :param max_retries: Maximum number of retries in case of failure. Default: ``3``.
+        :type max_retries: ``int``
         :raises MeApiException: If HTTP status is higher than 400.
         :raises ValueError: If the response received does not contain a valid JSON or the request type is not valid.
         :raises ConnectionError: If the request failed.
@@ -405,14 +418,15 @@ class AuthMethods:
         url = ME_BASE_API + endpoint
         if isinstance(method, RequestType):
             method = method.name
-        else:
+        elif isinstance(method, str):
             method = method.upper()
+        else:
+            raise ValueError("Request type must be a string or a RequestType enum!!")
         request_types = (rt.name for rt in RequestType)
         if method not in request_types:
             raise ValueError("Request type not in requests type list!!\nAvailable types: " + ", ".join(request_types))
-        max_rounds = 3
-        while max_rounds > 0:
-            max_rounds -= 1
+        while max_retries > 0:
+            max_retries -= 1
             if headers is None:
                 req_headers = HEADERS.copy()
                 if self._auth_data is not None:
@@ -436,6 +450,10 @@ class AuthMethods:
                     if self._generate_access_token():
                         continue
                 else:  # official authentication method, no pwd_token to generate access token
+                    if self._interactive_mode:
+                        print("The access token is invalid or expired.")
+                        self._prompt_for_access_token()
+                        continue
                     if self._auth_data is None:  # after logout
                         raise NotLoggedIn("You are not logged in!")
                     raise ForbiddenRequest(http_status=response.status_code, msg=str(response_text.get('detail')))
