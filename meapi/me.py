@@ -88,6 +88,7 @@ class Me(MeModel, AuthMethods, AccountMethods, SocialMethods, SettingsMethods, N
             raise TypeError("credentials_manager must be an instance of CredentialsManager!")
 
         self.uuid = None
+        self._auth_data = None
         self._interactive_mode = interactive_mode
         self._session = session or requests.Session()  # create new session if not provided
 
