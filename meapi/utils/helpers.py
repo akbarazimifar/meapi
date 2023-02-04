@@ -29,7 +29,7 @@ Welcome to meapi!
 |_| |_| |_|\___|\__,_| .__/|_|
                      |_|
 >> MeAPI v{version}
->> Copyright (C) {copyright}
+>> {copyright}
 >> Source Code: https://github.com/david-lev/meapi
 >> Documentation: https://meapi.readthedocs.io
 >> License: {license}
