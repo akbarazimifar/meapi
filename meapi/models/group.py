@@ -126,3 +126,6 @@ class Group(MeModel):
 
     def __hash__(self) -> int:
         return hash(self.name)
+
+    def __bool__(self):
+        return self.is_active

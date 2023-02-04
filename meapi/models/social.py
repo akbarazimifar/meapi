@@ -152,6 +152,9 @@ class SocialMediaAccount(MeModel):
             raise TypeError("Social media account must have profile_id to be hashable!")
         return hash(self.profile_id)
 
+    def __bool__(self):
+        return bool(self.profile_id)
+
     def add(self, token_or_url: str) -> bool:
         """
         Add social media account to your Me profile.

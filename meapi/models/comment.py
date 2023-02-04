@@ -216,3 +216,6 @@ class Comment(MeModel):
             if key not in ('message', 'status', 'like_count', 'comment_likes', 'comments_blocked'):
                 raise FrozenInstance(self, key)
         return super().__setattr__(key, value)
+
+    def __bool__(self):
+        return self.status not in ('deleted', 'ignored')
