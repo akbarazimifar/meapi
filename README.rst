@@ -96,53 +96,55 @@ ________________________
 
     from meapi import Me
 
-    # Initialize the Client:
-    me = Me(phone_number=972123456789, interactive_mode=True)
-    # me = Me(access_token='eyJ0eXAiOiJ') # If you have official access token
+    # Initialize the client in interactive mode:
+    me = Me(interactive_mode=True)
 
     # ☎ Get information about any phone number:
-    search_res = me.phone_search('+972548776658')
-    if search_res:
-        print(search_res.name)
+    res = me.phone_search('+972545416627')
+    if res:
+        print(res.name)
 
     # 😎 Get user full profile:
-    if search_res.user:
-        profile = search_res.get_profile()
-        print(profile.email, profile.date_of_birth, profile.slogan)
+    if res.user:
+        user = res.user
+        print(f"{user.name=}, {user.email=}, {user.slogan=} {user.profile_picture=}")
+        profile = res.get_profile()
+        print(f"{profile.date_of_birth=}, {profile.location_name=}, {profile.gender=}, {profile.device_type=}")
 
         # 📱 Get social media accounts:
         for social in profile.social:
-            if social.is_active:
+            if social:
                 print(f"Social media ({social.name}): {social.profile_url}")
                 for post in social.posts:
                     print(f"Post from {post.posted_at}:\n{post.text_first}\n{post.text_second}")
 
     # 💬 Watch, approve and like comments:
     for comment in me.get_comments():
-        print(f"Comment from {comment.author.name} at {comment.created_at}: {comment.message}")
+        print(f"Comment from {comment.author.name}: {comment.message}")
         if comment.status == 'waiting':
             comment.approve()
-        comment.like()
+
 
     # ✍️ Change your profile details:
     my_profile = me.get_my_profile()
     my_profile.first_name = 'David'
+    my_profile.last_name = 'Lev'
 
     # 🎴 Get your profile in vCard format:
-    with open('~/Downloads/my_vcard.vcf', 'w') as f:
+    with open('/home/david/Downloads/my_vcard.vcf', 'w') as f:
         f.write(my_profile.as_vcard(dl_profile_picture=True))
 
     # 👥 See how people call you:
     for group in me.get_groups(sorted_by='count'):
-        print(f"People named you {group.name} {group.count} times")
+        print(f"People named you '{group.name}' {group.count} times")
 
     # 👁 who watched your profile:
     for watcher in me.who_watched(incognito=True, sorted_by='last_view'):
-        print(f"The user {watcher.user.name} watched you {watcher.count} times")
+        print(f"The user '{watcher.user.name}' watched you {watcher.count} times")
 
     # 🗑 who deleted you:
     for deleted in me.who_deleted():
-        print(f"The user {deleted.user.name} deleted you at {deleted.created_at}")
+        print(f"The user '{deleted.user.name}' deleted you at {deleted.created_at}")
 
     # ➕ And much much more...
 

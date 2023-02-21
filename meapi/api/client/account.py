@@ -35,6 +35,10 @@ class AccountMethods:
         """
         Get information on any phone number.
 
+        >>> res = me.phone_search(phone_number=972545416627)
+        >>> res.name
+        'David'
+
         :param phone_number: International phone number format.
         :type phone_number: ``str`` | ``int``
         :raises SearchPassedLimit: if you passed the limit (About ``350`` per day in the unofficial auth method).
@@ -56,6 +60,10 @@ class AccountMethods:
          For Me users (those who have registered in the app) there is an account ``UUID`` obtained when receiving
          information about the phone number :py:func:`phone_search`. With it,
          you can get social information and perform social actions.
+
+        >>> p = me.get_profile(uuid='f7930d0f-c8ba-425b-8478-013968f30466')
+        >>> print(p.name, p.email, p.profile_picture, p.gender, p.date_of_birth, p.slogan)
+
 
         :param uuid: The user's UUID as ``str`` or :py:obj:`~meapi.models.contact.Contact` or :py:obj:`~meapi.models.user.User` objects.
         :type uuid: ``str`` | :py:obj:`~meapi.models.contact.Contact` | :py:obj:`~meapi.models.user.User`
@@ -82,6 +90,12 @@ class AccountMethods:
         """
         Get your profile information.
 
+        >>> p = me.get_my_profile()
+        >>> p.as_dict()
+        >>> p.as_vcard()
+        >>> p.name = 'Changed Name'
+        >>> p.email = 'john.doe@gmail.com'
+
         :param only_limited_data: ``True`` to get only limited data (not included in the rate limit). *Default:* ``False``.
         :type only_limited_data: ``bool``
         :return: :py:obj:`~meapi.models.profile.Profile` object.
@@ -100,6 +114,9 @@ class AccountMethods:
     def get_uuid(self: 'Me', phone_number: Union[int, str] = None) -> Optional[str]:
         """
         Get user's uuid (To use in :py:func:`get_profile`, :py:func:`get_comments` and more).
+
+        >>> me.get_uuid(phone_number=972545416627)
+        'f7930d0f-c8ba-425b-8478-013968f30466'
 
         :param phone_number: International phone number format. Default: None (Return self uuid).
         :type phone_number: ``str`` | ``int`` | ``None``
@@ -133,9 +150,10 @@ class AccountMethods:
             - The default of the parameters is ``False``. if you leave it ``False``, the parameter will not be updated.
 
         Examples:
-            >>> me.update_profile_details(first_name='Chandler', last_name='Bing', date_of_birth='1968-04-08')
+            >>> is_success, new_profile = me.update_profile_details(first_name='Chandler', last_name='Bing', date_of_birth='1968-04-08')
             >>> new_details = {'location_name': 'New York', 'gender': 'M'}
             >>> me.update_profile_details(**new_details)  # dict unpacking
+            (True, Profile(name='Chandler Bing', date_of_birth=datetime.date(1968, 4, 8), location_name='New York', gender='M', ...))
 
         :param first_name: First name.
         :type first_name: ``str`` | ``None``
@@ -166,13 +184,14 @@ class AccountMethods:
         :return: Tuple of: Is update success, new :py:obj:`~meapi.models.profile.Profile` object.
         :rtype: Tuple[``bool``, :py:obj:`~meapi.models.profile.Profile`]
         :raises ValueError: If one of the parameters is not valid.
+        :raises BlockedAccount: If your account is blocked for updating profile details.
         """
         args = locals()
         del args['self']
         for key, value in args.items():
             if value is not False:
                 if key == 'device_type':
-                    device_types = ['android', 'ios']
+                    device_types = ('android', 'ios')
                     if value not in device_types and value is not None:
                         raise ValueError(f"Device type not in the available device types "
                                          f"({', '.join(device_types)}, None)!")
@@ -193,7 +212,7 @@ class AccountMethods:
                             raise ValueError("profile_picture_url must be a url or path to a file!")
                         args[key] = str(self.upload_picture(image=value))
                 elif key == 'gender':
-                    if value not in ['M', 'm', 'F', 'f', None]:
+                    if value not in ('M', 'm', 'F', 'f', None):
                         raise ValueError("Gender must be: 'F' for Female, 'M' for Male, and 'None' for null.")
                     args[key] = str(value).upper() if value is not None else None
                 elif key in ['first_name', 'last_name', 'slogan', 'location_name'] and type(value) not in [str, None]:
@@ -204,9 +223,10 @@ class AccountMethods:
                                                        r',;:\s@\"]{2,})$', str(value)):
                         raise ValueError("Email must be in user@domain.com format!")
                 elif key == 'login_type':
-                    login_types = ['email', 'apple', None]
+                    login_types = ('email', 'apple', None)
                     if value not in login_types:
-                        raise ValueError(f"{key} not in the available login types ({', '.join(login_types)})!")
+                        raise ValueError(f"{key} not in the available login types ("
+                                         f"{', '.join(str(t) for t in login_types)})!")
 
         body = {key: val for key, val in args.items() if val is not False}
         try:
@@ -224,6 +244,9 @@ class AccountMethods:
     def delete_account(self: 'Me', yes_im_sure: bool = False) -> bool:
         """
         Delete your account and it's data (!!!)
+
+        >>> me.delete_account(yes_im_sure=True)
+        True
 
         :param yes_im_sure: ``True`` to delete your account and ignore prompt. *Default:* ``False``.
         :type yes_im_sure: ``bool``
@@ -243,6 +266,8 @@ class AccountMethods:
         """
         Suspend your account until your next login.
 
+        >>> me.suspend_account(yes_im_sure=True)
+
         :param yes_im_sure: ``True`` to suspend your account and ignore prompt. *Default:* ``False``.
         :type yes_im_sure: ``bool``
         :return: Is suspended.
@@ -260,6 +285,9 @@ class AccountMethods:
     def add_contacts(self: 'Me', contacts: List[Dict[str, Union[str, int, None]]]) -> dict:
         """
         Upload new contacts to your Me account. See :py:func:`upload_random_data`.
+
+        >>> contacts = [{'country_code': 'XX', 'date_of_birth': None, 'name': 'Chandler', 'phone_number': 512145887}]
+        >>> me.add_contacts(contacts=contacts)
 
         :param contacts: List of dicts with contacts data.
         :type contacts: List[``dict``])
@@ -283,6 +311,9 @@ class AccountMethods:
         """
         Remove contacts from your Me account.
 
+        >>> contacts = [{'country_code': 'XX', 'date_of_birth': None, 'name': 'Chandler', 'phone_number': 512145887}]
+        >>> me.remove_contacts(contacts=contacts)
+
         :param contacts: List of dicts with contacts data.
         :type contacts: List[``dict``]
         :return: Dict with upload results.
@@ -305,6 +336,9 @@ class AccountMethods:
         """
         Get all the contacts stored in your contacts (Which has an Me account).
 
+        >>> saved_contacts = me.get_unsaved_contacts()
+        >>> for usr in saved_contacts: print(usr.name)
+
         :return: List of saved contacts.
         :rtype: List[:py:obj:`~meapi.models.user.User`]
         """
@@ -314,6 +348,9 @@ class AccountMethods:
         """
         Get all the contacts that not stored in your contacts (Which has an Me account).
 
+        >>> unsaved_contacts = me.get_unsaved_contacts()
+        >>> for usr in unsaved_contacts: print(usr.name)
+
         :return: List of unsaved contacts.
         :rtype: List[:py:obj:`~meapi.models.user.User`]
         """
@@ -322,6 +359,9 @@ class AccountMethods:
     def add_calls_to_log(self: 'Me', calls: List[Dict[str, Union[str, int, None]]]) -> List[Call]:
         """
         Add call to your calls log. See :py:func:`upload_random_data`.
+
+        >>> calls = [{'called_at': '2021-07-29T11:27:50Z', 'duration': 28, 'name': '043437535', 'phone_number': 43437535, 'tag': None, 'type': 'missed'}]
+        >>> me.add_calls_to_log(calls=calls)
 
         :param calls: List of dicts with calls data.
         :type calls: List[``dict``]
@@ -348,6 +388,9 @@ class AccountMethods:
         """
         Remove calls from your calls log.
 
+        >>> calls = [{'called_at': '2021-07-29T11:27:50Z', 'duration': 28, 'name': '043437535', 'phone_number': 43437535, 'tag': None, 'type': 'missed'}]
+        >>> me.remove_calls_from_log(calls=calls)
+
         :param calls: List of dicts with calls data.
         :type calls: List[``dict``]
         :return: dict with upload result.
@@ -372,6 +415,8 @@ class AccountMethods:
         """
         Block user profile.
 
+        >>> me.block_profile(phone_number=123456789, block_contact=True, me_full_block=False)
+
         :param phone_number: User phone number in international format.
         :type phone_number: ``str`` | ``int``
         :param block_contact: To block for calls. *Default:* ``True``.
@@ -390,6 +435,8 @@ class AccountMethods:
     def unblock_profile(self: 'Me', phone_number: int, unblock_contact=True, me_full_unblock=True) -> bool:
         """
         Unblock user profile.
+
+        >>> me.unblock_profile(phone_number=123456789, unblock_contact=True, me_full_unblock=False)
 
         :param phone_number: User phone number in international format.
         :type phone_number: ``str`` | ``int``
@@ -411,6 +458,8 @@ class AccountMethods:
         """
         Block phone numbers.
 
+        >>> me.block_numbers(numbers=[123456789, 987654321])
+
         :param numbers: Single or list of phone numbers in international format.
         :type numbers: ``int`` | ``str`` | List[``int`` | ``str``]
         :return: Is blocked success.
@@ -426,6 +475,8 @@ class AccountMethods:
         """
         Unblock numbers.
 
+        >>> me.unblock_numbers(numbers=[123456789, 987654321])
+
         :param numbers: Single or list of phone numbers in international format. See :py:func:`get_blocked_numbers`.
         :type numbers: ``int`` | List[``int``]
         :return: Is unblocking success.
@@ -440,6 +491,9 @@ class AccountMethods:
         """
         Get list of your blocked numbers. See :py:func:`unblock_numbers`.
 
+        >>> me.get_blocked_numbers()
+        [BlockedNumber(phone_number=123456789, block_contact=True, me_full_block=True]
+
         :return: List of :py:class:`blocked_number.BlockedNumber` objects.
         :rtype: List[:py:obj:`~meapi.models.blocked_number.BlockedNumber`]
         """
@@ -448,6 +502,8 @@ class AccountMethods:
     def upload_random_data(self: 'Me', count: int = 50, contacts=False, calls=False, location=False) -> bool:
         """
         Upload random data to your account.
+
+        >>> me.upload_random_data(count=50, contacts=True, calls=True, location=True)
 
         :param count: Count of random data to upload. Default: ``50``.
         :type count: ``int``
@@ -472,6 +528,9 @@ class AccountMethods:
     def upload_picture(self: 'Me', image: str) -> str:
         """
         Upload a profile picture from a local file or a direct url.
+
+        >>> me.upload_picture(image="/path/to/image.png")
+        >>> me.upload_picture(image="https://example.com/image.png")
 
         :param image: Path or url to the image. for example: ``https://example.com/image.png``, ``/path/to/image.png``.
         :type image: ``str``

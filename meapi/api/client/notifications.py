@@ -32,6 +32,9 @@ class NotificationsMethods:
         """
         Get count of unread notifications.
 
+        >>> me.unread_notifications_count()
+        25
+
         :return: count of unread notifications.
         :rtype: ``int``
         """
@@ -50,6 +53,9 @@ class NotificationsMethods:
                           ) -> List[Notification]:
         """
         Get app notifications: new names, birthdays, comments, watches, deletes, location shares and system notifications.
+
+        >>> me.get_notifications(limit=300, names_filter=True, system_filter=True)
+        [Notification(id=109, category='JOINED_ME', is_read=False, created_at=datetime.datetime(2020, 1, 1), ...),]
 
         :param page: :py:func:`get_notifications`.``count`` / ``page_size``. *Default:* ``1``.
         :type page: ``int``
@@ -83,6 +89,9 @@ class NotificationsMethods:
     def read_notification(self: 'Me', notification_id: Union[int, str, Notification]) -> bool:
         """
         Mark notification as read.
+
+        >>> me.read_notification(109)
+        True
 
         :param notification_id: Notification id from :py:func:`get_notifications` or :py:obj:`~meapi.models.notification.Notification` object.
         :type notification_id: ``int`` | ``str`` | :py:obj:`~meapi.models.notification.Notification`

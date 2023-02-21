@@ -25,7 +25,7 @@ if TYPE_CHECKING:  # always False at runtime.
 _logger = logging.getLogger(__name__)
 
 ME_BASE_API = 'https://app.mobile.me.app'
-WA_AUTH_URL = "https://wa.me/972543229534?text=Connectme"
+WA_AUTH_URL = "https://wa.me/447427928793?text=Connectme"
 TG_AUTH_URL = "http://t.me/Meofficialbot?start=__iw__{}"
 
 
@@ -88,6 +88,8 @@ class AuthMethods:
                     self.uuid = self.get_uuid()
                 except MeApiException as e:
                     if e.http_status == 401:
+                        if 'User is blocked' in e.msg:
+                            raise BlockedAccount(http_status=e.http_status, msg=e.msg)
                         if new_account_details is None and not interactive_mode:
                             raise NewAccountException(http_status=e.http_status, msg=e.msg)
                         self._register(new_account_details=new_account_details)
@@ -395,9 +397,12 @@ class AuthMethods:
             max_retries: int = 3
       ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """
-        Make a request to the API.
+        Make a raw request to Me API.
 
-        :param method: Request method. Can be ``GET``, ``POST``, ``PUT``, ``DELETE`` or ``PATCH``.
+        >>> me.make_request('GET', '/main/users/profile/me/')
+        >>> me.make_request('PATCH', '/main/users/profile/', body={'name': 'Chandler Bing'})
+
+        :param method: Request method. Can be ``GET``, ``POST``, ``PUT``, ``DELETE``, ``PATCH``, ``HEAD`` or ``OPTIONS``.
         :type method: ``str`` | :py:class:`~meapi.RequestType`
         :param endpoint: API endpoint. e.g. ``/main/users/profile/me/``.
         :type endpoint: ``str``
@@ -422,9 +427,9 @@ class AuthMethods:
             method = method.upper()
         else:
             raise ValueError("Request type must be a string or a RequestType enum!!")
-        request_types = (rt.name for rt in RequestType)
-        if method not in request_types:
-            raise ValueError("Request type not in requests type list!!\nAvailable types: " + ", ".join(request_types))
+        if method not in RequestType.all():
+            raise ValueError(
+                "Request type not in requests type list!!\nAvailable types: " + ", ".join(RequestType.all()))
         while max_retries > 0:
             max_retries -= 1
             if headers is None:

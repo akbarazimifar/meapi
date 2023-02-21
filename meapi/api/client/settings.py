@@ -20,6 +20,14 @@ class SettingsMethods:
         """
         Get current settings.
 
+        >>> # Take control of your privacy:
+        >>> my_settings = me.get_settings()
+        >>> my_settings.who_watched_enabled = False
+        >>> my_settings.who_deleted_enabled = False
+        >>> my_settings.mutual_contacts_available = False
+        >>> my_settings.comments_enabled = False
+        >>> my_settings.location_enabled = False
+
         :return: :py:class:`~meapi.models.settings.Settings` object.
         :rtype: :py:class:`~meapi.models.settings.Settings`
         """
@@ -43,6 +51,9 @@ class SettingsMethods:
                         ) -> Tuple[bool, Settings]:
         """
         Change social, app and notification settings.
+
+        >>> me.change_settings(language='en', mutual_contacts_available=False)
+        (True, Settings(language='en', mutual_contacts_available=False, ...))
 
         :param mutual_contacts_available: Show common contacts between users. *Default:* ``None``.
         :type mutual_contacts_available: ``bool``
