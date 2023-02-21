@@ -80,7 +80,7 @@ There are two ways for authentication, the unofficial method and the official me
 
 
 - There are two forms of active authentication, which means that you can initialize the client with the authentication code that you will receive actively in one of the following forms:
-    1. **WhatsApp:** Go to `WhatsApp <https://wa.me/972543229534?text=Connectme>`_ and send any message to this number (`+972543229534 <tel:+972543229534>`_) to get a verification code.
+    1. **WhatsApp:** Go to `WhatsApp <https://wa.me/447427928793?text=Connectme>`_ and send any message to this number (`+447427928793 <tel:+447427928793>`_) to get a verification code.
     2. **Telegram:** Go to Telegram (http://t.me/Meofficialbot?start=__iw__XXXXXX Replace the ``XXXXX`` with your phone number) and hit ``/start`` to get a verification code.
 
 - After you get the code, you can initialize the client with the following code:
