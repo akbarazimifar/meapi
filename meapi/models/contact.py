@@ -51,6 +51,8 @@ class Contact(MeModel, _CommonMethodsForUserContactProfile):
 
     Methods:
 
+        Get friendship: :py:func:`~meapi.models.common._CommonMethodsForUserContactProfile.friendship`.
+        Get comments: :py:func:`~meapi.models.common._CommonMethodsForUserContactProfile.get_comments`.
         Get the contact as Vcard: :py:func:`~meapi.models.common._CommonMethodsForUserContactProfile.as_vcard`.
         Block this contact: :py:func:`~meapi.models.common._CommonMethodsForUserContactProfile.block`.
         Unblock this contact: :py:func:`~meapi.models.common._CommonMethodsForUserContactProfile.unblock`.

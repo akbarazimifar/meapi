@@ -39,7 +39,7 @@ class Comment(MeModel):
             The number of likes of the comment.
         comment_likes (``list`` of :py:obj:`~meapi.models.user.User`):
             The list of users who liked the comment.
-        created_at (``datetime``):
+        created_at (``datetime`` | ``None``):
             The date of the comment creation.
         is_liked (``bool``):
             Whether the creator liked his comment.

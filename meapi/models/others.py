@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from typing import Optional, Union
+from typing import Optional, List
 from meapi.models.me_model import MeModel
 
 
@@ -30,21 +30,31 @@ class NewAccountDetails(MeModel):
 
 
 class CallType(Enum):
+    """Call type enum."""
     MISSED = "missed"
     OUTGOING = "outgoing"
     INCOMING = "incoming"
 
     @classmethod
-    def all(cls):
+    def all(cls) -> List[str]:
+        """Get all call types."""
         return list(map(lambda c: c.value, cls))
 
 
 class RequestType(Enum):
+    """Request type enum."""
     POST = auto()
     GET = auto()
     PUT = auto()
     DELETE = auto()
     PATCH = auto()
+    HEAD = auto()
+    OPTIONS = auto()
+
+    @classmethod
+    def all(cls) -> List[str]:
+        """Get all request types."""
+        return list(map(lambda c: c.name, cls))
 
 
 class AuthMethod(Enum):

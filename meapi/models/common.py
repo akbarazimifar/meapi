@@ -1,5 +1,6 @@
 from functools import reduce
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Union, List, Optional
+
 from meapi.utils.helpers import get_img_binary_content, encode_string
 
 if TYPE_CHECKING:  # always False at runtime.
@@ -7,12 +8,24 @@ if TYPE_CHECKING:  # always False at runtime.
     from meapi.models.user import User
     from meapi.models.contact import Contact
     from meapi.models.mutual_contact import MutualContact
+    from meapi.models.comment import Comment
+    from meapi.models.friendship import Friendship
 
 
 class _CommonMethodsForUserContactProfile:
     """
     Common methods for :py:obj:`~meapi.models.profile.Profile`, :py:obj:`~meapi.models.user.User` and :py:obj:`~meapi.models.contact.Contact`.
     """
+    def _extract_uuid(self: Union['Profile', 'User', 'Contact', 'MutualContact']) -> Optional[str]:
+        """
+        Extracts the uuid from the contact.
+
+        Returns:
+            ``str``: The uuid of the contact.
+        """
+        if getattr(self, 'user', None):
+            return self.user.uuid if self.user else None
+
     def get_profile(self: Union['Profile', 'User', 'Contact', 'MutualContact']) -> Union['Profile', None]:
         """
         Returns the profile of the contact.
@@ -20,13 +33,26 @@ class _CommonMethodsForUserContactProfile:
         Returns:
             :py:obj:`~meapi.models.profile.Profile` | ``None``: The profile of the contact or ``None`` if the contact has no user.
         """
-        uuid = None
-        if hasattr(self, 'user'):
-            if getattr(self, 'user', None):
-                uuid = self.user.uuid
-        else:
-            uuid = self.uuid
-        return getattr(self, f'_{self.__class__.__name__}__client').get_profile(uuid) if uuid is not None else uuid
+        uuid = self._extract_uuid()
+        return getattr(self, f'_{self.__class__.__name__}__client').get_profile(uuid=uuid) if uuid is not None else uuid
+
+    def get_comments(self: Union['Profile', 'User', 'Contact', 'MutualContact']) -> List['Comment']:
+        """
+        Returns the comments of the contact.
+
+        Returns:
+            List[:py:obj:`~meapi.models.comment.Comment`]: The comments of the contact.
+        """
+        return getattr(self, f'_{self.__class__.__name__}__client').get_comments(uuid=self.uuid) if self.uuid else []
+
+    def friendship(self: Union['Profile', 'User', 'Contact', 'MutualContact']) -> 'Friendship':
+        """
+        Returns the friendship status of the contact.
+
+        Returns:
+            ``bool``: ``True`` if the contact is your friend, else ``False``.
+        """
+        return getattr(self, f'_{self.__class__.__name__}__client').friendship(phone_number=self.phone_number)
 
     def block(self: Union['Profile', 'User', 'Contact', 'MutualContact'], block_contact=True, me_full_block=True) -> bool:
         """

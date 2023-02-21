@@ -12,7 +12,7 @@ social_profile_urls = {
     'facebook': "https://facebook.com/profile.php?id={}",
     'instagram': "https://instagram.com/{}",
     'linkedin': "{}",
-    'pinterset': "{}",
+    'pinterest': "{}",
     'spotify': "https://open.spotify.com/user/{}",
     'twitter': "https://twitter.com/{}",
     'tiktok': "https://tiktok.com/@{}",
