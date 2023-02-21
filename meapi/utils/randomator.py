@@ -135,7 +135,7 @@ def generate_random_data(count: int = 50, contacts=False, calls=False, location=
     count = random.randint(count - 10 if count > 10 else 1, count + 10)
 
     if contacts or calls:
-        country_code = random.choice(('IL', 'US', 'GB'))
+        country_code = get_random_country_code()
         phone_numbers = get_random_phone_numbers(country_code=country_code, limit=count)
         names = get_random_names(name_type='fullname', limit=count)
 
