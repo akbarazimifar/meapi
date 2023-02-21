@@ -305,10 +305,12 @@ class AuthMethods:
                 phone_number=str(self.phone_number),
                 pwd_token=self._auth_data.pwd_token
             )
+            self._Me__init_done = False
             self._auth_data = AuthData(
                 pwd_token=self._auth_data.pwd_token,
                 **new_auth_data
             )
+            self._Me__init_done = True
         except IncorrectPwdToken as err:
             self.logout()
             if self._interactive_mode:
