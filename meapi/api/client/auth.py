@@ -69,7 +69,6 @@ class AuthMethods:
         :rtype: ``bool``
         """
         if self._auth_data is None and self.phone_number:
-            self._Me__init_done = False
             interactive_mode = interactive_mode or self._interactive_mode
             need_emulate = False
             activate_already = False
@@ -99,7 +98,6 @@ class AuthMethods:
                 activate_already = True
             if need_emulate:
                 self._emulate_app()
-        self._Me__init_done = True
         if interactive_mode:
             print("You are now logged in!")
         return True
@@ -113,7 +111,6 @@ class AuthMethods:
         :return: Is success.
         :type: ``bool``
         """
-        self._Me__init_done = False
         self._auth_data = None
         if not self.phone_number:
             return True
@@ -196,7 +193,6 @@ class AuthMethods:
 
     def _prompt_for_access_token(self: 'Me'):
         """Allows the user to enter the access token in interactive mode."""
-        self._Me__init_done = False
         while True:
             try:
                 access_token = validate_access_token(input("Please enter your access token: "))
@@ -205,7 +201,6 @@ class AuthMethods:
                 break
             except NotValidAccessToken:
                 print("Please enter a valid access token!")
-        self._Me__init_done = True
 
     def _choose_verification(self: 'Me'):
         """Allows the user to choose the verification method in interactive mode."""
@@ -305,12 +300,10 @@ class AuthMethods:
                 phone_number=str(self.phone_number),
                 pwd_token=self._auth_data.pwd_token
             )
-            self._Me__init_done = False
             self._auth_data = AuthData(
                 pwd_token=self._auth_data.pwd_token,
                 **new_auth_data
             )
-            self._Me__init_done = True
         except IncorrectPwdToken as err:
             self.logout()
             if self._interactive_mode:

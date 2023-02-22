@@ -114,12 +114,6 @@ class Me(MeModel, AuthMethods, AccountMethods, SocialMethods, SettingsMethods, N
         )
 
     def __setattr__(self, key: str, value: Any):
-        """
-        Prevent attr changes after the init in protected data classes
-        """
-        if getattr(self, '_Me__init_done', None):
-            if key in ('phone_number', 'uuid', '_credentials_manager', '_interactive_mode', '_session', '_auth_data'):
-                raise FrozenInstance(cls=self, attr=key)
         return super().__setattr__(key, value)
 
     def __hash__(self):
