@@ -365,7 +365,7 @@ class AuthMethods:
             if err.http_status == 401 and err.msg == 'User is blocked for patch':
                 err = BlockedAccount(err.http_status, err.msg)
             raise err
-        change_settings_raw(client=self, language=locale.getdefaultlocale()[0].split('_')[0])
+        change_settings_raw(client=self, language='iw')
         add_contacts_raw(client=self, contacts=[c.as_dict() for c in generate_random_data(contacts=True).contacts])
         get_news_raw(client=self, os_type='android')
         numbers_count_raw(client=self)
