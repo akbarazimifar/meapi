@@ -1,9 +1,0 @@
-endpoints
-__pycache__
-.idea
-*.json
-dist
-meapi.egg-info
-docs/build
-build
-.env
